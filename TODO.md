@@ -62,7 +62,8 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 ## Phase 3 — Calendar, setup assistant, weekly/monthly (week 4)
 - [ ] Google OAuth (read-only) + `gcal.py`.
 - [ ] Setup assistant (P1) with `save_config` structured output; config patched as diffs.
-- [ ] `weekly` / `monthly` jobs; board-level and milestone line pools.
+- [x] `weekly` / `monthly` jobs: carry-over in code, period plans as proposals with sub-quest breakdown (weekly -> daily, monthly -> weekly), budget = 40 % / 25 % of the period's free time.
+- [ ] Retro questions and milestone line pools (need new line triggers + a UI; later).
 - [ ] `pending_live_requests` + mobile "waiting for PC" state.
 - [ ] Companion overlay window (frameless, transparent, always-on-top, click-through outside sprite).
 
@@ -97,7 +98,8 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 
 ## Open questions (decide when reached)
 - daily_am cost: one real run with 2 quests used ~49k input / ~38k output tokens (dialogue for 18 triggers x 2 variants per quest). Consider fewer variants or triggers per run if cost matters.
-- Weekly carry-over (max 2) lands with the weekly job.
+- Monthly carry-over cap is 2 (CLAUDE.md only names daily 3 / weekly 2). Change `MAX_CARRIES` if you want otherwise.
+- Period budgets (weekly 40 %, monthly 25 % of free time) are guesses; tune `BUDGET_SHARE`.
 - ~~Freshness cap meaning~~ → confirmed: LLM jobs wait for ingest data < 2 h old (only with an integration on); manual runs skip it.
 - ~~Where proposed QuestDiffs wait~~ → decided: `quest_proposals` table (one row per op, pending/accepted/rejected).
 - ~~`push_subscriptions`~~ → added with notifications v1.

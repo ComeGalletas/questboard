@@ -38,6 +38,32 @@ test("accepting an add inserts an llm quest with code-computed XP and no deadlin
   assert.equal(d.quest.xp, 40); // 25 min x 1.5 (P1), rounded to 5
   assert.equal(d.quest.deadline, null);
   assert.equal(d.quest.scheduled_for, "2026-09-25");
+  assert.equal(d.quest.parent_id, null);
+});
+
+test("accepted sub-quests keep their parent", () => {
+  const parent = quest({ cadence: "weekly" });
+  const d = planAcceptance(
+    proposal({
+      op: "add",
+      reason: "split",
+      quest: {
+        title: "Draft intro",
+        persona: "teacher",
+        cadence: "daily",
+        category: "jobs",
+        estimate_min: 30,
+        priority: 2,
+        scheduled_for: "2026-09-30",
+        parent_id: parent.id,
+      },
+    }),
+    [parent],
+    DEMO_CONFIG,
+    now,
+  );
+  assert.ok(d.kind === "insert" && d.quest.parent_id === parent.id);
+  assert.ok(d.kind === "insert" && d.quest.scheduled_for === "2026-09-30");
 });
 
 test("accepting an update patches allowed fields and recomputes XP", () => {
