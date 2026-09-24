@@ -5,6 +5,7 @@ description = "Questboard runner: scheduler, providers, ingest, sanitizer, extra
 requires-python = ">=3.12"
 dependencies = [
   "anthropic>=1.8.0",
+  "cryptography>=45",
   "en-core-web-md",
   "es-core-news-md",
   "httpx>=0.28.1",
@@ -15,6 +16,7 @@ dependencies = [
   "pywebpush>=2.5.0",
   "pyyaml>=6.0.3",
   "questboard-schema",
+  "sqlcipher3>=0.6.2",
   "tzdata>=2026.4",
 ]
 

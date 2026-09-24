@@ -70,7 +70,8 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 ## Phase 4 — Email pipeline (weeks 5–6)
 - [ ] Gmail adapter (read-only), allow/deny lists, `senders` classification.
 - [x] Sanitizer: Presidio + spaCy es/en NER, custom recognizers (cédula, NIT with check digit, CO phones, Luhn cards, IBAN mod-97, amounts, CO/US addresses, account/reference numbers, OTP codes and passwords), residual pass for leftover numbers/codes, stable salted tokens, reply/signature stripping, 1200-char window + 800-char cap, `log_rows` for `sanitization_log` (written by the Gmail pipeline). Tokens come from a `Vault` protocol; `MemoryVault` for now.
-- [ ] Vault: SQLCipher, key in OS keychain via Tauri; PC-only re-hydration.
+- [x] Vault: `vault.db` (SQLCipher) + AES-GCM sealed values, master key in the OS keychain (runner via `keyring`; Tauri reads the same entry later), stable tokens across restarts, `rehydrate()` for the PC UI; `python -m runner vault`. Key loss = mapping loss until the encrypted backup (Phase 7).
+- [ ] Make "Sanitizer release gate" a required check (issue #14; needs repo admin, works from the phone).
 - [ ] Category profiles + extractors in order: ics, utilities, government, delivery, subscription, health, jobs, learning, travel, personal.
 - [ ] Quest templates per category; auto-complete by `reference_token`.
 - [ ] LLM-proposed bucket; PII output validator.
