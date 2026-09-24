@@ -262,7 +262,7 @@ def test_db_outage_skips_everything_then_network_up_recovers() -> None:
     sched, repo, clock = make(local(2026, 9, 25, 6, 0), daily_am=h)
     loop = Loop(sched, sleep=lambda s: None)
     repo.online = False
-    assert loop.step(first=True)[0].reason == "db unreachable"
+    assert loop.step(first=True)[0].reason == "db unreachable: offline"
     repo.online = True
     clock.advance(minutes=5)
     decisions = loop.step()
@@ -305,3 +305,13 @@ def test_cli_dry_run_tick(tmp_path, monkeypatch, capsys) -> None:
     monkeypatch.setenv("QUESTBOARD_DATA_DIR", str(tmp_path))
     assert main(["trigger", "ingest", "--dry-run"]) == 0
     assert "ingest: run (ok)" in capsys.readouterr().out
+
+
+def test_providers_use_models_from_config() -> None:
+    from runner.__main__ import DEFAULT_CONFIG, providers_for
+
+    data = {**DEFAULT_CONFIG, "llm": {**DEFAULT_CONFIG["llm"], "models": {"ollama": "llama3.1"}}}
+    built = providers_for(Config.model_validate(data))
+    assert built[ProviderName.ollama].model == "llama3.1"  # type: ignore[attr-defined]
+    assert built[ProviderName.claude_api].model == "claude-opus-5"  # type: ignore[attr-defined]
+    assert built[ProviderName.claude_cli].model is None  # type: ignore[attr-defined]

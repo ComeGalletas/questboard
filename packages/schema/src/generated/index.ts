@@ -68,6 +68,12 @@ export interface Config {
      */
     providers: ["claude-cli" | "ollama" | "claude-api", ...("claude-cli" | "ollama" | "claude-api")[]];
     /**
+     * Model per provider, e.g. {"claude-api": "claude-opus-5", "ollama": "qwen3:8b"}. Unset uses the runner default.
+     */
+    models?: {
+      [k: string]: string;
+    };
+    /**
      * Per-job provider order override, keyed by job name.
      */
     per_job?: {

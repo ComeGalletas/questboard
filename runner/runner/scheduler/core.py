@@ -36,6 +36,7 @@ BACKOFF = (timedelta(minutes=5), timedelta(minutes=15), timedelta(minutes=60))
 FRESHNESS = timedelta(hours=2)
 STALE_RUN = timedelta(minutes=30)
 STALE_ERROR = "stale run"
+DB_DOWN = "db unreachable"
 FINISHED_BAD = {Status.failed, Status.invalid_output}
 IN_FLIGHT = {Status.queued, Status.running}
 
@@ -82,8 +83,8 @@ class Scheduler:
             self.repo.ping()
             config = self.repo.get_config()
             state = self.repo.get_runner_state()
-        except RepoUnavailable:
-            return [Decision(j, "skip", "db unreachable") for j in jobs]
+        except RepoUnavailable as exc:
+            return [Decision(j, "skip", f"{DB_DOWN}: {exc}") for j in jobs]
 
         now = self.clock().astimezone(ZoneInfo(config.timezone))
         decisions = []
@@ -95,8 +96,8 @@ class Scheduler:
                 else:
                     decision = self._interval_job(spec, trigger, now, config, state)
                     state = self.repo.get_runner_state()
-            except RepoUnavailable:
-                decision = Decision(job, "skip", "db unreachable")
+            except RepoUnavailable as exc:
+                decision = Decision(job, "skip", f"{DB_DOWN}: {exc}")
             decisions.append(decision)
         self._heartbeat(now, config)
         return decisions

@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 
 from questboard_schema.llm_run_schema import Trigger
 
-from runner.scheduler.core import Decision, Scheduler
+from runner.scheduler.core import DB_DOWN, Decision, Scheduler
 
 TICK_SECONDS = 300
 log = logging.getLogger("questboard.runner")
@@ -30,7 +30,7 @@ class Loop:
         else:
             trigger = Trigger.tick
         decisions = self.scheduler.evaluate(trigger)
-        self._db_was_down = any(d.reason == "db unreachable" for d in decisions)
+        self._db_was_down = any(d.reason.startswith(DB_DOWN) for d in decisions)
         for d in decisions:
             # Job names and reasons only: never payloads (CLAUDE.md logging rule).
             log.info("%s %s %s: %s", trigger.value, d.job.value, d.action, d.reason)

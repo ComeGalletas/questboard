@@ -49,7 +49,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 
 ## Phase 2 — Runner, providers, daily cache (week 3)
 - [x] Runner skeleton: trigger loop, guards, lock file, heartbeat, `llm_runs` idempotency + backoff + catch-up. (Tested against an in-memory DB; Supabase connection next.)
-- [ ] Providers: `ollama.py`, `claude_api.py`; output validation, one retry, fallthrough.
+- [x] Providers: `ollama.py`, `claude_api.py`; output validation, one retry, fallthrough. Supabase connection for the runner (signs in as the user; refresh token in the OS keychain).
 - [ ] Engine: prompt assembly, `daily_am` (QuestDiffs + capacity fit + dialogue bundles), `daily_pm` (accounting + carry-over rules).
 - [ ] `persona_lines` selection in the app.
 - [ ] Tauri shell: dashboard window, tray, start-at-login, sidecar, OS notifications, deep links.
@@ -92,8 +92,8 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [ ] Encrypted backup/export of config, packs and vault.
 
 ## Open questions (decide when reached)
-- "Freshness cap 2 h unless manual" is read as: LLM jobs wait until ingest data is < 2 h old (only when an integration is on); manual runs skip it. Confirm.
-- Where proposed QuestDiffs wait for accept/reject (no table for them yet; needed in Phase 2).
+- ~~Freshness cap meaning~~ → confirmed: LLM jobs wait for ingest data < 2 h old (only with an integration on); manual runs skip it.
+- ~~Where proposed QuestDiffs wait~~ → decided: `quest_proposals` table (one row per op, pending/accepted/rejected).
 - `push_subscriptions` table for Web Push (lands with the PWA item).
 - `progress` table: game stats are computed from the quest log in the app; decide whether the runner/weekly jobs need the cached daily rows before writing them.
 - `goals` table vs `config.goals`: pick one source of truth before the setup assistant.

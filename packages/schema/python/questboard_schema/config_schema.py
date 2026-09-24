@@ -22,6 +22,10 @@ class XpWeights(RootModel[float]):
     root: float = Field(..., ge=0.0)
 
 
+class Models(RootModel[str]):
+    root: str = Field(..., max_length=100, min_length=1)
+
+
 class PerJob(RootModel[list[common_schema.ProviderName]]):
     root: list[common_schema.ProviderName] = Field(..., min_length=1)
 
@@ -31,6 +35,10 @@ class Llm(BaseModel):
         extra="forbid",
     )
     providers: list[common_schema.ProviderName] = Field(..., min_length=1)
+    models: dict[common_schema.ProviderName, Models] | None = Field(
+        None,
+        description='Model per provider, e.g. {"claude-api": "claude-opus-5", "ollama": "qwen3:8b"}. Unset uses the runner default.',
+    )
     per_job: dict[common_schema.JobName, PerJob] | None = Field(
         None, description="Per-job provider order override, keyed by job name."
     )
