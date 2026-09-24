@@ -1,0 +1,268 @@
+{
+  "lines": [
+    {
+      "trigger": "assigned",
+      "variant": 1,
+      "condition": "any",
+      "text": "I put something new on your list, sweetheart."
+    },
+    {
+      "trigger": "assigned",
+      "variant": 2,
+      "condition": "any",
+      "text": "A little something for today. Nothing scary."
+    },
+    {
+      "trigger": "reminder_am",
+      "variant": 1,
+      "condition": "any",
+      "text": "Good morning, love. Did you eat breakfast?"
+    },
+    {
+      "trigger": "reminder_am",
+      "variant": 2,
+      "condition": "any",
+      "text": "Rise and shine! Your list is waiting."
+    },
+    {
+      "trigger": "reminder_mid",
+      "variant": 1,
+      "condition": "any",
+      "text": "Just checking in. Did you have lunch?"
+    },
+    {
+      "trigger": "reminder_mid",
+      "variant": 2,
+      "condition": "any",
+      "text": "How's your day going, dear?"
+    },
+    {
+      "trigger": "reminder_pm",
+      "variant": 1,
+      "condition": "any",
+      "text": "It's getting late. {time_left} left, then rest."
+    },
+    {
+      "trigger": "reminder_pm",
+      "variant": 2,
+      "condition": "any",
+      "text": "Evening, dear. Just a little more and then bed."
+    },
+    {
+      "trigger": "started",
+      "variant": 1,
+      "condition": "any",
+      "text": "That's my kid!"
+    },
+    {
+      "trigger": "started",
+      "variant": 2,
+      "condition": "any",
+      "text": "Look at you getting started."
+    },
+    {
+      "trigger": "completed_early",
+      "variant": 1,
+      "condition": "any",
+      "text": "Early! I'm so proud of you."
+    },
+    {
+      "trigger": "completed_early",
+      "variant": 2,
+      "condition": "any",
+      "text": "Done already? Look at you!"
+    },
+    {
+      "trigger": "completed_on_time",
+      "variant": 1,
+      "condition": "any",
+      "text": "All done! I knew you could."
+    },
+    {
+      "trigger": "completed_on_time",
+      "variant": 2,
+      "condition": "any",
+      "text": "Wonderful, love. One less thing to worry about."
+    },
+    {
+      "trigger": "completed_late",
+      "variant": 1,
+      "condition": "any",
+      "text": "Better late than never, sweetheart."
+    },
+    {
+      "trigger": "completed_late",
+      "variant": 2,
+      "condition": "any",
+      "text": "It's done, that's what matters."
+    },
+    {
+      "trigger": "partial",
+      "variant": 1,
+      "condition": "any",
+      "text": "A little is still something."
+    },
+    {
+      "trigger": "partial",
+      "variant": 2,
+      "condition": "any",
+      "text": "You tried, and that counts."
+    },
+    {
+      "trigger": "snoozed",
+      "variant": 1,
+      "condition": "any",
+      "text": "Take a breather, but don't forget."
+    },
+    {
+      "trigger": "snoozed",
+      "variant": 2,
+      "condition": "any",
+      "text": "Okay, a few minutes. I'll remind you."
+    },
+    {
+      "trigger": "deferred",
+      "variant": 1,
+      "condition": "any",
+      "text": "Another day then. Just don't forget me."
+    },
+    {
+      "trigger": "deferred",
+      "variant": 2,
+      "condition": "any",
+      "text": "Moved it? Alright, I'll keep an eye on it."
+    },
+    {
+      "trigger": "skipped",
+      "variant": 1,
+      "condition": "any",
+      "text": "Skipped? Alright. I won't say anything."
+    },
+    {
+      "trigger": "skipped",
+      "variant": 2,
+      "condition": "any",
+      "text": "Okay, not today. Take care of yourself."
+    },
+    {
+      "trigger": "forgotten",
+      "variant": 1,
+      "condition": "any",
+      "text": "You forgot one yesterday, love. It happens."
+    },
+    {
+      "trigger": "forgotten",
+      "variant": 2,
+      "condition": "any",
+      "text": "Something slipped yesterday. Let's fix it together."
+    },
+    {
+      "trigger": "overdue_1d",
+      "variant": 1,
+      "condition": "any",
+      "text": "This one's a day late, dear."
+    },
+    {
+      "trigger": "overdue_1d",
+      "variant": 2,
+      "condition": "any",
+      "text": "Don't leave this one hanging, love."
+    },
+    {
+      "trigger": "overdue_3d",
+      "variant": 1,
+      "condition": "any",
+      "text": "Three days, sweetheart. Is something wrong?"
+    },
+    {
+      "trigger": "overdue_3d",
+      "variant": 2,
+      "condition": "any",
+      "text": "It's been a few days. Want to talk about it?"
+    },
+    {
+      "trigger": "overdue_7d",
+      "variant": 1,
+      "condition": "any",
+      "text": "A whole week, love. Maybe let it go?"
+    },
+    {
+      "trigger": "overdue_7d",
+      "variant": 2,
+      "condition": "any",
+      "text": "It's been a week. No shame in dropping it."
+    },
+    {
+      "trigger": "carried_over",
+      "variant": 1,
+      "condition": "any",
+      "text": "Still here after {days_carried} days. Today, maybe?"
+    },
+    {
+      "trigger": "carried_over",
+      "variant": 2,
+      "condition": "any",
+      "text": "This one keeps coming back, dear."
+    },
+    {
+      "trigger": "abandoned",
+      "variant": 1,
+      "condition": "any",
+      "text": "Let it go, love. You have enough on your plate."
+    },
+    {
+      "trigger": "abandoned",
+      "variant": 2,
+      "condition": "any",
+      "text": "Dropped. That's okay, really."
+    },
+    {
+      "trigger": "all_done",
+      "variant": 1,
+      "condition": "any",
+      "text": "Everything done! Now go rest."
+    },
+    {
+      "trigger": "all_done",
+      "variant": 2,
+      "condition": "any",
+      "text": "All finished! I'm so proud of you."
+    },
+    {
+      "trigger": "half_by_noon",
+      "variant": 1,
+      "condition": "any",
+      "text": "Half done by noon! Have a snack."
+    },
+    {
+      "trigger": "half_by_noon",
+      "variant": 2,
+      "condition": "any",
+      "text": "Such a good morning, dear."
+    },
+    {
+      "trigger": "nothing_by_15",
+      "variant": 1,
+      "condition": "any",
+      "text": "It's three already, love. Just one small thing?"
+    },
+    {
+      "trigger": "nothing_by_15",
+      "variant": 2,
+      "condition": "any",
+      "text": "Rough day? Start with something easy."
+    },
+    {
+      "trigger": "over_capacity",
+      "variant": 1,
+      "condition": "any",
+      "text": "That's too much for one day, sweetheart."
+    },
+    {
+      "trigger": "over_capacity",
+      "variant": 2,
+      "condition": "any",
+      "text": "You're taking on too much. Move something."
+    }
+  ]
+}

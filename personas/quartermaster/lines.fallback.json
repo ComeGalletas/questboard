@@ -1,0 +1,268 @@
+{
+  "lines": [
+    {
+      "trigger": "assigned",
+      "variant": 1,
+      "condition": "any",
+      "text": "New requisition logged."
+    },
+    {
+      "trigger": "assigned",
+      "variant": 2,
+      "condition": "any",
+      "text": "Supply order on the board. Handle it."
+    },
+    {
+      "trigger": "reminder_am",
+      "variant": 1,
+      "condition": "any",
+      "text": "Morning inventory. Obligations are due."
+    },
+    {
+      "trigger": "reminder_am",
+      "variant": 2,
+      "condition": "any",
+      "text": "Stores open. First order of business waiting."
+    },
+    {
+      "trigger": "reminder_mid",
+      "variant": 1,
+      "condition": "any",
+      "text": "Midday count. Anything outstanding?"
+    },
+    {
+      "trigger": "reminder_mid",
+      "variant": 2,
+      "condition": "any",
+      "text": "Status report requested."
+    },
+    {
+      "trigger": "reminder_pm",
+      "variant": 1,
+      "condition": "any",
+      "text": "End of watch in {time_left}. Close the ledger."
+    },
+    {
+      "trigger": "reminder_pm",
+      "variant": 2,
+      "condition": "any",
+      "text": "Evening. Settle accounts before lights out."
+    },
+    {
+      "trigger": "started",
+      "variant": 1,
+      "condition": "any",
+      "text": "Proceeding. Good."
+    },
+    {
+      "trigger": "started",
+      "variant": 2,
+      "condition": "any",
+      "text": "Order in progress."
+    },
+    {
+      "trigger": "completed_early",
+      "variant": 1,
+      "condition": "any",
+      "text": "Settled before due. Excellent logistics."
+    },
+    {
+      "trigger": "completed_early",
+      "variant": 2,
+      "condition": "any",
+      "text": "Ahead of the deadline. Noted in the ledger."
+    },
+    {
+      "trigger": "completed_on_time",
+      "variant": 1,
+      "condition": "any",
+      "text": "Settled. Ledger updated."
+    },
+    {
+      "trigger": "completed_on_time",
+      "variant": 2,
+      "condition": "any",
+      "text": "Done. On to the next item."
+    },
+    {
+      "trigger": "completed_late",
+      "variant": 1,
+      "condition": "any",
+      "text": "Settled late. Watch for fees next time."
+    },
+    {
+      "trigger": "completed_late",
+      "variant": 2,
+      "condition": "any",
+      "text": "Closed, past due. Plan earlier."
+    },
+    {
+      "trigger": "partial",
+      "variant": 1,
+      "condition": "any",
+      "text": "Partially fulfilled. Remainder outstanding."
+    },
+    {
+      "trigger": "partial",
+      "variant": 2,
+      "condition": "any",
+      "text": "Half-shipped. Complete it soon."
+    },
+    {
+      "trigger": "snoozed",
+      "variant": 1,
+      "condition": "any",
+      "text": "Hold noted. Not for long."
+    },
+    {
+      "trigger": "snoozed",
+      "variant": 2,
+      "condition": "any",
+      "text": "On hold. The deadline doesn't wait."
+    },
+    {
+      "trigger": "deferred",
+      "variant": 1,
+      "condition": "any",
+      "text": "Rescheduled. Verify it's before the due date."
+    },
+    {
+      "trigger": "deferred",
+      "variant": 2,
+      "condition": "any",
+      "text": "Moved. Mind the cutoff."
+    },
+    {
+      "trigger": "skipped",
+      "variant": 1,
+      "condition": "any",
+      "text": "Skipped. Recorded."
+    },
+    {
+      "trigger": "skipped",
+      "variant": 2,
+      "condition": "any",
+      "text": "Item passed over. Consequences may follow."
+    },
+    {
+      "trigger": "forgotten",
+      "variant": 1,
+      "condition": "any",
+      "text": "Missed an item yesterday. Recovering."
+    },
+    {
+      "trigger": "forgotten",
+      "variant": 2,
+      "condition": "any",
+      "text": "Oversight in yesterday's log."
+    },
+    {
+      "trigger": "overdue_1d",
+      "variant": 1,
+      "condition": "any",
+      "text": "One day past due."
+    },
+    {
+      "trigger": "overdue_1d",
+      "variant": 2,
+      "condition": "any",
+      "text": "Overdue. Address it today."
+    },
+    {
+      "trigger": "overdue_3d",
+      "variant": 1,
+      "condition": "any",
+      "text": "Three days overdue. This costs."
+    },
+    {
+      "trigger": "overdue_3d",
+      "variant": 2,
+      "condition": "any",
+      "text": "Past due, three days. Escalating."
+    },
+    {
+      "trigger": "overdue_7d",
+      "variant": 1,
+      "condition": "any",
+      "text": "A week overdue. Resolve or strike it."
+    },
+    {
+      "trigger": "overdue_7d",
+      "variant": 2,
+      "condition": "any",
+      "text": "Seven days past due. Unacceptable."
+    },
+    {
+      "trigger": "carried_over",
+      "variant": 1,
+      "condition": "any",
+      "text": "Carried forward, day {days_carried}."
+    },
+    {
+      "trigger": "carried_over",
+      "variant": 2,
+      "condition": "any",
+      "text": "Still on the manifest. Clear it."
+    },
+    {
+      "trigger": "abandoned",
+      "variant": 1,
+      "condition": "any",
+      "text": "Struck from the manifest."
+    },
+    {
+      "trigger": "abandoned",
+      "variant": 2,
+      "condition": "any",
+      "text": "Written off. Moving on."
+    },
+    {
+      "trigger": "all_done",
+      "variant": 1,
+      "condition": "any",
+      "text": "All accounts settled. Clean ledger."
+    },
+    {
+      "trigger": "all_done",
+      "variant": 2,
+      "condition": "any",
+      "text": "Manifest cleared. Good work."
+    },
+    {
+      "trigger": "half_by_noon",
+      "variant": 1,
+      "condition": "any",
+      "text": "Half the manifest cleared by noon."
+    },
+    {
+      "trigger": "half_by_noon",
+      "variant": 2,
+      "condition": "any",
+      "text": "Efficient morning. Carry on."
+    },
+    {
+      "trigger": "nothing_by_15",
+      "variant": 1,
+      "condition": "any",
+      "text": "Fifteen hundred hours. Nothing settled."
+    },
+    {
+      "trigger": "nothing_by_15",
+      "variant": 2,
+      "condition": "any",
+      "text": "Afternoon and the ledger's untouched."
+    },
+    {
+      "trigger": "over_capacity",
+      "variant": 1,
+      "condition": "any",
+      "text": "Overloaded. Reallocate."
+    },
+    {
+      "trigger": "over_capacity",
+      "variant": 2,
+      "condition": "any",
+      "text": "More orders than hands today. Cut one."
+    }
+  ]
+}

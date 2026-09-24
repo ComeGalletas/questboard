@@ -1,0 +1,7 @@
+name: Teacher
+slug: teacher
+accent: "#4a8fd6"
+intensity: 1
+quiet_hours: null
+owns: [learning, jobs]
+priority: 50

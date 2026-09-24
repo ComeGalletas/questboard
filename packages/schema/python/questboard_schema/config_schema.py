@@ -77,14 +77,6 @@ class Goal(BaseModel):
     persona: common_schema.PersonaSlug | None = None
 
 
-class QuietHours(BaseModel):
-    model_config = ConfigDict(
-        extra="forbid",
-    )
-    start: common_schema.LocalTime
-    end: common_schema.LocalTime
-
-
 class Config(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -94,7 +86,7 @@ class Config(BaseModel):
     )
     goals: list[Goal]
     capacity: Capacity
-    quiet_hours: QuietHours
+    quiet_hours: common_schema.QuietHours
     xp_weights: dict[str, XpWeights] = Field(
         ..., description="Multiplier per category."
     )

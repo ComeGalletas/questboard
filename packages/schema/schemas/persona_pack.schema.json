@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_pack.schema.json",
+  "title": "PersonaPack",
+  "description": "personas/<slug>/persona.yaml. Custom packs cannot change schema, escalation caps or quiet-hour rules (invariant 6).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "slug", "accent", "intensity", "owns", "priority"],
+  "properties": {
+    "name": { "type": "string", "minLength": 1, "maxLength": 40 },
+    "slug": { "$ref": "common.schema.json#/$defs/PersonaSlug" },
+    "accent": { "type": "string", "pattern": "^#[0-9a-f]{6}$" },
+    "intensity": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3,
+      "description": "Escalation style, 0 = gentle, 3 = drill sergeant. Capped by code."
+    },
+    "quiet_hours": {
+      "anyOf": [{ "$ref": "common.schema.json#/$defs/QuietHours" }, { "type": "null" }],
+      "description": "Extra quiet hours for this persona; config quiet hours always apply too."
+    },
+    "owns": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "common.schema.json#/$defs/Category" },
+      "description": "Categories this persona hands out by default."
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Tie-break when several personas own a category; higher wins."
+    }
+  }
+}

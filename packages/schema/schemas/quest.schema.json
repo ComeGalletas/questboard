@@ -51,6 +51,18 @@
       "description": "Board day (daily), week start (weekly) or month start (monthly)."
     },
     "deadline": { "type": ["string", "null"], "format": "date-time" },
+    "started_at": { "type": ["string", "null"], "format": "date-time" },
+    "completed_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Set when status becomes done or partial."
+    },
+    "snoozed_until": { "type": ["string", "null"], "format": "date-time" },
+    "xp_awarded": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "XP actually earned (after lateness / partial modifiers). Computed in code."
+    },
     "hard_deadline": {
       "type": "boolean",
       "description": "Hard-deadline obligations always carry over, ignoring carry caps."

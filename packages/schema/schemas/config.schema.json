@@ -33,7 +33,7 @@
         "focus_factor": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
       }
     },
-    "quiet_hours": { "$ref": "#/$defs/QuietHours" },
+    "quiet_hours": { "$ref": "common.schema.json#/$defs/QuietHours" },
     "xp_weights": {
       "type": "object",
       "additionalProperties": { "type": "number", "minimum": 0 },
@@ -108,15 +108,6 @@
         "persona": {
           "anyOf": [{ "$ref": "common.schema.json#/$defs/PersonaSlug" }, { "type": "null" }]
         }
-      }
-    },
-    "QuietHours": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["start", "end"],
-      "properties": {
-        "start": { "$ref": "common.schema.json#/$defs/LocalTime" },
-        "end": { "$ref": "common.schema.json#/$defs/LocalTime" }
       }
     }
   }

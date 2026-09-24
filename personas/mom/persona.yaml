@@ -1,0 +1,7 @@
+name: Mom
+slug: mom
+accent: "#e6b84a"
+intensity: 1
+quiet_hours: null
+owns: [personal, delivery, travel]
+priority: 40

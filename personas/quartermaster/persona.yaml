@@ -1,0 +1,7 @@
+name: Quartermaster
+slug: quartermaster
+accent: "#7fa08a"
+intensity: 2
+quiet_hours: null
+owns: [utilities, government, subscription]
+priority: 60

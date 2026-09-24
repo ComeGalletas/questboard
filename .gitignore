@@ -31,3 +31,7 @@ Thumbs.db
 .vscode/
 .idea/
 next-env.d.ts
+
+# Generated from /personas by apps/web/scripts/build-personas.mjs
+apps/web/src/generated/
+apps/web/public/personas/
