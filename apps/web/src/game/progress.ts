@@ -60,7 +60,11 @@ export function streak(quests: Quest[], now: Date): { days: number; atRisk: bool
  * Completion rate over the last `windowDays` days of scheduled daily quests that are settled
  * (finished, or closed undone). Partial counts half.
  */
-export function completionRate(quests: Quest[], now: Date, windowDays = 7): number | null {
+export function completionRate(
+  quests: Quest[],
+  now: Date,
+  windowDays = 7,
+): { rate: number | null; settled: number } {
   const from = addDays(isoDate(now), -(windowDays - 1));
   let settled = 0;
   let score = 0;
@@ -71,7 +75,7 @@ export function completionRate(quests: Quest[], now: Date, windowDays = 7): numb
     else if (!CLOSED_UNDONE.has(q.status)) continue;
     settled++;
   }
-  return settled === 0 ? null : score / settled;
+  return { rate: settled === 0 ? null : score / settled, settled };
 }
 
 /** Mood picks the dialogue variant bucket. Too little data reads as neutral. */

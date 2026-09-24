@@ -40,11 +40,11 @@ Tooling not named in the docs (confirmed 2026-09-24):
 Done when: log in on PC and phone and see an empty board with a "Runner offline" pill.
 
 ## Phase 1 — Manual quests and the board (week 2)
-- [ ] Quest CRUD + complete / partial / snooze / defer / skip with actual-time logging. (Action rules + DB columns done; UI next.)
-- [ ] Capacity bar (manual free hours x focus factor vs planned effort). (Calculation done; bar UI next.)
+- [x] Quest create + complete / partial / snooze / defer / skip with actual-time logging. (Edit/delete of a quest's fields: later, when needed.)
+- [x] Capacity bar (manual free hours x focus factor vs planned effort).
 - [x] Progress: XP, level, streaks, stats, all computed in code (P2). (`apps/web/src/game/`; UI lands with the board PR.)
-- [ ] Persona panel with mood from completion rate; `lines.fallback.json`. (Mood + line selection + fallback lines done; panel UI next.)
-- [ ] Pixel UI kit: panels, bars, typewriter dialogue box, sprite component, palette tokens.
+- [x] Persona panel with mood from completion rate; `lines.fallback.json`.
+- [x] Pixel UI kit: panels, bars, typewriter dialogue box, sprite component, palette tokens.
 - [x] Built-in packs (coach, teacher, mom, quartermaster) with placeholder sprites.
 
 ## Phase 2 — Runner, providers, daily cache (week 3)
@@ -94,6 +94,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 ## Open questions (decide when reached)
 - Where proposed QuestDiffs wait for accept/reject (no table for them yet; needed in Phase 2).
 - `push_subscriptions` table for Web Push (lands with the PWA item).
+- `progress` table: game stats are computed from the quest log in the app; decide whether the runner/weekly jobs need the cached daily rows before writing them.
 - `goals` table vs `config.goals`: pick one source of truth before the setup assistant.
 1. Gmail restricted-scope verification vs. "testing" mode with own account.
 2. Mobile re-hydration of pseudonyms (default: no).

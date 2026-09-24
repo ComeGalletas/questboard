@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/hooks";
 import { supabase } from "@/lib/supabase";
+import { setDemo } from "@/data/demo-flag";
 
 // Email + password rather than a magic link: on iOS a link opens Safari, not the installed PWA.
 export default function LoginPage() {
@@ -18,6 +19,17 @@ export default function LoginPage() {
     if (session) router.replace("/today");
   }, [session, router]);
 
+  function tryDemo() {
+    setDemo(true);
+    router.replace("/today");
+  }
+
+  const demoButton = (
+    <button type="button" className="link" onClick={tryDemo}>
+      Try the demo (local sample data)
+    </button>
+  );
+
   if (!supabase) {
     return (
       <main className="form panel">
@@ -28,6 +40,7 @@ export default function LoginPage() {
           Set <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>{" "}
           (see <code>apps/web/.env.example</code>) and rebuild.
         </p>
+        {demoButton}
       </main>
     );
   }
@@ -67,6 +80,7 @@ export default function LoginPage() {
         {busy ? "Signing in…" : "Sign in"}
       </button>
       {error && <p className="error">{error}</p>}
+      {demoButton}
     </form>
   );
 }
