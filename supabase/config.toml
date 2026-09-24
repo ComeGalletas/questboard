@@ -3,11 +3,10 @@
 project_id = "questboard"
 
 [db]
-major_version = 15
+major_version = 17
 
 [auth]
-# Single user: create the account once from the dashboard, then keep sign-ups off.
-enable_signup = false
-
-[auth.email]
+# Single user: create the account once from the dashboard (or the admin API), then keep
+# sign-ups off. The auth.users trigger in the migrations is the database-side backstop.
+# Do not also set [auth.email] enable_signup = false: that disables email *logins* too.
 enable_signup = false
