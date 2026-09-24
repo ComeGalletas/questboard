@@ -6,6 +6,7 @@ from __future__ import annotations
 from questboard_schema.common_schema import JobName
 
 from runner.engine.daily import daily_am, daily_pm
+from runner.engine.digest import persona_digest
 from runner.engine.period import monthly, weekly
 from runner.scheduler.core import JobContext, JobHandler, JobResult
 
@@ -21,4 +22,5 @@ HANDLERS: dict[JobName, JobHandler] = {
     JobName.daily_pm: daily_pm,
     JobName.weekly: weekly,
     JobName.monthly: monthly,
+    JobName.persona_digest: persona_digest,
 }

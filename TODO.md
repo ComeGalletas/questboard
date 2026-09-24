@@ -83,8 +83,8 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [ ] LLM fallback for unparsed utterances.
 
 ## Phase 6 — Custom personas, assets, 3D (week 8)
-- [ ] Pack loader with validation; missing frames -> idle.
-- [ ] `persona_digest` weekly job with guardrails.
+- [x] Pack loader with validation (manifest, fallback lines, sprite frames, size limits); missing frames -> idle; `python -m runner packs`.
+- [x] `persona_digest` weekly job with guardrails (voice-only schema, rule-talk + PII check, re-digests only changed `context/`; cached in the runner data dir).
 - [ ] Setup assistant drafts a pack from a description.
 - [ ] Optional GLB renderer (three.js) with budget check and sprite fallback.
 - [x] Effort-calibration table fed back into prompts (+ add-quest hint).
@@ -103,6 +103,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - ~~Freshness cap meaning~~ → confirmed: LLM jobs wait for ingest data < 2 h old (only with an integration on); manual runs skip it.
 - ~~Where proposed QuestDiffs wait~~ → decided: `quest_proposals` table (one row per op, pending/accepted/rejected).
 - ~~`push_subscriptions`~~ → added with notifications v1.
+- Custom packs live in `personas/` next to the built-ins; the web bundles them at build time. A per-machine packs folder (outside the repo) would also need the assets uploaded to Supabase storage for the phone. Decide when the first custom pack exists.
 - `progress` table: game stats are computed from the quest log in the app; decide whether the runner/weekly jobs need the cached daily rows before writing them.
 - `goals` table vs `config.goals`: pick one source of truth before the setup assistant.
 1. Gmail restricted-scope verification vs. "testing" mode with own account.

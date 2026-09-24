@@ -41,6 +41,15 @@ uv run python -m runner login   # Supabase URL + anon key, then email/password
 uv run python -m runner run     # trigger loop; `tick` or `trigger daily_am` for one pass
 ```
 
+## Persona packs
+
+A pack is a folder in `personas/` (see CLAUDE.md "Persona packs" for the layout). Check one
+before use with `(cd runner && uv run python -m runner packs)`: errors reject the pack (missing
+sprite, bad manifest, fallback lines missing a trigger); warnings mean it loads degraded (a sheet
+with fewer than five frames shows idle for the missing states). Lore in a pack's `context/`
+(`.md` / `.txt`) is condensed each Sunday by the `persona_digest` job into a short style guide,
+cached on the runner machine, and added to planning prompts. It shapes the voice only.
+
 ## Checks
 
 ```sh
