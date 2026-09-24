@@ -48,7 +48,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [x] Built-in packs (coach, teacher, mom, quartermaster) with placeholder sprites.
 
 ## Phase 2 — Runner, providers, daily cache (week 3)
-- [ ] Runner skeleton: trigger loop, guards, lock file, heartbeat, `llm_runs` idempotency + backoff + catch-up.
+- [x] Runner skeleton: trigger loop, guards, lock file, heartbeat, `llm_runs` idempotency + backoff + catch-up. (Tested against an in-memory DB; Supabase connection next.)
 - [ ] Providers: `ollama.py`, `claude_api.py`; output validation, one retry, fallthrough.
 - [ ] Engine: prompt assembly, `daily_am` (QuestDiffs + capacity fit + dialogue bundles), `daily_pm` (accounting + carry-over rules).
 - [ ] `persona_lines` selection in the app.
@@ -92,6 +92,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [ ] Encrypted backup/export of config, packs and vault.
 
 ## Open questions (decide when reached)
+- "Freshness cap 2 h unless manual" is read as: LLM jobs wait until ingest data is < 2 h old (only when an integration is on); manual runs skip it. Confirm.
 - Where proposed QuestDiffs wait for accept/reject (no table for them yet; needed in Phase 2).
 - `push_subscriptions` table for Web Push (lands with the PWA item).
 - `progress` table: game stats are computed from the quest log in the app; decide whether the runner/weekly jobs need the cached daily rows before writing them.

@@ -11,6 +11,11 @@
     "heartbeat_at": { "type": ["string", "null"], "format": "date-time" },
     "last_am_success": { "type": ["string", "null"], "format": "date-time" },
     "last_pm_success": { "type": ["string", "null"], "format": "date-time" },
+    "last_ingest_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Last successful ingest; LLM jobs want inputs fresher than 2 h."
+    },
     "lock_holder": { "type": ["string", "null"] },
     "lock_acquired_at": { "type": ["string", "null"], "format": "date-time" },
     "provider_health": {

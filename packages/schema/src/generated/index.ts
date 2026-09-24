@@ -539,6 +539,10 @@ export interface RunnerState {
   heartbeat_at: string | null;
   last_am_success: string | null;
   last_pm_success: string | null;
+  /**
+   * Last successful ingest; LLM jobs want inputs fresher than 2 h.
+   */
+  last_ingest_at?: string | null;
   lock_holder?: string | null;
   lock_acquired_at?: string | null;
   /**

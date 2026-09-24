@@ -7,6 +7,7 @@ dependencies = [
   "pydantic>=2.8,<3",
   "pyyaml>=6.0.3",
   "questboard-schema",
+  "tzdata>=2026.4",
 ]
 
 [dependency-groups]
