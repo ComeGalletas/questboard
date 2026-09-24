@@ -1,15 +1,10 @@
 // Which scheduled_for dates belong on each board. Local calendar dates (YYYY-MM-DD).
 
+import { isoDate } from "../game/dates.ts";
+
 export type Board = "today" | "week" | "month";
 
 export const BOARD_CADENCE = { today: "daily", week: "weekly", month: "monthly" } as const;
-
-export function isoDate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
 
 /** Inclusive date range for a board; weeks start on Monday. */
 export function boardRange(board: Board, now: Date): { from: string; to: string } {

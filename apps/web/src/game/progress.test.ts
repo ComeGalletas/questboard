@@ -50,8 +50,8 @@ test("completion rate and mood", () => {
     quest({ status: "open", scheduled_for: "2026-09-25" }), // not settled yet
     done("2026-09-10"), // outside the window
   ];
-  assert.equal(completionRate(qs, now), 2.5 / 4);
-  assert.equal(completionRate([], now), null);
+  assert.deepEqual(completionRate(qs, now), { rate: 2.5 / 4, settled: 4 });
+  assert.deepEqual(completionRate([], now), { rate: null, settled: 0 });
   assert.equal(mood(0.8), "pleased");
   assert.equal(mood(0.5), "neutral");
   assert.equal(mood(0.2), "concerned");
