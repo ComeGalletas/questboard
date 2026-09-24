@@ -32,6 +32,14 @@ class Token(RootModel[str]):
     )
 
 
+class AmountToken(RootModel[str]):
+    root: str = Field(
+        ...,
+        description="Pseudonym for a money amount. Value and currency stay in the local vault.",
+        pattern="^AMOUNT_[0-9]+$",
+    )
+
+
 class Cadence(StrEnum):
     daily = "daily"
     weekly = "weekly"

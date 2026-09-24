@@ -27,7 +27,10 @@ export interface ExtractedRecord {
    * Pseudonym token issued by the local vault, e.g. PERSON_7, ORG_3, AMOUNT_2.
    */
   entity_token: string;
-  amount?: Money | null;
+  /**
+   * AMOUNT_n token. The value and currency live only in the local vault; the PC UI re-hydrates it.
+   */
+  amount?: string | null;
   due_at?: string | null;
   event_at?: string | null;
   /**
@@ -51,8 +54,4 @@ export interface ExtractedRecord {
     | [string, string, string, string, string, string, string, string, string, string];
   reference_token?: string | null;
   confidence: number;
-}
-export interface Money {
-  value: number;
-  currency: string;
 }

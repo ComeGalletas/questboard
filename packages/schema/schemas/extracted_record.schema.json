@@ -15,7 +15,8 @@
     },
     "entity_token": { "$ref": "common.schema.json#/$defs/Token" },
     "amount": {
-      "anyOf": [{ "$ref": "#/$defs/Money" }, { "type": "null" }]
+      "anyOf": [{ "$ref": "common.schema.json#/$defs/AmountToken" }, { "type": "null" }],
+      "description": "AMOUNT_n token. The value and currency live only in the local vault; the PC UI re-hydrates it."
     },
     "due_at": { "type": ["string", "null"], "format": "date-time" },
     "event_at": { "type": ["string", "null"], "format": "date-time" },
@@ -33,16 +34,5 @@
       "anyOf": [{ "$ref": "common.schema.json#/$defs/Token" }, { "type": "null" }]
     },
     "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
-  },
-  "$defs": {
-    "Money": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["value", "currency"],
-      "properties": {
-        "value": { "type": "number", "minimum": 0 },
-        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
-      }
-    }
   }
 }

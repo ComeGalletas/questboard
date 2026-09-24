@@ -14,6 +14,11 @@
       "pattern": "^[A-Z]+_[0-9]+$",
       "description": "Pseudonym token issued by the local vault, e.g. PERSON_7, ORG_3, AMOUNT_2."
     },
+    "AmountToken": {
+      "type": "string",
+      "pattern": "^AMOUNT_[0-9]+$",
+      "description": "Pseudonym for a money amount. Value and currency stay in the local vault."
+    },
     "Cadence": {
       "type": "string",
       "enum": ["daily", "weekly", "monthly"]
