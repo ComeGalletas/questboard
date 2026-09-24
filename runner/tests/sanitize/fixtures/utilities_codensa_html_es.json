@@ -1,0 +1,25 @@
+{
+ "name": "utilities_codensa_html_es",
+ "description": "HTML bill with a hidden tracking href and entities",
+ "html": true,
+ "body": "<html><head><style>.x{color:red}</style></head><body><p>Hola <b>Laura Martínez</b>,</p><p>Tu factura de energía por <strong>COP 98.450</strong> vence el <span>15&nbsp;de&nbsp;octubre</span>.</p><p>Número de cliente: 7788990011</p><a href='https://track.example.com/u?email=laura.martinez%40hotmail.com'>Ver factura</a><p>Línea de atención: (601) 601 6060</p></body></html>",
+ "secrets": [
+  "Laura",
+  "Martínez",
+  "98.450",
+  "7788990011",
+  "laura.martinez",
+  "601 6060"
+ ],
+ "keep": [
+  "factura de energía",
+  "15 de octubre",
+  "Ver factura"
+ ],
+ "kinds": [
+  "PERSON",
+  "AMOUNT",
+  "REF"
+ ],
+ "drop": null
+}

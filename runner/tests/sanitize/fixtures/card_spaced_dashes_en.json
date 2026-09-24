@@ -1,0 +1,21 @@
+{
+ "name": "card_spaced_dashes_en",
+ "description": "Cards with spaces, dashes, a non-breaking hyphen and zero-width spaces",
+ "html": false,
+ "body": "Your card 5555-5555-5555-4444 was charged $45.99. Backup card: 4111‑1111‑1111‑1111. Old card 3782​822463​10005 expired.",
+ "secrets": [
+  "5555-5555-5555-4444",
+  "4111",
+  "378282246310005",
+  "45.99"
+ ],
+ "keep": [
+  "was charged",
+  "expired"
+ ],
+ "kinds": [
+  "CARD",
+  "AMOUNT"
+ ],
+ "drop": null
+}

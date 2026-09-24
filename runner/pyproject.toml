@@ -5,8 +5,11 @@ description = "Questboard runner: scheduler, providers, ingest, sanitizer, extra
 requires-python = ">=3.12"
 dependencies = [
   "anthropic>=1.8.0",
+  "en-core-web-md",
+  "es-core-news-md",
   "httpx>=0.28.1",
   "keyring>=25.7.0",
+  "presidio-analyzer>=2.2",
   "psutil>=7.2.2",
   "pydantic>=2.8,<3",
   "pywebpush>=2.5.0",
@@ -20,6 +23,8 @@ dev = ["pytest>=8", "ruff>=0.6"]
 
 [tool.uv.sources]
 questboard-schema = { path = "../packages/schema/python", editable = true }
+es-core-news-md = { url = "https://github.com/explosion/spacy-models/releases/download/es_core_news_md-3.8.0/es_core_news_md-3.8.0-py3-none-any.whl" }
+en-core-web-md = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.8.0/en_core_web_md-3.8.0-py3-none-any.whl" }
 
 [build-system]
 requires = ["hatchling"]

@@ -1,0 +1,19 @@
+{
+ "name": "obfuscated_email_es",
+ "description": "Obfuscated email and phone written with dots",
+ "html": false,
+ "body": "Escríbeme a camila.rojas [at] gmail [dot] com o al 320.444.5566 para coordinar la entrega del lunes.",
+ "secrets": [
+  "camila.rojas",
+  "320.444.5566",
+  "3204445566"
+ ],
+ "keep": [
+  "entrega del lunes"
+ ],
+ "kinds": [
+  "EMAIL",
+  "PHONE"
+ ],
+ "drop": null
+}

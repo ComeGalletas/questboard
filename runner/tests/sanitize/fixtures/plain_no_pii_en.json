@@ -1,0 +1,13 @@
+{
+ "name": "plain_no_pii_en",
+ "description": "Nothing personal: text passes through (with no false drops)",
+ "html": false,
+ "body": "Reminder: the community cleanup is on Saturday at 9 am. Bring gloves and water.",
+ "secrets": [],
+ "keep": [
+  "community cleanup is on Saturday at 9 am",
+  "Bring gloves and water"
+ ],
+ "kinds": [],
+ "drop": null
+}

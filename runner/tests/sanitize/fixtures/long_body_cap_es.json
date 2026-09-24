@@ -1,0 +1,16 @@
+{
+ "name": "long_body_cap_es",
+ "description": "PII past the analysis window and a number at the cap boundary never leak",
+ "html": false,
+ "body": "Recordatorio de pago del servicio de internet. Recordatorio de pago del servicio de internet. Recordatorio de pago del servicio de internet. Recordatorio de pago del servicio de internet. Recordatorio de pago del servicio de internet. Recordatorio de pago del servicio de internet. Recordatorio de pago del servicio de internet. Recordatorio de pago del servicio de internet. Recordatorio de pago del servicio de internet. Recordatorio de pago del servicio de internet. Recordatorio de pago del servicio de internet. Recordatorio de pago del servicio de internet. Recordatorio de pago del servicio de internet. Recordatorio de pago del servicio de internet. Recordatorio de pago del servicio de internet. Recordatorio de pago del servicio de internet. Recordatorio de pago del servicio de internet. Recordatorio de pago del servicio de internet. Su cédula 1.098.765.432 y su celular 301 222 3333 quedan registrados.",
+ "secrets": [
+  "1.098.765.432",
+  "1098765432",
+  "301 222 3333"
+ ],
+ "keep": [
+  "Recordatorio de pago"
+ ],
+ "kinds": [],
+ "drop": null
+}

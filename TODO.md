@@ -69,12 +69,12 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 
 ## Phase 4 — Email pipeline (weeks 5–6)
 - [ ] Gmail adapter (read-only), allow/deny lists, `senders` classification.
-- [ ] Sanitizer: Presidio + spaCy es/en, CO recognizers, stable salted tokens, reply/signature stripping, 800-char cap, `sanitization_log`.
+- [x] Sanitizer: Presidio + spaCy es/en NER, custom recognizers (cédula, NIT with check digit, CO phones, Luhn cards, IBAN mod-97, amounts, CO/US addresses, account/reference numbers, OTP codes and passwords), residual pass for leftover numbers/codes, stable salted tokens, reply/signature stripping, 1200-char window + 800-char cap, `log_rows` for `sanitization_log` (written by the Gmail pipeline). Tokens come from a `Vault` protocol; `MemoryVault` for now.
 - [ ] Vault: SQLCipher, key in OS keychain via Tauri; PC-only re-hydration.
 - [ ] Category profiles + extractors in order: ics, utilities, government, delivery, subscription, health, jobs, learning, travel, personal.
 - [ ] Quest templates per category; auto-complete by `reference_token`.
 - [ ] LLM-proposed bucket; PII output validator.
-- [ ] Adversarial email fixture suite as CI release gate.
+- [x] Adversarial email fixture suite as CI release gate: `runner/tests/sanitize/fixtures/` (23 es/en cases), own CI job "Sanitizer release gate". Mark it required in branch protection.
 
 ## Phase 5 — Voice (week 7)
 - [ ] PC capture with whisper.cpp; mobile Web Speech with clip fallback (P1).

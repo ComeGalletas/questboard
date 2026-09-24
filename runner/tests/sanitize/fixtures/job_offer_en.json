@@ -1,0 +1,26 @@
+{
+ "name": "job_offer_en",
+ "description": "Recruiter email with name, phone, email and salary",
+ "html": false,
+ "body": "Hi Daniel Ortiz,\nThanks for applying to the Data Engineer role at Globant. The offer is USD 4,800 per month. Please confirm by Oct 3 at recruiting.team@globant.com or call me at +57 300 765 4321.\nBest,\nMelissa Carter\nTalent Acquisition",
+ "secrets": [
+  "Daniel",
+  "Ortiz",
+  "4,800",
+  "recruiting.team@globant.com",
+  "300 765 4321",
+  "Melissa",
+  "Carter"
+ ],
+ "keep": [
+  "role at",
+  "Oct 3"
+ ],
+ "kinds": [
+  "PERSON",
+  "AMOUNT",
+  "EMAIL",
+  "PHONE"
+ ],
+ "drop": null
+}

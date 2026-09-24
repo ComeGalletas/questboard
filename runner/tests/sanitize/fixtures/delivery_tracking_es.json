@@ -1,0 +1,22 @@
+{
+ "name": "delivery_tracking_es",
+ "description": "Delivery: guide number, alphanumeric tracking and address",
+ "html": false,
+ "body": "Servientrega: tu envío con guía No. 2045678912 va en camino. Seguimiento internacional: LX123456789CO. Entrega en Transversal 23 # 97-45 Int 3, Bogotá, a nombre de Sofía Castaño.",
+ "secrets": [
+  "2045678912",
+  "LX123456789CO",
+  "23 # 97-45",
+  "Sofía",
+  "Castaño"
+ ],
+ "keep": [
+  "va en camino"
+ ],
+ "kinds": [
+  "REF",
+  "ADDRESS",
+  "PERSON"
+ ],
+ "drop": null
+}

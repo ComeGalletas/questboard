@@ -1,0 +1,12 @@
+{
+ "name": "otp_en",
+ "description": "One-time code in English",
+ "html": false,
+ "body": "Your Google verification code is G-731904. Don't share it.",
+ "secrets": [
+  "731904"
+ ],
+ "keep": [],
+ "kinds": [],
+ "drop": "credentials"
+}

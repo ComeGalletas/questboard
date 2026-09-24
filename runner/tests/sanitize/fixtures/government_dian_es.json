@@ -1,0 +1,24 @@
+{
+ "name": "government_dian_es",
+ "description": "Tax authority notice with NIT + check digit and radicado",
+ "html": false,
+ "body": "Apreciado contribuyente CARLOS ANDRÉS RUIZ,\nLa DIAN le informa que la declaración de renta del NIT 900.373.913-4 tiene vencimiento el 2026-10-14.\nRadicado No. 20260912345678\nConsulte con su documento CC 79845123.\n",
+ "secrets": [
+  "CARLOS",
+  "RUIZ",
+  "900.373.913-4",
+  "900373913",
+  "20260912345678",
+  "79845123"
+ ],
+ "keep": [
+  "declaración de renta",
+  "2026-10-14"
+ ],
+ "kinds": [
+  "TAXID",
+  "REF",
+  "IDNUM"
+ ],
+ "drop": null
+}
