@@ -25,6 +25,10 @@ class RunnerState(BaseModel):
     heartbeat_at: AwareDatetime | None
     last_am_success: AwareDatetime | None
     last_pm_success: AwareDatetime | None
+    last_ingest_at: AwareDatetime | None = Field(
+        None,
+        description="Last successful ingest; LLM jobs want inputs fresher than 2 h.",
+    )
     lock_holder: str | None = None
     lock_acquired_at: AwareDatetime | None = None
     provider_health: dict[common_schema.ProviderName, ProviderHealth] = Field(

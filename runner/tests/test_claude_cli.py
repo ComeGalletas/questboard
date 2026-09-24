@@ -181,3 +181,16 @@ def test_schema_sent_to_cli_is_strict_json_schema() -> None:
     schema = output_schema(QuestDiff)
     assert "discriminator" not in json.dumps(schema)
     assert schema["$defs"]["QuestOp"]["oneOf"]
+
+
+def test_semantic_check_failures_are_retried_with_the_problems() -> None:
+    run = FakeRun(fixture("quest_diff_structured.json"), fixture("quest_diff_structured.json"))
+    calls = []
+
+    def check(diff: QuestDiff) -> list[str]:
+        calls.append(diff)
+        return ["ops.1: quest_id is not an open quest"] if len(calls) == 1 else []
+
+    result = provider(run).generate(REQUEST, QuestDiff, check)
+    assert result.attempts == 2
+    assert "ops.1: quest_id is not an open quest" in run.calls[1]["input"]

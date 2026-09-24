@@ -51,6 +51,12 @@
           "items": { "$ref": "common.schema.json#/$defs/ProviderName" },
           "default": ["claude-cli", "ollama", "claude-api"]
         },
+        "models": {
+          "type": "object",
+          "description": "Model per provider, e.g. {\"claude-api\": \"claude-opus-5\", \"ollama\": \"qwen3:8b\"}. Unset uses the runner default.",
+          "propertyNames": { "$ref": "common.schema.json#/$defs/ProviderName" },
+          "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 100 }
+        },
         "per_job": {
           "type": "object",
           "description": "Per-job provider order override, keyed by job name.",

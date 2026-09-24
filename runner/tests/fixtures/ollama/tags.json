@@ -1,0 +1,11 @@
+{
+  "models": [
+    {
+      "name": "qwen3:8b",
+      "size": 5200000000
+    },
+    {
+      "name": "llama3.1:latest"
+    }
+  ]
+}
