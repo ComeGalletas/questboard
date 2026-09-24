@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "setup_turn.schema.json",
+  "title": "SetupTurn",
+  "description": "One setup-assistant reply. config_patch replaces whole top-level config keys; the user reviews and applies it (the assistant never writes config itself).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["reply", "config_patch", "done"],
+  "properties": {
+    "reply": { "type": "string", "minLength": 1, "maxLength": 1500 },
+    "config_patch": { "anyOf": [{ "$ref": "#/$defs/ConfigPatch" }, { "type": "null" }] },
+    "done": {
+      "type": "boolean",
+      "description": "True when the assistant thinks setup is complete."
+    }
+  },
+  "$defs": {
+    "ConfigPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Only user-level settings. LLM providers, integrations, features and notifications stay out of the assistant's reach.",
+      "properties": {
+        "timezone": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "goals": {
+          "type": "array",
+          "maxItems": 12,
+          "items": { "$ref": "config.schema.json#/$defs/Goal" }
+        },
+        "capacity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["weekday_hours", "weekend_hours", "focus_factor"],
+          "properties": {
+            "weekday_hours": { "type": "number", "minimum": 0, "maximum": 24 },
+            "weekend_hours": { "type": "number", "minimum": 0, "maximum": 24 },
+            "focus_factor": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+          }
+        },
+        "quiet_hours": { "$ref": "common.schema.json#/$defs/QuietHours" },
+        "persona_order": {
+          "type": "array",
+          "maxItems": 12,
+          "items": { "$ref": "common.schema.json#/$defs/PersonaSlug" }
+        }
+      }
+    }
+  }
+}

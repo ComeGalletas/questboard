@@ -6,7 +6,9 @@ import type {
   Quest,
   QuestProposal,
   RunnerState,
+  SetupRequest,
 } from "@questboard/schema";
+import type { LiveRequest } from "./store.ts";
 import type { QuestPatch } from "../game/actions.ts";
 import type { QuestChangesPatch } from "../game/proposals.ts";
 import type { NewQuest, Store } from "./store.ts";
@@ -92,6 +94,34 @@ export class SupabaseStore implements Store {
     if (error) throw new Error(error.message);
   }
 
+  async createLiveRequest(kind: "setup_assistant", payload: SetupRequest): Promise<string> {
+    const { data, error } = await this.db
+      .from("pending_live_requests")
+      .insert({ kind, payload, origin: "mobile" })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return (data as { id: string }).id;
+  }
+
+  async getLiveRequest(id: string): Promise<LiveRequest | null> {
+    const { data, error } = await this.db
+      .from("pending_live_requests")
+      .select("status,result,error")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data as LiveRequest | null) ?? null;
+  }
+
+  async saveConfig(config: Config): Promise<void> {
+    const { error } = await this.db
+      .from("config")
+      .update({ data: config })
+      .not("user_id", "is", null);
+    if (error) throw new Error(error.message);
+  }
+
   async savePushSubscription(sub: {
     endpoint: string;
     p256dh: string;
@@ -115,7 +145,13 @@ export class SupabaseStore implements Store {
 
   subscribe(onChange: () => void): () => void {
     const channel = this.db.channel("questboard");
-    for (const table of ["quests", "persona_lines", "runner_state", "quest_proposals"]) {
+    for (const table of [
+      "quests",
+      "persona_lines",
+      "runner_state",
+      "quest_proposals",
+      "pending_live_requests",
+    ]) {
       channel.on("postgres_changes", { event: "*", schema: "public", table }, onChange);
     }
     channel.subscribe();

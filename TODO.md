@@ -61,10 +61,10 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 
 ## Phase 3 — Calendar, setup assistant, weekly/monthly (week 4)
 - [ ] Google OAuth (read-only) + `gcal.py`.
-- [ ] Setup assistant (P1) with `save_config` structured output; config patched as diffs.
+- [x] Setup assistant (P1): chat on /setup -> pending_live_requests -> runner answers between ticks (5 s poll) with a reply + config patch (goals, capacity, quiet hours, timezone, persona order); the user reviews before/after and applies. Seeding first weekly/monthly quests: run the weekly/monthly job manually after setup.
 - [x] `weekly` / `monthly` jobs: carry-over in code, period plans as proposals with sub-quest breakdown (weekly -> daily, monthly -> weekly), budget = 40 % / 25 % of the period's free time.
 - [ ] Retro questions and milestone line pools (need new line triggers + a UI; later).
-- [ ] `pending_live_requests` + mobile "waiting for PC" state.
+- [x] `pending_live_requests` + "waiting for your PC's runner" state (shown when the runner is offline).
 - [ ] Companion overlay window (frameless, transparent, always-on-top, click-through outside sprite).
 
 ## Phase 4 — Email pipeline (weeks 5–6)

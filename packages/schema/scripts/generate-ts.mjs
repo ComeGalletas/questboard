@@ -22,6 +22,8 @@ const ts = await compile(bundle, "QuestboardSchemas", {
   bannerComment: banner,
   additionalProperties: false,
   unreachableDefinitions: true,
+  // Array length limits are enforced by JSON Schema / Pydantic, not by TS tuple types.
+  ignoreMinAndMaxItems: true,
   style: { singleQuote: false },
 });
 await rm(outDir, { recursive: true, force: true });

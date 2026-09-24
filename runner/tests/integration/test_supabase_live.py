@@ -84,7 +84,27 @@ def test_config_state_and_heartbeat(repo: SupabaseRepo) -> None:
     assert state is not None and state.heartbeat_at == stamp
 
 
-def test_daily_am_then_pm_through_rls(repo: SupabaseRepo) -> None:
+@pytest.fixture
+def clean_quests(repo: SupabaseRepo):
+    """Leftover test quests would count as carried-over quests on a later run's board."""
+
+    def wipe() -> None:
+        rest(repo, "DELETE", "quests", params={"title": "eq.Integration stretch"})
+        rest(repo, "DELETE", "quests", params={"source": "eq.llm", "title": "eq.Easy 3 km run"})
+        rest(
+            repo,
+            "PATCH",
+            "quest_proposals",
+            params={"status": "eq.pending"},
+            json={"status": "superseded"},
+        )
+
+    wipe()
+    yield
+    wipe()
+
+
+def test_daily_am_then_pm_through_rls(repo: SupabaseRepo, clean_quests) -> None:
     # A fresh day far from real data so reruns don't collide with earlier runs.
     day = datetime(2031, 1, 6 + uuid.uuid4().int % 20, 6, 0, tzinfo=BOGOTA)
     created = rest(
