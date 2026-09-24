@@ -32,8 +32,8 @@ Tooling not named in the docs (confirmed 2026-09-24):
 - [x] `packages/schema`: JSON Schemas for Quest, QuestDiff, PersonaLine, ExtractedRecord, Config, LLMRun; codegen to TS + Pydantic; CI check that generated code is fresh.
 - [x] Supabase migrations for the 15 core tables; single-user guard + owner-only RLS; realtime on `quests`, `persona_lines`, `runner_state`; tested on local Postgres in CI (`supabase/tests/run.sh`).
 - [ ] Create the hosted Supabase project, turn sign-ups off, apply migrations (needs your account).
-- [ ] Web app shell: auth, Today/Week/Month routes, status pill reading `runner_state`.
-- [ ] PWA manifest + iOS install; Web Push registration (no sends yet).
+- [x] Web app shell: auth, Today/Week/Month routes, status pill reading `runner_state`. (Static export for Vercel + Tauri; email/password sign-in so iOS stays in the PWA.)
+- [ ] PWA manifest + iOS install; Web Push registration (no sends yet). (Manifest + placeholder icons done; push registration waits on the `push_subscriptions` decision.)
 - [ ] CI: lint, type-check, schema codegen check, runner tests. (Schema freshness + tsc + runner ruff/pytest done; web lint lands with `apps/web`.)
 - [x] `runner/providers/base.py` + `claude_cli.py` with a fixture-driven test validating a QuestDiff response (first task #4 in PLAN.md).
 

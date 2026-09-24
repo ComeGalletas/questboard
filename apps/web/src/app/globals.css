@@ -1,0 +1,183 @@
+/* Palette tokens from CLAUDE.md "Visual rules". Full pixel UI kit lands in Phase 1. */
+:root {
+  --ground: #1b1a2e;
+  --panel: #2a2740;
+  --border: #5a5580;
+  --text: #ede9dc;
+  --muted: #a9a3c2;
+  --coach: #e0623a;
+  --teacher: #4a8fd6;
+  --mom: #e6b84a;
+  --quartermaster: #7fa08a;
+  --ok: #7fa08a;
+  --warn: #e0623a;
+  --px: 4px;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--ground);
+  color: var(--text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+img.sprite,
+canvas.sprite {
+  image-rendering: pixelated;
+}
+
+h1,
+h2,
+.pixel {
+  font-family: var(--font-pixel), monospace;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.panel {
+  background: var(--panel);
+  border: var(--px) solid var(--border);
+  box-shadow: 0 var(--px) 0 0 #000;
+  padding: calc(var(--px) * 4);
+}
+
+.shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+  padding-top: max(16px, env(safe-area-inset-top));
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.topbar h1 {
+  font-size: 14px;
+  margin: 0;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.tabs a {
+  font-family: var(--font-pixel), monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 8px 10px;
+  border: 2px solid transparent;
+}
+
+.tabs a[aria-current="page"] {
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--panel);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-pixel), monospace;
+  font-size: 9px;
+  padding: 6px 10px;
+  border: 2px solid var(--border);
+  background: var(--panel);
+  white-space: nowrap;
+}
+
+.pill::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: var(--dot, var(--muted));
+}
+
+.pill[data-kind="online"] {
+  --dot: var(--ok);
+}
+
+.pill[data-kind="offline"] {
+  --dot: var(--warn);
+}
+
+.board h2 {
+  font-size: 12px;
+  margin: 0 0 12px;
+}
+
+.quest-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.quest-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  border-left-width: 6px;
+  border-left-color: var(--accent, var(--border));
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 32px 8px;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+  max-width: 360px;
+  margin: 10vh auto 0;
+}
+
+.form input,
+.form button {
+  font: inherit;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  background: var(--ground);
+  color: var(--text);
+}
+
+.form button {
+  font-family: var(--font-pixel), monospace;
+  font-size: 11px;
+  background: var(--border);
+  cursor: pointer;
+}
+
+.form button:disabled {
+  opacity: 0.6;
+}
+
+.error {
+  color: var(--warn);
+}
