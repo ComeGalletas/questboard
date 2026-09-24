@@ -1,6 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Config, PersonaLine, Quest, RunnerState } from "@questboard/schema";
+import type {
+  Config,
+  FallbackLine,
+  PersonaLine,
+  Quest,
+  QuestProposal,
+  RunnerState,
+} from "@questboard/schema";
 import type { QuestPatch } from "../game/actions.ts";
+import type { QuestChangesPatch } from "../game/proposals.ts";
 import type { NewQuest, Store } from "./store.ts";
 
 /** How far back the log is loaded; enough for streaks, mood and XP totals for now. */
@@ -28,7 +36,7 @@ export class SupabaseStore implements Store {
     return data as Quest;
   }
 
-  async updateQuest(id: string, patch: QuestPatch): Promise<Quest> {
+  async updateQuest(id: string, patch: QuestPatch | QuestChangesPatch): Promise<Quest> {
     const { data, error } = await this.db
       .from("quests")
       .update(patch)
@@ -59,9 +67,43 @@ export class SupabaseStore implements Store {
     return (data as RunnerState | null) ?? null;
   }
 
+  async listPendingProposals(): Promise<QuestProposal[]> {
+    const { data, error } = await this.db
+      .from("quest_proposals")
+      .select("id,run_id,op,quest_id,payload,lines,status,decided_at,created_at")
+      .eq("status", "pending")
+      .order("created_at");
+    if (error) throw new Error(error.message);
+    return data as QuestProposal[];
+  }
+
+  async decideProposal(id: string, status: "accepted" | "rejected" | "superseded") {
+    const { error } = await this.db
+      .from("quest_proposals")
+      .update({ status, decided_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) throw new Error(error.message);
+  }
+
+  async insertLines(questId: string, persona: string, lines: FallbackLine[]) {
+    if (lines.length === 0) return;
+    const rows = lines.map((l) => ({ ...l, quest_id: questId, persona }));
+    const { error } = await this.db.from("persona_lines").insert(rows);
+    if (error) throw new Error(error.message);
+  }
+
+  async recordFeedback(row: {
+    quest_id: string | null;
+    action: "accepted" | "rejected";
+    diff_op: QuestProposal["payload"];
+  }) {
+    const { error } = await this.db.from("quest_feedback").insert(row);
+    if (error) throw new Error(error.message);
+  }
+
   subscribe(onChange: () => void): () => void {
     const channel = this.db.channel("questboard");
-    for (const table of ["quests", "persona_lines", "runner_state"]) {
+    for (const table of ["quests", "persona_lines", "runner_state", "quest_proposals"]) {
       channel.on("postgres_changes", { event: "*", schema: "public", table }, onChange);
     }
     channel.subscribe();
