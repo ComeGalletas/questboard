@@ -87,7 +87,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [ ] `persona_digest` weekly job with guardrails.
 - [ ] Setup assistant drafts a pack from a description.
 - [ ] Optional GLB renderer (three.js) with budget check and sprite fallback.
-- [ ] Effort-calibration table fed back into prompts.
+- [x] Effort-calibration table fed back into prompts (+ add-quest hint).
 
 ## Phase 7 — Polish and hardening (ongoing)
 - [ ] Final sprite sheets, portraits, animation timing.

@@ -17,6 +17,7 @@ from questboard_schema.config_schema import Config
 from questboard_schema.quest_diff_schema import QuestDiff
 from questboard_schema.quest_schema import Quest
 
+from runner.engine.calibration import WINDOW_DAYS, calibration
 from runner.engine.carry import period_carry_patch
 from runner.engine.daily import HISTORY_DAYS, _outcomes, _quest_view, capacity_minutes
 from runner.engine.packs import Pack, load_packs
@@ -150,7 +151,7 @@ def period_job(cadence: str, ctx: JobContext, packs: list[Pack] | None = None) -
             repo.update_quest(str(q.id), patch)
 
     # 2. Proposals (model): the period's quests, within budget.
-    quests = repo.list_quests(since=period.start - timedelta(days=HISTORY_DAYS))
+    quests = repo.list_quests(since=period.start - timedelta(days=WINDOW_DAYS))
     open_q = {str(q.id): q for q in quests if q.status.value in ACTIVE}
     in_period = [
         q for q in open_q.values() if q.cadence.value == cadence and q.scheduled_for == period.start
@@ -164,6 +165,7 @@ def period_job(cadence: str, ctx: JobContext, packs: list[Pack] | None = None) -
         "goals": [g.model_dump(mode="json", exclude_none=True) for g in ctx.config.goals],
         "open_quests": [_quest_view(q) for q in open_q.values()],
         "recent_outcomes": _outcomes(quests, period.start),
+        "estimate_calibration": calibration(quests, period.start),
     }
     check_ctx = {
         "period": period,
