@@ -17,6 +17,7 @@ from questboard_schema.config_schema import Config
 from questboard_schema.daily_plan_schema import DailyPlan
 from questboard_schema.quest_schema import Quest
 
+from runner.engine.calibration import WINDOW_DAYS, calibration
 from runner.engine.carry import carry_patch
 from runner.engine.packs import Pack, load_packs
 from runner.engine.prompts import system_prompt, user_prompt
@@ -68,15 +69,7 @@ def _outcomes(quests: list[Quest], today: date) -> dict[str, Any]:
     since = today - timedelta(days=OUTCOME_DAYS)
     recent = [q for q in quests if q.scheduled_for and since <= q.scheduled_for < today]
     counts = Counter(q.status.value for q in recent)
-    ratios: dict[str, list[float]] = {}
-    for q in recent:
-        if q.actual_min is not None and q.status.value in ("done", "partial"):
-            ratios.setdefault(q.category.value, []).append(q.actual_min / q.estimate_min)
-    return {
-        "days": OUTCOME_DAYS,
-        "by_status": dict(sorted(counts.items())),
-        "actual_over_estimate": {c: round(sum(r) / len(r), 2) for c, r in sorted(ratios.items())},
-    }
+    return {"days": OUTCOME_DAYS, "by_status": dict(sorted(counts.items()))}
 
 
 def build_context(
@@ -95,6 +88,7 @@ def build_context(
         "open_quests": [_quest_view(q) for q in open_quests],
         "todays_board": [str(q.id) for q in todays],
         "recent_outcomes": _outcomes(quests, today),
+        "estimate_calibration": calibration(quests, today),
         "recent_feedback": [
             {"action": f["action"], "quest_id": f.get("quest_id")} for f in feedback[-20:]
         ],
@@ -175,7 +169,7 @@ def write_plan(ctx: JobContext, plan: DailyPlan, todays_ids: list[str]) -> None:
 def daily_am(ctx: JobContext, packs: list[Pack] | None = None) -> JobResult:
     today = ctx.occurrence.date
     packs = packs if packs is not None else load_packs()
-    quests = ctx.repo.list_quests(since=today - timedelta(days=HISTORY_DAYS))
+    quests = ctx.repo.list_quests(since=today - timedelta(days=WINDOW_DAYS))
     feedback = ctx.repo.list_feedback(since=today - timedelta(days=HISTORY_DAYS))
     prompt_ctx, plan_ctx, todays_ids = build_context(ctx.config, quests, feedback, today)
     plan_ctx = PlanContext(**{**plan_ctx.__dict__, "personas": {p.slug for p in packs}})

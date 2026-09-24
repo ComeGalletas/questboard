@@ -27,6 +27,9 @@ Return one JSON object with:
      dates come only from the user's own records.
    - A quest carried 3 times should be split (drop it, add 2-3 smaller quests) or dropped.
    - Use goals and recent outcomes; respect each persona's categories.
+   - estimate_calibration gives, per category, how long quests really take vs their estimate
+     (ratio 1.4 = 40 % longer). Scale estimates in adds and updates by it; propose updates for
+     open quests whose estimates are clearly off.
 2. quest_lines: dialogue for every quest on today's daily board, including your adds.
    - quest is the quest id, or new:N for the N-th add in diff.ops (counting adds only, from 0).
    - persona is the quest's persona; write in that persona's voice.
@@ -77,6 +80,7 @@ Return a QuestDiff (ops + optional summary):
   schedule each inside the period{sub_rule}. Keep the parent open: it tracks the whole;
   lower its estimate_min if the sub-quests now carry the work;
 - update or drop open {cadence} quests that no longer fit (carries show what keeps slipping).
+Scale estimates by estimate_calibration (per-category actual/estimate ratio) when present.
 Rules: the {cadence} total must fit budget_min; never add utilities or subscription quests and
 never set or change deadlines; keep titles short, concrete and free of personal data
 (no names of real people, emails, phone or ID numbers, amounts of money, links).

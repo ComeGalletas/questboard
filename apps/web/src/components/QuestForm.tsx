@@ -7,6 +7,7 @@ import { BOARD_CADENCE, boardRange, type Board } from "@/lib/board";
 import { endOfLocalDay } from "@/game/dates";
 import { PACKS, personaForCategory } from "@/game/personas";
 import { baseXp } from "@/game/xp";
+import { calibration, estimateHint } from "@/game/calibration";
 
 const CATEGORIES: Quest["category"][] = [
   "general",
@@ -23,7 +24,7 @@ const CATEGORIES: Quest["category"][] = [
 
 /** Manual quest creation. Bill-like categories are allowed here: the user typed it. */
 export function QuestForm({ board, onDone }: { board: Board; onDone: () => void }) {
-  const { store, config, reload } = useLog();
+  const { store, config, quests, reload } = useLog();
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<Quest["category"]>("general");
   const [persona, setPersona] = useState<string | null>(null);
@@ -34,6 +35,7 @@ export function QuestForm({ board, onDone }: { board: Board; onDone: () => void 
   const [error, setError] = useState<string | null>(null);
 
   const chosenPersona = persona ?? personaForCategory(category, config.persona_order);
+  const hint = estimateHint(calibration(quests, new Date()), category, Number(estimate));
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -124,6 +126,7 @@ export function QuestForm({ board, onDone }: { board: Board; onDone: () => void 
           <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
         </label>
       </div>
+      {hint && <p className="muted hint">{hint}</p>}
       <div className="quest-form-actions">
         <button type="submit" disabled={busy || !title.trim()}>
           Add quest
