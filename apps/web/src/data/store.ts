@@ -26,7 +26,7 @@ export type NewQuest = Pick<
   | "deadline"
   | "source"
 > &
-  Partial<Pick<Quest, "notes" | "hard_deadline">>;
+  Partial<Pick<Quest, "notes" | "hard_deadline" | "parent_id">>;
 
 export interface Store {
   readonly kind: "supabase" | "demo";

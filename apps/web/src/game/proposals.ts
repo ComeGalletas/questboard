@@ -46,6 +46,7 @@ export function planAcceptance(
         xp: baseXp(q, config.xp_weights),
         scheduled_for: q.scheduled_for ?? boardRange(BOARD_FOR[q.cadence], now).from,
         deadline: null,
+        parent_id: q.parent_id ?? null,
         source: "llm",
       },
     };

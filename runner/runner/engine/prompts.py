@@ -44,12 +44,16 @@ Personas:
 {personas}"""
 
 
-def system_prompt(packs: list[Pack]) -> str:
-    personas = "\n\n".join(
+def _persona_section(packs: list[Pack]) -> str:
+    return "\n\n".join(
         f"## {p.manifest.name} (slug {p.slug}; intensity {p.manifest.intensity}; "
         f"owns {', '.join(c.value for c in p.manifest.owns) or 'nothing'})\n{p.voice}"
         for p in packs
     )
+
+
+def system_prompt(packs: list[Pack]) -> str:
+    personas = _persona_section(packs)
     return SYSTEM_TEMPLATE.format(
         quest_triggers=", ".join(QUEST_TRIGGERS),
         board_triggers=", ".join(BOARD_TRIGGERS),
@@ -60,4 +64,33 @@ def system_prompt(packs: list[Pack]) -> str:
 def user_prompt(context: dict[str, Any]) -> str:
     return "Current state (JSON). Propose today's diff and dialogue.\n\n" + json.dumps(
         context, sort_keys=True, indent=1, default=str
+    )
+
+
+PERIOD_TEMPLATE = """You are the planning author for Questboard, a single-user RPG quest board
+for real life. Today you plan the {cadence} quests for the period in the state below. You never
+act: you propose changes the user accepts or rejects.
+
+Return a QuestDiff (ops + optional summary):
+- add {cadence} quests for the period (scheduled_for = period start) that move the goals forward;
+- or break an open {cadence} quest into {sub} sub-quests: set parent_id to that quest's id and
+  schedule each inside the period{sub_rule}. Keep the parent open: it tracks the whole;
+  lower its estimate_min if the sub-quests now carry the work;
+- update or drop open {cadence} quests that no longer fit (carries show what keeps slipping).
+Rules: the {cadence} total must fit budget_min; never add utilities or subscription quests and
+never set or change deadlines; keep titles short, concrete and free of personal data
+(no names of real people, emails, phone or ID numbers, amounts of money, links).
+Give every op a one-sentence reason. Few, high-value ops; an empty list is fine.
+
+Personas:
+{personas}"""
+
+
+def period_system_prompt(packs: list[Pack], cadence: str) -> str:
+    sub = "daily" if cadence == "weekly" else "weekly"
+    return PERIOD_TEMPLATE.format(
+        cadence=cadence,
+        sub=sub,
+        sub_rule=" (weekly sub-quests on a Monday)" if sub == "weekly" else "",
+        personas=_persona_section(packs),
     )

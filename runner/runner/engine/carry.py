@@ -12,7 +12,7 @@ from typing import Any
 
 from questboard_schema.quest_schema import Quest
 
-MAX_CARRIES = {"daily": 3, "weekly": 2}
+MAX_CARRIES = {"daily": 3, "weekly": 2, "monthly": 2}
 UNFINISHED = {"open", "in_progress", "snoozed", "deferred", "overdue"}
 
 
@@ -27,6 +27,24 @@ def carry_patch(q: Quest, today: date, now: datetime) -> dict[str, Any] | None:
         return {
             "status": "overdue" if past_due else "open",
             "scheduled_for": (today + timedelta(days=1)).isoformat(),
+            "carries": q.carries + 1,
+            "snoozed_until": None,
+        }
+    return {"status": "abandoned", "snoozed_until": None}
+
+
+def period_carry_patch(q: Quest, next_start: date, now: datetime) -> dict[str, Any] | None:
+    """Weekly/monthly quests left open when a new period starts move to it (cap per cadence)."""
+    cadence = q.cadence.value
+    if cadence == "daily" or q.status.value not in UNFINISHED:
+        return None
+    if q.scheduled_for is None or q.scheduled_for >= next_start:
+        return None
+    past_due = q.deadline is not None and q.deadline <= now
+    if q.hard_deadline or q.carries < MAX_CARRIES[cadence]:
+        return {
+            "status": "overdue" if past_due else "open",
+            "scheduled_for": next_start.isoformat(),
             "carries": q.carries + 1,
             "snoozed_until": None,
         }
