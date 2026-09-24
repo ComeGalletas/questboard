@@ -4,7 +4,7 @@
 // them fresh (realtime + polling). Every screen renders from this cache; nothing waits on a model.
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import type { Config, PersonaLine, Quest, RunnerState } from "@questboard/schema";
+import type { Config, PersonaLine, Quest, QuestProposal, RunnerState } from "@questboard/schema";
 import type { Store } from "./store";
 import { DEMO_CONFIG } from "./demo-store";
 
@@ -13,6 +13,7 @@ export type Log = {
   quests: Quest[];
   config: Config;
   lines: PersonaLine[];
+  proposals: QuestProposal[];
   runner: RunnerState | null;
   loaded: boolean;
   error: string | null;
@@ -27,6 +28,7 @@ export function LogProvider({ store, children }: { store: Store; children: React
     quests: [],
     config: DEMO_CONFIG,
     lines: [],
+    proposals: [],
     runner: null,
     loaded: false,
     error: null,
@@ -35,10 +37,11 @@ export function LogProvider({ store, children }: { store: Store; children: React
 
   const reload = useCallback(async () => {
     try {
-      const [quests, config, lines, runner] = await Promise.all([
+      const [quests, config, lines, proposals, runner] = await Promise.all([
         store.listQuests(),
         store.getConfig(),
         store.listLines(),
+        store.listPendingProposals(),
         store.getRunnerState(),
       ]);
       if (!alive.current) return;
@@ -46,6 +49,7 @@ export function LogProvider({ store, children }: { store: Store; children: React
         quests,
         config: config ?? DEMO_CONFIG,
         lines,
+        proposals,
         runner,
         loaded: true,
         error: null,

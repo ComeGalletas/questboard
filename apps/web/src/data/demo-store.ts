@@ -1,13 +1,23 @@
 // Browser-local sample data so the board can be tried before Supabase exists.
 // Nothing here leaves the browser; clearing site data resets it.
 
-import type { Config, PersonaLine, Quest, RunnerState } from "@questboard/schema";
+import type {
+  Config,
+  FallbackLine,
+  PersonaLine,
+  Quest,
+  QuestProposal,
+  RunnerState,
+} from "@questboard/schema";
 import type { QuestPatch } from "../game/actions.ts";
+import type { QuestChangesPatch } from "../game/proposals.ts";
 import { addDays, isoDate } from "../game/dates.ts";
 import { baseXp } from "../game/xp.ts";
 import type { NewQuest, Store } from "./store.ts";
 
-const KEY = "questboard.demo.v1";
+const KEY = "questboard.demo.v2";
+
+type DemoState = { quests: Quest[]; proposals: QuestProposal[]; lines: PersonaLine[] };
 
 export const DEMO_CONFIG: Config = {
   timezone: "America/Bogota",
@@ -40,7 +50,7 @@ function make(q: NewQuest, over: Partial<Quest> = {}): Quest {
   };
 }
 
-function seed(now: Date): Quest[] {
+function seed(now: Date): DemoState {
   const today = isoDate(now);
   const draft = (
     title: string,
@@ -80,28 +90,79 @@ function seed(now: Date): Quest[] {
     const done = new Date(`${day}T08:00:00`).toISOString();
     quests.push(make(q, { status: "done", completed_at: done, actual_min: 15, xp_awarded: 15 }));
   }
-  return quests;
+  // What a runner's daily_am might have proposed, so the review strip has something to show.
+  const created = now.toISOString();
+  const review = quests[1];
+  const proposals: QuestProposal[] = [
+    {
+      id: uuid(),
+      op: "add",
+      status: "pending",
+      created_at: created,
+      payload: {
+        op: "add",
+        reason: "No quest moves the 10k goal forward this week.",
+        quest: {
+          title: "Stride drills",
+          persona: "coach",
+          cadence: "daily",
+          category: "health",
+          estimate_min: 10,
+          priority: 2,
+          scheduled_for: today,
+        },
+      },
+      lines: [
+        {
+          trigger: "completed_on_time",
+          variant: 1,
+          condition: "any",
+          text: "Quick feet! Drills done.",
+        },
+        {
+          trigger: "assigned",
+          variant: 1,
+          condition: "any",
+          text: "Ten minutes of drills. Short and sharp.",
+        },
+      ],
+    },
+    {
+      id: uuid(),
+      op: "update",
+      quest_id: review.id,
+      status: "pending",
+      created_at: created,
+      payload: {
+        op: "update",
+        quest_id: review.id,
+        reason: "Your last reviews took about 45 minutes.",
+        changes: { estimate_min: 45 },
+      },
+    },
+  ];
+  return { quests, proposals, lines: [] };
 }
 
 export class DemoStore implements Store {
   readonly kind = "demo" as const;
   private listeners = new Set<() => void>();
 
-  private load(): Quest[] {
+  private load(): DemoState {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) return JSON.parse(raw) as Quest[];
+      if (raw) return JSON.parse(raw) as DemoState;
     } catch {
       // storage unavailable: fall through to fresh seed data
     }
-    const quests = seed(new Date());
-    this.save(quests);
-    return quests;
+    const state = seed(new Date());
+    this.save(state);
+    return state;
   }
 
-  private save(quests: Quest[]): void {
+  private save(state: DemoState): void {
     try {
-      localStorage.setItem(KEY, JSON.stringify(quests));
+      localStorage.setItem(KEY, JSON.stringify(state));
     } catch {
       // private mode etc.: demo still works for this page view
     }
@@ -109,22 +170,56 @@ export class DemoStore implements Store {
   }
 
   async listQuests(): Promise<Quest[]> {
-    return this.load();
+    return this.load().quests;
   }
 
   async insertQuest(q: NewQuest): Promise<Quest> {
+    const state = this.load();
     const quest = make(q);
-    this.save([...this.load(), quest]);
+    state.quests.push(quest);
+    this.save(state);
     return quest;
   }
 
-  async updateQuest(id: string, patch: QuestPatch): Promise<Quest> {
-    const quests = this.load();
-    const i = quests.findIndex((q) => q.id === id);
+  async updateQuest(id: string, patch: QuestPatch | QuestChangesPatch): Promise<Quest> {
+    const state = this.load();
+    const i = state.quests.findIndex((q) => q.id === id);
     if (i < 0) throw new Error("quest not found");
-    quests[i] = { ...quests[i], ...patch, updated_at: new Date().toISOString() };
-    this.save(quests);
-    return quests[i];
+    state.quests[i] = { ...state.quests[i], ...patch, updated_at: new Date().toISOString() };
+    this.save(state);
+    return state.quests[i];
+  }
+
+  async listPendingProposals(): Promise<QuestProposal[]> {
+    return this.load().proposals.filter((p) => p.status === "pending");
+  }
+
+  async decideProposal(id: string, status: "accepted" | "rejected" | "superseded") {
+    const state = this.load();
+    state.proposals = state.proposals.map((p) =>
+      p.id === id ? { ...p, status, decided_at: new Date().toISOString() } : p,
+    );
+    this.save(state);
+  }
+
+  async insertLines(questId: string, persona: string, lines: FallbackLine[]) {
+    const state = this.load();
+    const created = new Date().toISOString();
+    for (const l of lines) {
+      state.lines.push({
+        ...l,
+        id: uuid(),
+        quest_id: questId,
+        persona,
+        used_at: null,
+        created_at: created,
+      } as PersonaLine);
+    }
+    this.save(state);
+  }
+
+  async recordFeedback(): Promise<void> {
+    // Demo mode keeps no feedback log.
   }
 
   async getConfig(): Promise<Config> {
@@ -132,10 +227,14 @@ export class DemoStore implements Store {
   }
 
   async listLines(): Promise<PersonaLine[]> {
-    return [];
+    return this.load().lines;
   }
 
-  async markLineUsed(): Promise<void> {}
+  async markLineUsed(id: string, at: string): Promise<void> {
+    const state = this.load();
+    state.lines = state.lines.map((l) => (l.id === id ? { ...l, used_at: at } : l));
+    this.save(state);
+  }
 
   async getRunnerState(): Promise<RunnerState | null> {
     return null;

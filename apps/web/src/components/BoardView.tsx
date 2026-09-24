@@ -6,6 +6,7 @@ import { useLog } from "@/data/log";
 import { finishedCount, summarize } from "@/game/summary";
 import { useNow } from "@/lib/hooks";
 import { PersonaPanel } from "./PersonaPanel";
+import { ProposalStrip } from "./ProposalStrip";
 import { QuestForm } from "./QuestForm";
 import { QuestRow } from "./QuestRow";
 import { StatsStrip } from "./StatsStrip";
@@ -28,36 +29,41 @@ export function BoardView({ board }: { board: Board }) {
     <div className="board-layout">
       <PersonaPanel summary={summary} />
       <StatsStrip summary={summary} showCapacity={board === "today"} />
-      <section className="panel board" aria-labelledby={`${board}-title`}>
-        <div className="board-head">
-          <h2 id={`${board}-title`}>
-            {TITLES[board]}
-            {summary.rows.length > 0 && (
-              <span className="muted count">
-                {" "}
-                {done}/{summary.rows.length}
-              </span>
+      <section className="board-main">
+        <ProposalStrip board={board} />
+        <section className="panel board" aria-labelledby={`${board}-title`}>
+          <div className="board-head">
+            <h2 id={`${board}-title`}>
+              {TITLES[board]}
+              {summary.rows.length > 0 && (
+                <span className="muted count">
+                  {" "}
+                  {done}/{summary.rows.length}
+                </span>
+              )}
+            </h2>
+            {!adding && (
+              <button type="button" className="btn" onClick={() => setAdding(true)}>
+                + Quest
+              </button>
             )}
-          </h2>
-          {!adding && (
-            <button type="button" className="btn" onClick={() => setAdding(true)}>
-              + Quest
-            </button>
+          </div>
+          {adding && <QuestForm board={board} onDone={() => setAdding(false)} />}
+          {error && <p className="error">Could not load quests: {error}</p>}
+          {actionError && <p className="error">{actionError}</p>}
+          {loaded && summary.rows.length === 0 && !error && !adding && (
+            <p className="empty">
+              No quests yet. Add one, or wait for the runner&apos;s next pass.
+            </p>
           )}
-        </div>
-        {adding && <QuestForm board={board} onDone={() => setAdding(false)} />}
-        {error && <p className="error">Could not load quests: {error}</p>}
-        {actionError && <p className="error">{actionError}</p>}
-        {loaded && summary.rows.length === 0 && !error && !adding && (
-          <p className="empty">No quests yet. Add one, or wait for the runner&apos;s next pass.</p>
-        )}
-        {summary.rows.length > 0 && (
-          <ul className="quest-list">
-            {summary.rows.map((row) => (
-              <QuestRow key={row.quest.id} row={row} onAction={(a) => act(row.quest, a)} />
-            ))}
-          </ul>
-        )}
+          {summary.rows.length > 0 && (
+            <ul className="quest-list">
+              {summary.rows.map((row) => (
+                <QuestRow key={row.quest.id} row={row} onAction={(a) => act(row.quest, a)} />
+              ))}
+            </ul>
+          )}
+        </section>
       </section>
     </div>
   );

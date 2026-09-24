@@ -51,7 +51,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [x] Runner skeleton: trigger loop, guards, lock file, heartbeat, `llm_runs` idempotency + backoff + catch-up. (Tested against an in-memory DB; Supabase connection next.)
 - [x] Providers: `ollama.py`, `claude_api.py`; output validation, one retry, fallthrough. Supabase connection for the runner (signs in as the user; refresh token in the OS keychain).
 - [x] Engine: prompt assembly, `daily_am` (QuestDiffs + capacity fit + dialogue bundles), `daily_pm` (accounting + carry-over rules). Proposals wait in `quest_proposals`.
-- [ ] App: review strip for pending proposals (accept applies the op in code and caches its lines; reject records feedback).
+- [x] App: review strip for pending proposals (accept applies the op in code and caches its lines; reject records feedback).
 - [x] `persona_lines` selection in the app. (Done in Phase 1.)
 - [ ] Tauri shell: dashboard window, tray, start-at-login, sidecar, OS notifications, deep links.
 - [ ] Notifications v1 with dedup and quiet hours; Web Push to PWA.
