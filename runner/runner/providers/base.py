@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import re
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
@@ -25,6 +25,10 @@ _MAX_ERRORS_IN_RETRY = 10
 # reject it. Local validation still uses it through the Pydantic model.
 _NON_STANDARD_KEYWORDS = frozenset({"discriminator"})
 _SCHEMA_MAPS = frozenset({"properties", "$defs", "definitions", "patternProperties"})
+
+
+type Check[T] = Callable[[T], list[str]]
+"""Semantic rules beyond the schema; returns human-readable problems (no data values)."""
 
 
 class ProviderError(Exception):
@@ -85,8 +89,13 @@ class Provider(ABC):
         """Send one request and return the raw response. Raise ProviderError on failure."""
 
     def generate[T: BaseModel](
-        self, request: GenerationRequest, output_model: type[T]
+        self,
+        request: GenerationRequest,
+        output_model: type[T],
+        check: Check[T] | None = None,
     ) -> ProviderResult[T]:
+        """Schema-validate the output, then run `check` (semantic rules). Either kind of
+        failure is retried once with the errors appended to the prompt."""
         schema = output_schema(output_model)
         usage: TokenUsage | None = None
         retry_errors: list[str] = []
@@ -98,6 +107,11 @@ class Provider(ABC):
                 output = output_model.model_validate(_parse_json(raw.data))
             except (ValueError, ValidationError) as exc:
                 retry_errors = _describe(exc)
+                current = _with_retry_hint(request, retry_errors)
+                continue
+            problems = check(output) if check else []
+            if problems:
+                retry_errors = problems[:_MAX_ERRORS_IN_RETRY]
                 current = _with_retry_hint(request, retry_errors)
                 continue
             return ProviderResult(
@@ -113,7 +127,10 @@ class Provider(ABC):
 
 
 def run_with_fallback[T: BaseModel](
-    providers: Sequence[Provider], request: GenerationRequest, output_model: type[T]
+    providers: Sequence[Provider],
+    request: GenerationRequest,
+    output_model: type[T],
+    check: Check[T] | None = None,
 ) -> ProviderResult[T]:
     """Try each provider in order; skip unreachable ones; return the first valid result."""
     failures: list[tuple[ProviderName, ProviderError]] = []
@@ -122,7 +139,7 @@ def run_with_fallback[T: BaseModel](
             failures.append((provider.name, ProviderUnavailable("not available")))
             continue
         try:
-            return provider.generate(request, output_model)
+            return provider.generate(request, output_model, check)
         except ProviderError as exc:
             failures.append((provider.name, exc))
     raise AllProvidersFailed(failures)

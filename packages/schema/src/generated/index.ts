@@ -3,6 +3,7 @@
 export interface QuestboardSchemas {
   common?: Common;
   config?: Config;
+  daily_plan?: DailyPlan;
   extracted_record?: ExtractedRecord;
   fallback_lines?: FallbackLines;
   llm_run?: LLMRun;
@@ -10,6 +11,7 @@ export interface QuestboardSchemas {
   persona_pack?: PersonaPack;
   quest?: Quest;
   quest_diff?: QuestDiff;
+  quest_proposal?: QuestProposal;
   runner_state?: RunnerState;
 }
 /**
@@ -117,6 +119,199 @@ export interface Goal {
   persona?: string | null;
 }
 /**
+ * daily_am output: quest diffs for today plus the dialogue bundle the app performs from the cache.
+ */
+export interface DailyPlan {
+  diff: QuestDiff;
+  /**
+   * @maxItems 40
+   */
+  quest_lines: QuestLines[];
+  /**
+   * @maxItems 48
+   */
+  board_lines: BoardLine[];
+}
+/**
+ * What a model proposes against the current quest log. The user accepts or rejects each op; the model never writes quests directly.
+ */
+export interface QuestDiff {
+  /**
+   * @maxItems 50
+   *
+   * Items: This interface was referenced by `QuestDiff`'s JSON-Schema
+   * via the `definition` "QuestOp".
+   */
+  ops: (AddOp | UpdateOp | DropOp)[];
+  summary?: string | null;
+}
+/**
+ * This interface was referenced by `QuestDiff`'s JSON-Schema
+ * via the `definition` "AddOp".
+ */
+export interface AddOp {
+  op: "add";
+  quest: QuestDraft;
+  reason: string;
+}
+/**
+ * This interface was referenced by `QuestDiff`'s JSON-Schema
+ * via the `definition` "QuestDraft".
+ */
+export interface QuestDraft {
+  title: string;
+  notes?: string | null;
+  /**
+   * Persona pack slug (coach, teacher, mom, quartermaster, or a custom pack).
+   *
+   * This interface was referenced by `Common`'s JSON-Schema
+   * via the `definition` "PersonaSlug".
+   */
+  persona: string;
+  /**
+   * This interface was referenced by `Common`'s JSON-Schema
+   * via the `definition` "Cadence".
+   */
+  cadence: "daily" | "weekly" | "monthly";
+  /**
+   * Quest / record category. Non-general values match the email extractors.
+   *
+   * This interface was referenced by `Common`'s JSON-Schema
+   * via the `definition` "Category".
+   */
+  category:
+    | "general"
+    | "ics"
+    | "utilities"
+    | "government"
+    | "health"
+    | "delivery"
+    | "subscription"
+    | "jobs"
+    | "learning"
+    | "personal"
+    | "travel";
+  estimate_min: number;
+  scheduled_for?: string | null;
+  deadline?: string | null;
+  priority: number;
+  parent_id?: string | null;
+}
+/**
+ * This interface was referenced by `QuestDiff`'s JSON-Schema
+ * via the `definition` "UpdateOp".
+ */
+export interface UpdateOp {
+  op: "update";
+  quest_id: string;
+  changes: QuestChanges;
+  reason: string;
+}
+/**
+ * This interface was referenced by `QuestDiff`'s JSON-Schema
+ * via the `definition` "QuestChanges".
+ */
+export interface QuestChanges {
+  title?: string;
+  notes?: string | null;
+  /**
+   * Persona pack slug (coach, teacher, mom, quartermaster, or a custom pack).
+   *
+   * This interface was referenced by `Common`'s JSON-Schema
+   * via the `definition` "PersonaSlug".
+   */
+  persona?: string;
+  estimate_min?: number;
+  scheduled_for?: string | null;
+  deadline?: string | null;
+  priority?: number;
+}
+/**
+ * This interface was referenced by `QuestDiff`'s JSON-Schema
+ * via the `definition` "DropOp".
+ */
+export interface DropOp {
+  op: "drop";
+  quest_id: string;
+  reason: string;
+}
+/**
+ * This interface was referenced by `DailyPlan`'s JSON-Schema
+ * via the `definition` "QuestLines".
+ */
+export interface QuestLines {
+  /**
+   * An existing quest id, or new:N for the N-th add op (0-based) in diff.ops.
+   */
+  quest: string;
+  /**
+   * Persona pack slug (coach, teacher, mom, quartermaster, or a custom pack).
+   *
+   * This interface was referenced by `Common`'s JSON-Schema
+   * via the `definition` "PersonaSlug".
+   */
+  persona: string;
+  /**
+   * @maxItems 60
+   */
+  lines: FallbackLine[];
+}
+/**
+ * This interface was referenced by `FallbackLines`'s JSON-Schema
+ * via the `definition` "FallbackLine".
+ */
+export interface FallbackLine {
+  trigger:
+    | "assigned"
+    | "reminder_am"
+    | "reminder_mid"
+    | "reminder_pm"
+    | "started"
+    | "completed_early"
+    | "completed_on_time"
+    | "completed_late"
+    | "partial"
+    | "snoozed"
+    | "deferred"
+    | "skipped"
+    | "forgotten"
+    | "overdue_1d"
+    | "overdue_3d"
+    | "overdue_7d"
+    | "carried_over"
+    | "abandoned"
+    | "all_done"
+    | "half_by_noon"
+    | "nothing_by_15"
+    | "over_capacity";
+  variant: number;
+  /**
+   * Mood bucket; mood itself is computed in code from completion rate.
+   */
+  condition: "any" | "pleased" | "neutral" | "concerned";
+  /**
+   * May contain runtime placeholders {time_left} {streak} {days_carried} {actual_vs_estimate} {next_quest}.
+   */
+  text: string;
+}
+/**
+ * This interface was referenced by `DailyPlan`'s JSON-Schema
+ * via the `definition` "BoardLine".
+ */
+export interface BoardLine {
+  /**
+   * Persona pack slug (coach, teacher, mom, quartermaster, or a custom pack).
+   *
+   * This interface was referenced by `Common`'s JSON-Schema
+   * via the `definition` "PersonaSlug".
+   */
+  persona: string;
+  trigger: "all_done" | "half_by_noon" | "nothing_by_15" | "over_capacity";
+  variant: number;
+  condition: "any" | "pleased" | "neutral" | "concerned";
+  text: string;
+}
+/**
  * Output of a deterministic email extractor. Money and dates enter the system only through this record.
  */
 export interface ExtractedRecord {
@@ -185,44 +380,6 @@ export interface FallbackLines {
    * @minItems 1
    */
   lines: [FallbackLine, ...FallbackLine[]];
-}
-/**
- * This interface was referenced by `FallbackLines`'s JSON-Schema
- * via the `definition` "FallbackLine".
- */
-export interface FallbackLine {
-  trigger:
-    | "assigned"
-    | "reminder_am"
-    | "reminder_mid"
-    | "reminder_pm"
-    | "started"
-    | "completed_early"
-    | "completed_on_time"
-    | "completed_late"
-    | "partial"
-    | "snoozed"
-    | "deferred"
-    | "skipped"
-    | "forgotten"
-    | "overdue_1d"
-    | "overdue_3d"
-    | "overdue_7d"
-    | "carried_over"
-    | "abandoned"
-    | "all_done"
-    | "half_by_noon"
-    | "nothing_by_15"
-    | "over_capacity";
-  variant: number;
-  /**
-   * Mood bucket; mood itself is computed in code from completion rate.
-   */
-  condition: "any" | "pleased" | "neutral" | "concerned";
-  /**
-   * May contain runtime placeholders {time_left} {streak} {days_carried} {actual_vs_estimate} {next_quest}.
-   */
-  text: string;
 }
 /**
  * One attempt of a scheduled LLM job, as stored in `llm_runs`. Idempotent per (job, slot, date).
@@ -435,107 +592,24 @@ export interface Quest {
   updated_at: string;
 }
 /**
- * What a model proposes against the current quest log. The user accepts or rejects each op; the model never writes quests directly.
+ * One proposed QuestDiff op waiting for the user (`quest_proposals`). The model never writes quests; accepting applies the op in code.
  */
-export interface QuestDiff {
+export interface QuestProposal {
+  id: string;
+  run_id?: string | null;
+  op: "add" | "update" | "drop";
+  quest_id?: string | null;
   /**
-   * @maxItems 50
-   *
-   * Items: This interface was referenced by `QuestDiff`'s JSON-Schema
-   * via the `definition` "QuestOp".
+   * The op exactly as proposed (validated).
    */
-  ops: (AddOp | UpdateOp | DropOp)[];
-  summary?: string | null;
-}
-/**
- * This interface was referenced by `QuestDiff`'s JSON-Schema
- * via the `definition` "AddOp".
- */
-export interface AddOp {
-  op: "add";
-  quest: QuestDraft;
-  reason: string;
-}
-/**
- * This interface was referenced by `QuestDiff`'s JSON-Schema
- * via the `definition` "QuestDraft".
- */
-export interface QuestDraft {
-  title: string;
-  notes?: string | null;
+  payload: AddOp | UpdateOp | DropOp;
   /**
-   * Persona pack slug (coach, teacher, mom, quartermaster, or a custom pack).
-   *
-   * This interface was referenced by `Common`'s JSON-Schema
-   * via the `definition` "PersonaSlug".
+   * Dialogue for a proposed add; inserted into persona_lines when accepted.
    */
-  persona: string;
-  /**
-   * This interface was referenced by `Common`'s JSON-Schema
-   * via the `definition` "Cadence".
-   */
-  cadence: "daily" | "weekly" | "monthly";
-  /**
-   * Quest / record category. Non-general values match the email extractors.
-   *
-   * This interface was referenced by `Common`'s JSON-Schema
-   * via the `definition` "Category".
-   */
-  category:
-    | "general"
-    | "ics"
-    | "utilities"
-    | "government"
-    | "health"
-    | "delivery"
-    | "subscription"
-    | "jobs"
-    | "learning"
-    | "personal"
-    | "travel";
-  estimate_min: number;
-  scheduled_for?: string | null;
-  deadline?: string | null;
-  priority: number;
-  parent_id?: string | null;
-}
-/**
- * This interface was referenced by `QuestDiff`'s JSON-Schema
- * via the `definition` "UpdateOp".
- */
-export interface UpdateOp {
-  op: "update";
-  quest_id: string;
-  changes: QuestChanges;
-  reason: string;
-}
-/**
- * This interface was referenced by `QuestDiff`'s JSON-Schema
- * via the `definition` "QuestChanges".
- */
-export interface QuestChanges {
-  title?: string;
-  notes?: string | null;
-  /**
-   * Persona pack slug (coach, teacher, mom, quartermaster, or a custom pack).
-   *
-   * This interface was referenced by `Common`'s JSON-Schema
-   * via the `definition` "PersonaSlug".
-   */
-  persona?: string;
-  estimate_min?: number;
-  scheduled_for?: string | null;
-  deadline?: string | null;
-  priority?: number;
-}
-/**
- * This interface was referenced by `QuestDiff`'s JSON-Schema
- * via the `definition` "DropOp".
- */
-export interface DropOp {
-  op: "drop";
-  quest_id: string;
-  reason: string;
+  lines?: FallbackLine[];
+  status: "pending" | "accepted" | "rejected" | "superseded";
+  decided_at?: string | null;
+  created_at: string;
 }
 /**
  * The runner's heartbeat row (`runner_state`). The status pill reads heartbeat_at.

@@ -13,7 +13,10 @@ from typing import Any, Protocol
 from questboard_schema.common_schema import JobName
 from questboard_schema.config_schema import Config
 from questboard_schema.llm_run_schema import LLMRun
+from questboard_schema.quest_schema import Quest
 from questboard_schema.runner_state_schema import RunnerState
+
+ACTIVE = ("open", "in_progress", "snoozed", "deferred", "overdue")
 
 
 class RepoUnavailable(Exception):
@@ -28,6 +31,21 @@ class Repo(Protocol):
     def list_runs(self, job: JobName, slot: str | None, day: date) -> list[LLMRun]: ...
     def insert_run(self, run: LLMRun) -> LLMRun: ...
     def update_run(self, run_id: str, fields: dict[str, Any]) -> None: ...
+    def list_quests(self, since: date) -> list[Quest]:
+        """Active quests plus everything scheduled on or after `since`."""
+        ...
+
+    def update_quest(self, quest_id: str, fields: dict[str, Any]) -> None: ...
+    def list_feedback(self, since: date) -> list[dict[str, Any]]: ...
+    def supersede_pending_proposals(self) -> int: ...
+    def insert_proposals(self, rows: list[dict[str, Any]]) -> None: ...
+    def replace_quest_lines(self, quest_ids: list[str], rows: list[dict[str, Any]]) -> None:
+        """Drop unused cached lines for these quests, then insert `rows`."""
+        ...
+
+    def replace_board_lines(self, rows: list[dict[str, Any]]) -> None:
+        """Drop unused board-level lines (quest_id null), then insert `rows`."""
+        ...
 
 
 class MemoryRepo:
@@ -46,6 +64,10 @@ class MemoryRepo:
             "provider_health": {},
         }
         self.runs: list[LLMRun] = []
+        self.quests: list[Quest] = []
+        self.feedback: list[dict[str, Any]] = []
+        self.proposals: list[dict[str, Any]] = []
+        self.lines: list[dict[str, Any]] = []
 
     def _check(self) -> None:
         if not self.online:
@@ -90,3 +112,53 @@ class MemoryRepo:
                 self.runs[i] = LLMRun.model_validate({**r.model_dump(), **fields})
                 return
         raise KeyError(run_id)
+
+    def list_quests(self, since: date) -> list[Quest]:
+        self._check()
+        return [
+            q
+            for q in self.quests
+            if q.status.value in ACTIVE or (q.scheduled_for and q.scheduled_for >= since)
+        ]
+
+    def update_quest(self, quest_id: str, fields: dict[str, Any]) -> None:
+        self._check()
+        for i, q in enumerate(self.quests):
+            if str(q.id) == str(quest_id):
+                self.quests[i] = Quest.model_validate({**q.model_dump(), **fields})
+                return
+        raise KeyError(quest_id)
+
+    def list_feedback(self, since: date) -> list[dict[str, Any]]:
+        self._check()
+        return [f for f in self.feedback if f["created_at"][:10] >= since.isoformat()]
+
+    def supersede_pending_proposals(self) -> int:
+        self._check()
+        pending = [p for p in self.proposals if p["status"] == "pending"]
+        for p in pending:
+            p["status"] = "superseded"
+        return len(pending)
+
+    def insert_proposals(self, rows: list[dict[str, Any]]) -> None:
+        self._check()
+        self.proposals.extend({"id": str(uuid.uuid4()), "status": "pending", **r} for r in rows)
+
+    def replace_quest_lines(self, quest_ids: list[str], rows: list[dict[str, Any]]) -> None:
+        self._check()
+        ids = {str(i) for i in quest_ids}
+        self.lines = [
+            line
+            for line in self.lines
+            if not (str(line.get("quest_id")) in ids and line.get("used_at") is None)
+        ]
+        self.lines.extend(rows)
+
+    def replace_board_lines(self, rows: list[dict[str, Any]]) -> None:
+        self._check()
+        self.lines = [
+            line
+            for line in self.lines
+            if not (line.get("quest_id") is None and line.get("used_at") is None)
+        ]
+        self.lines.extend(rows)

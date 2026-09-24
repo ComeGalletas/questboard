@@ -49,6 +49,7 @@ class JobContext:
     config: Config
     repo: Repo
     providers: list[Provider]
+    run_id: str | None = None  # the llm_runs row for this attempt
 
 
 @dataclass(frozen=True)
@@ -151,7 +152,7 @@ class Scheduler:
         if not manual and self._inputs_stale(config, state, now):
             return Decision(spec.name, "skip", "inputs stale (ingest older than 2 h)")
         providers = self._providers_for(config, spec.name)
-        if not any(p.is_available() for p in providers):
+        if spec.provider_required and not any(p.is_available() for p in providers):
             return Decision(spec.name, "skip", "no provider reachable")
         return self._run(spec, occ, trigger, now, config, providers, attempt=len(runs) + 1)
 
@@ -167,7 +168,7 @@ class Scheduler:
                 started_at=now,
             )
         )
-        ctx = JobContext(occ, trigger, now, config, self.repo, providers)
+        ctx = JobContext(occ, trigger, now, config, self.repo, providers, run_id=str(run.id))
         try:
             result = self.handlers[spec.name](ctx)
         except ProviderOutputError as exc:

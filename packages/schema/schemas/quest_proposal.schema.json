@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "quest_proposal.schema.json",
+  "title": "QuestProposal",
+  "description": "One proposed QuestDiff op waiting for the user (`quest_proposals`). The model never writes quests; accepting applies the op in code.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "op", "payload", "status", "created_at"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "run_id": { "type": ["string", "null"], "format": "uuid" },
+    "op": { "type": "string", "enum": ["add", "update", "drop"] },
+    "quest_id": { "type": ["string", "null"], "format": "uuid" },
+    "payload": {
+      "$ref": "quest_diff.schema.json#/$defs/QuestOp",
+      "description": "The op exactly as proposed (validated)."
+    },
+    "lines": {
+      "type": "array",
+      "description": "Dialogue for a proposed add; inserted into persona_lines when accepted.",
+      "items": { "$ref": "fallback_lines.schema.json#/$defs/FallbackLine" }
+    },
+    "status": { "type": "string", "enum": ["pending", "accepted", "rejected", "superseded"] },
+    "decided_at": { "type": ["string", "null"], "format": "date-time" },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

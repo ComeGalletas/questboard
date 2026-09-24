@@ -18,9 +18,10 @@ from pydantic_core import to_jsonable_python
 from questboard_schema.common_schema import JobName
 from questboard_schema.config_schema import Config
 from questboard_schema.llm_run_schema import LLMRun
+from questboard_schema.quest_schema import Quest
 from questboard_schema.runner_state_schema import RunnerState
 
-from runner.repo import RepoUnavailable
+from runner.repo import ACTIVE, RepoUnavailable
 
 KEYRING_SERVICE = "questboard-runner"
 KEYRING_USER = "supabase-refresh-token"
@@ -29,6 +30,9 @@ RUN_COLUMNS = (
     "id,job,slot,date,trigger,provider_used,attempt,status,tokens_input,tokens_output,"
     "error,started_at,finished_at"
 )
+
+
+QUEST_COLUMNS = ",".join(Quest.model_fields)
 
 
 class TokenStore(Protocol):
@@ -203,6 +207,52 @@ class SupabaseRepo:
         self._request(
             "PATCH", "llm_runs", {"id": f"eq.{run_id}"}, _run_to_row(fields), "return=minimal"
         )
+
+    def list_quests(self, since: date) -> list[Quest]:
+        active = ",".join(ACTIVE)
+        params = {
+            "select": QUEST_COLUMNS,
+            "or": f"(status.in.({active}),scheduled_for.gte.{since.isoformat()})",
+            "order": "created_at",
+        }
+        return [Quest.model_validate(r) for r in self._request("GET", "quests", params)]
+
+    def update_quest(self, quest_id: str, fields: dict[str, Any]) -> None:
+        self._request("PATCH", "quests", {"id": f"eq.{quest_id}"}, fields, "return=minimal")
+
+    def list_feedback(self, since: date) -> list[dict[str, Any]]:
+        params = {
+            "select": "quest_id,action,comment,created_at",
+            "created_at": f"gte.{since.isoformat()}",
+        }
+        return self._request("GET", "quest_feedback", params)
+
+    def supersede_pending_proposals(self) -> int:
+        rows = self._request(
+            "PATCH",
+            "quest_proposals",
+            {"status": "eq.pending", "select": "id"},
+            {"status": "superseded"},
+            "return=representation",
+        )
+        return len(rows or [])
+
+    def insert_proposals(self, rows: list[dict[str, Any]]) -> None:
+        if rows:
+            self._request("POST", "quest_proposals", None, rows, "return=minimal")
+
+    def replace_quest_lines(self, quest_ids: list[str], rows: list[dict[str, Any]]) -> None:
+        if quest_ids:
+            params = {"quest_id": f"in.({','.join(quest_ids)})", "used_at": "is.null"}
+            self._request("DELETE", "persona_lines", params, None, "return=minimal")
+        if rows:
+            self._request("POST", "persona_lines", None, rows, "return=minimal")
+
+    def replace_board_lines(self, rows: list[dict[str, Any]]) -> None:
+        params = {"quest_id": "is.null", "used_at": "is.null"}
+        self._request("DELETE", "persona_lines", params, None, "return=minimal")
+        if rows:
+            self._request("POST", "persona_lines", None, rows, "return=minimal")
 
 
 def _run_to_row(fields: dict[str, Any]) -> dict[str, Any]:

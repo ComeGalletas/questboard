@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "daily_plan.schema.json",
+  "title": "DailyPlan",
+  "description": "daily_am output: quest diffs for today plus the dialogue bundle the app performs from the cache.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["diff", "quest_lines", "board_lines"],
+  "properties": {
+    "diff": { "$ref": "quest_diff.schema.json" },
+    "quest_lines": {
+      "type": "array",
+      "maxItems": 40,
+      "items": { "$ref": "#/$defs/QuestLines" }
+    },
+    "board_lines": {
+      "type": "array",
+      "maxItems": 48,
+      "items": { "$ref": "#/$defs/BoardLine" }
+    }
+  },
+  "$defs": {
+    "QuestLines": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quest", "persona", "lines"],
+      "properties": {
+        "quest": {
+          "type": "string",
+          "pattern": "^([0-9a-f-]{36}|new:[0-9]{1,2})$",
+          "description": "An existing quest id, or new:N for the N-th add op (0-based) in diff.ops."
+        },
+        "persona": { "$ref": "common.schema.json#/$defs/PersonaSlug" },
+        "lines": {
+          "type": "array",
+          "maxItems": 60,
+          "items": { "$ref": "fallback_lines.schema.json#/$defs/FallbackLine" }
+        }
+      }
+    },
+    "BoardLine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["persona", "trigger", "variant", "condition", "text"],
+      "properties": {
+        "persona": { "$ref": "common.schema.json#/$defs/PersonaSlug" },
+        "trigger": {
+          "type": "string",
+          "enum": ["all_done", "half_by_noon", "nothing_by_15", "over_capacity"]
+        },
+        "variant": { "type": "integer", "minimum": 1, "maximum": 3 },
+        "condition": { "type": "string", "enum": ["any", "pleased", "neutral", "concerned"] },
+        "text": { "type": "string", "minLength": 1, "maxLength": 280 }
+      }
+    }
+  }
+}

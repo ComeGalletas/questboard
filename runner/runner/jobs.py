@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from questboard_schema.common_schema import JobName
 
+from runner.engine.daily import daily_am, daily_pm
 from runner.scheduler.core import JobContext, JobHandler, JobResult
 
 
@@ -13,4 +14,8 @@ def ingest(ctx: JobContext) -> JobResult:
     return JobResult()
 
 
-HANDLERS: dict[JobName, JobHandler] = {JobName.ingest: ingest}
+HANDLERS: dict[JobName, JobHandler] = {
+    JobName.ingest: ingest,
+    JobName.daily_am: daily_am,
+    JobName.daily_pm: daily_pm,
+}

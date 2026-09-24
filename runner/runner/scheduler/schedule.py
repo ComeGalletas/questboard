@@ -21,6 +21,11 @@ class JobSpec:
     slot: Slot | None = None
     window: tuple[time, time] | None = None  # inclusive local-time window for the slot
     every: timedelta | None = None
+    needs_provider: bool | None = None  # default: same as uses_llm
+
+    @property
+    def provider_required(self) -> bool:
+        return self.uses_llm if self.needs_provider is None else self.needs_provider
 
 
 SPECS: dict[JobName, JobSpec] = {
@@ -33,6 +38,8 @@ SPECS: dict[JobName, JobSpec] = {
         slot="AM",
         window=(time(5, 0), time(11, 59, 59)),
     ),
+    # daily_pm is bookkept like an LLM job (slot, idempotency, backoff) but its accounting
+    # is pure code, so it must not wait for a model (P0 is never blocked).
     JobName.daily_pm: JobSpec(
         JobName.daily_pm,
         "daily",
@@ -40,6 +47,7 @@ SPECS: dict[JobName, JobSpec] = {
         at=time(21, 0),
         slot="PM",
         window=(time(17, 0), time(23, 59, 59)),
+        needs_provider=False,
     ),
     JobName.weekly: JobSpec(JobName.weekly, "weekly", True, at=time(18, 0), weekday=6),
     JobName.monthly: JobSpec(JobName.monthly, "monthly", True, at=time(8, 0)),

@@ -50,8 +50,9 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 ## Phase 2 — Runner, providers, daily cache (week 3)
 - [x] Runner skeleton: trigger loop, guards, lock file, heartbeat, `llm_runs` idempotency + backoff + catch-up. (Tested against an in-memory DB; Supabase connection next.)
 - [x] Providers: `ollama.py`, `claude_api.py`; output validation, one retry, fallthrough. Supabase connection for the runner (signs in as the user; refresh token in the OS keychain).
-- [ ] Engine: prompt assembly, `daily_am` (QuestDiffs + capacity fit + dialogue bundles), `daily_pm` (accounting + carry-over rules).
-- [ ] `persona_lines` selection in the app.
+- [x] Engine: prompt assembly, `daily_am` (QuestDiffs + capacity fit + dialogue bundles), `daily_pm` (accounting + carry-over rules). Proposals wait in `quest_proposals`.
+- [ ] App: review strip for pending proposals (accept applies the op in code and caches its lines; reject records feedback).
+- [x] `persona_lines` selection in the app. (Done in Phase 1.)
 - [ ] Tauri shell: dashboard window, tray, start-at-login, sidecar, OS notifications, deep links.
 - [ ] Notifications v1 with dedup and quiet hours; Web Push to PWA.
 
@@ -92,6 +93,8 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [ ] Encrypted backup/export of config, packs and vault.
 
 ## Open questions (decide when reached)
+- daily_am cost: one real run with 2 quests used ~49k input / ~38k output tokens (dialogue for 18 triggers x 2 variants per quest). Consider fewer variants or triggers per run if cost matters.
+- Weekly carry-over (max 2) lands with the weekly job.
 - ~~Freshness cap meaning~~ → confirmed: LLM jobs wait for ingest data < 2 h old (only with an integration on); manual runs skip it.
 - ~~Where proposed QuestDiffs wait~~ → decided: `quest_proposals` table (one row per op, pending/accepted/rejected).
 - `push_subscriptions` table for Web Push (lands with the PWA item).
