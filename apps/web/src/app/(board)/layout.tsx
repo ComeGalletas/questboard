@@ -18,6 +18,7 @@ const TABS = [
   { href: "/today", label: "Today" },
   { href: "/week", label: "Week" },
   { href: "/month", label: "Month" },
+  { href: "/setup", label: "Setup" },
 ];
 
 export default function BoardLayout({ children }: { children: React.ReactNode }) {

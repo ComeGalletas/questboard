@@ -218,6 +218,18 @@ export class DemoStore implements Store {
     this.save(state);
   }
 
+  async createLiveRequest(): Promise<string> {
+    throw new Error("The setup assistant needs the PC runner; it isn't available in demo mode.");
+  }
+
+  async getLiveRequest(): Promise<null> {
+    return null;
+  }
+
+  async saveConfig(): Promise<void> {
+    throw new Error("Demo mode uses a fixed config.");
+  }
+
   async savePushSubscription(): Promise<void> {
     // Demo mode never sends pushes.
   }

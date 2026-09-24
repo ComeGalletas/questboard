@@ -13,6 +13,8 @@ export interface QuestboardSchemas {
   quest_diff?: QuestDiff;
   quest_proposal?: QuestProposal;
   runner_state?: RunnerState;
+  setup_request?: SetupRequest;
+  setup_turn?: SetupTurn;
 }
 /**
  * Shared enums and value types referenced by the other schemas.
@@ -68,7 +70,7 @@ export interface Config {
      * Items: This interface was referenced by `Common`'s JSON-Schema
      * via the `definition` "ProviderName".
      */
-    providers: ["claude-cli" | "ollama" | "claude-api", ...("claude-cli" | "ollama" | "claude-api")[]];
+    providers: ("claude-cli" | "ollama" | "claude-api")[];
     /**
      * Model per provider, e.g. {"claude-api": "claude-opus-5", "ollama": "qwen3:8b"}. Unset uses the runner default.
      */
@@ -85,7 +87,7 @@ export interface Config {
        * Items: This interface was referenced by `Common`'s JSON-Schema
        * via the `definition` "ProviderName".
        */
-      [k: string]: ["claude-cli" | "ollama" | "claude-api", ...("claude-cli" | "ollama" | "claude-api")[]];
+      [k: string]: ("claude-cli" | "ollama" | "claude-api")[];
     };
   };
   /**
@@ -357,18 +359,7 @@ export interface ExtractedRecord {
   /**
    * @maxItems 10
    */
-  instructions:
-    | []
-    | [string]
-    | [string, string]
-    | [string, string, string]
-    | [string, string, string, string]
-    | [string, string, string, string, string]
-    | [string, string, string, string, string, string]
-    | [string, string, string, string, string, string, string]
-    | [string, string, string, string, string, string, string, string]
-    | [string, string, string, string, string, string, string, string, string]
-    | [string, string, string, string, string, string, string, string, string, string];
+  instructions: string[];
   reference_token?: string | null;
   confidence: number;
 }
@@ -379,7 +370,7 @@ export interface FallbackLines {
   /**
    * @minItems 1
    */
-  lines: [FallbackLine, ...FallbackLine[]];
+  lines: FallbackLine[];
 }
 /**
  * One attempt of a scheduled LLM job, as stored in `llm_runs`. Idempotent per (job, slot, date).
@@ -641,4 +632,56 @@ export interface RunnerState {
 export interface ProviderHealth {
   reachable: boolean;
   checked_at: string;
+}
+/**
+ * payload of a `setup_assistant` row in pending_live_requests: the whole conversation so far (the app keeps it; each row is one turn).
+ */
+export interface SetupRequest {
+  /**
+   * @minItems 1
+   * @maxItems 40
+   */
+  messages: {
+    role: "user" | "assistant";
+    content: string;
+  }[];
+}
+/**
+ * One setup-assistant reply. config_patch replaces whole top-level config keys; the user reviews and applies it (the assistant never writes config itself).
+ */
+export interface SetupTurn {
+  reply: string;
+  config_patch: ConfigPatch | null;
+  /**
+   * True when the assistant thinks setup is complete.
+   */
+  done: boolean;
+}
+/**
+ * Only user-level settings. LLM providers, integrations, features and notifications stay out of the assistant's reach.
+ *
+ * This interface was referenced by `SetupTurn`'s JSON-Schema
+ * via the `definition` "ConfigPatch".
+ */
+export interface ConfigPatch {
+  timezone?: string;
+  /**
+   * @maxItems 12
+   */
+  goals?: Goal[];
+  capacity?: {
+    weekday_hours: number;
+    weekend_hours: number;
+    focus_factor: number;
+  };
+  quiet_hours?: QuietHours;
+  /**
+   * @maxItems 12
+   *
+   * Items: Persona pack slug (coach, teacher, mom, quartermaster, or a custom pack).
+   *
+   * This interface was referenced by `Common`'s JSON-Schema
+   * via the `definition` "PersonaSlug".
+   */
+  persona_order?: string[];
 }

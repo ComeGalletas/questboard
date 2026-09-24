@@ -509,3 +509,71 @@ button:disabled {
 .proposal-actions button:first-child {
   border-color: var(--ok);
 }
+
+.setup h2 {
+  font-size: 12px;
+  margin: 0 0 12px;
+}
+
+.chat {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.chat-msg {
+  max-width: 85%;
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  background: var(--ground);
+  white-space: pre-wrap;
+}
+
+.chat-msg[data-role="user"] {
+  justify-self: end;
+  border-color: var(--teacher);
+}
+
+.chat-input {
+  display: flex;
+  gap: 8px;
+}
+
+.chat-input input {
+  flex: 1;
+  font: inherit;
+  color: var(--text);
+  background: var(--ground);
+  border: 2px solid var(--border);
+  padding: 8px 10px;
+  min-width: 0;
+}
+
+.patch-review {
+  border: 2px dashed var(--mom);
+  padding: 10px;
+  margin-bottom: 12px;
+}
+
+.patch-review h3 {
+  font-size: 10px;
+  margin: 0 0 8px;
+}
+
+.patch-review dl {
+  margin: 0 0 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.patch-review dt {
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: capitalize;
+}
+
+.patch-review dd {
+  margin: 0;
+}

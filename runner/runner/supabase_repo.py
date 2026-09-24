@@ -291,6 +291,24 @@ class SupabaseRepo:
             "DELETE", "push_subscriptions", {"id": f"eq.{sub_id}"}, None, "return=minimal"
         )
 
+    def list_pending_requests(self, limit: int) -> list[dict[str, Any]]:
+        params = {
+            "select": "id,kind,payload,created_at",
+            "status": "eq.pending",
+            "order": "created_at",
+            "limit": str(limit),
+        }
+        return self._request("GET", "pending_live_requests", params)
+
+    def update_request(self, request_id: str, fields: dict[str, Any]) -> None:
+        self._request(
+            "PATCH",
+            "pending_live_requests",
+            {"id": f"eq.{request_id}"},
+            fields,
+            "return=minimal",
+        )
+
 
 def _run_to_row(fields: dict[str, Any]) -> dict[str, Any]:
     row = dict(fields)

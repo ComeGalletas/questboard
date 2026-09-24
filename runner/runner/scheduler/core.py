@@ -214,6 +214,17 @@ class Scheduler:
 
     # -- guards and state -------------------------------------------------------------------
 
+    def process_live(self) -> int:
+        """P1: answer pending live requests (setup assistant, ...). Called between ticks."""
+        from runner.live import process_live
+
+        try:
+            config = self.repo.get_config()
+            providers = [self.providers[n] for n in config.llm.providers if n in self.providers]
+            return process_live(self.repo, config, providers, self.clock())
+        except RepoUnavailable:
+            return 0
+
     def _providers_for(self, config: Config, job: JobName) -> list[Provider]:
         per_job = (config.llm.per_job or {}).get(job)
         order = per_job.root if per_job else config.llm.providers

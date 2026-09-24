@@ -9,6 +9,8 @@ import type {
   Quest,
   QuestProposal,
   RunnerState,
+  SetupRequest,
+  SetupTurn,
 } from "@questboard/schema";
 import type { QuestPatch } from "../game/actions.ts";
 import type { QuestChangesPatch } from "../game/proposals.ts";
@@ -41,6 +43,10 @@ export interface Store {
   decideProposal(id: string, status: "accepted" | "rejected" | "superseded"): Promise<void>;
   /** Cache dialogue that came with an accepted add, now that the quest has an id. */
   insertLines(questId: string, persona: string, lines: FallbackLine[]): Promise<void>;
+  /** P1 request for the runner; resolves with its id. */
+  createLiveRequest(kind: "setup_assistant", payload: SetupRequest): Promise<string>;
+  getLiveRequest(id: string): Promise<LiveRequest | null>;
+  saveConfig(config: Config): Promise<void>;
   savePushSubscription(sub: {
     endpoint: string;
     p256dh: string;
@@ -55,3 +61,9 @@ export interface Store {
   /** Calls back on any change to quests / persona_lines / runner_state / quest_proposals. */
   subscribe(onChange: () => void): () => void;
 }
+
+export type LiveRequest = {
+  status: "pending" | "running" | "done" | "failed" | "cancelled";
+  result: SetupTurn | null;
+  error: string | null;
+};

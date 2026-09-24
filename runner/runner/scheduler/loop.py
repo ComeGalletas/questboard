@@ -12,6 +12,7 @@ from questboard_schema.llm_run_schema import Trigger
 from runner.scheduler.core import DB_DOWN, Decision, Scheduler
 
 TICK_SECONDS = 300
+LIVE_POLL_SECONDS = 5  # P1 requests (setup assistant) are answered between ticks
 log = logging.getLogger("questboard.runner")
 
 
@@ -48,4 +49,12 @@ class Loop:
             first = False
             count += 1
             if ticks is None or count < ticks:
-                self.sleep(TICK_SECONDS)
+                self._between_ticks()
+
+    def _between_ticks(self) -> None:
+        for _ in range(TICK_SECONDS // LIVE_POLL_SECONDS):
+            self.sleep(LIVE_POLL_SECONDS)
+            try:
+                self.scheduler.process_live()
+            except Exception as exc:  # noqa: BLE001 - never let P1 stop P0
+                log.error("live requests failed: %s", type(exc).__name__)
