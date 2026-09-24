@@ -4,7 +4,8 @@ import type { FallbackLine, PersonaPack } from "@questboard/schema";
 import bundled from "../generated/personas.json" with { type: "json" };
 
 export type Pack = PersonaPack & {
-  assets: { sprite?: string; portrait?: string };
+  /** frames: how many of the five sprite states the sheet has (missing ones show idle). */
+  assets: { sprite?: string; portrait?: string; frames: number };
   lines: FallbackLine[];
 };
 

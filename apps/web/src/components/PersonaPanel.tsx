@@ -68,6 +68,7 @@ export function PersonaPanel({ summary }: { summary: Summary }) {
     <section className="panel persona-panel" aria-label="Persona">
       <Sprite
         sheet={pack?.assets.sprite}
+        frames={pack?.assets.frames}
         state={state}
         scale={3}
         label={`${pack?.name ?? slug}, ${state}`}

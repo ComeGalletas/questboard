@@ -7,6 +7,7 @@ export interface QuestboardSchemas {
   extracted_record?: ExtractedRecord;
   fallback_lines?: FallbackLines;
   llm_run?: LLMRun;
+  persona_digest?: PersonaDigest;
   persona_line?: PersonaLine;
   persona_pack?: PersonaPack;
   quest?: Quest;
@@ -403,6 +404,29 @@ export interface LLMRun {
 export interface TokenUsage {
   input: number;
   output: number;
+}
+/**
+ * persona_digest output: a short style guide distilled from a pack's context/ folder. Flavor only: it can describe voice, never change schema, escalation caps or quiet hours (invariant 6). Cached on the runner machine and added to planning prompts, capped.
+ */
+export interface PersonaDigest {
+  /**
+   * How the persona talks: tone, rhythm, recurring images.
+   */
+  voice: string;
+  /**
+   * @maxItems 6
+   */
+  do: string[];
+  /**
+   * @maxItems 6
+   */
+  dont: string[];
+  /**
+   * A few lines in character, to anchor the voice.
+   *
+   * @maxItems 4
+   */
+  sample_lines: string[];
 }
 /**
  * One pre-authored dialogue line, as stored in `persona_lines`. Quest-level lines carry a quest_id; board-level lines do not.

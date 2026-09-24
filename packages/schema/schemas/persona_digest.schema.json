@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_digest.schema.json",
+  "title": "PersonaDigest",
+  "description": "persona_digest output: a short style guide distilled from a pack's context/ folder. Flavor only: it can describe voice, never change schema, escalation caps or quiet hours (invariant 6). Cached on the runner machine and added to planning prompts, capped.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["voice", "do", "dont", "sample_lines"],
+  "properties": {
+    "voice": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 400,
+      "description": "How the persona talks: tone, rhythm, recurring images."
+    },
+    "do": {
+      "type": "array",
+      "maxItems": 6,
+      "items": { "type": "string", "minLength": 1, "maxLength": 120 }
+    },
+    "dont": {
+      "type": "array",
+      "maxItems": 6,
+      "items": { "type": "string", "minLength": 1, "maxLength": 120 }
+    },
+    "sample_lines": {
+      "type": "array",
+      "maxItems": 4,
+      "items": { "type": "string", "minLength": 1, "maxLength": 200 },
+      "description": "A few lines in character, to anchor the voice."
+    }
+  }
+}

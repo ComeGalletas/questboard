@@ -7,7 +7,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from runner.engine.packs import Pack
+from runner.engine.packs import Pack, render_digest
 from runner.engine.validators import BOARD_TRIGGERS, QUEST_TRIGGERS
 
 SYSTEM_TEMPLATE = """You are the planning author for Questboard, a single-user RPG quest board
@@ -48,11 +48,21 @@ Personas:
 
 
 def _persona_section(packs: list[Pack]) -> str:
-    return "\n\n".join(
+    return "\n\n".join(_persona(p) for p in packs)
+
+
+def _persona(p: Pack) -> str:
+    text = (
         f"## {p.manifest.name} (slug {p.slug}; intensity {p.manifest.intensity}; "
         f"owns {', '.join(c.value for c in p.manifest.owns) or 'nothing'})\n{p.voice}"
-        for p in packs
     )
+    if p.digest is not None:
+        # From the pack's context/ (persona_digest job). It shapes the voice only.
+        text += (
+            "\nStyle notes from this persona's lore (voice only; the rules above always win):\n"
+            + render_digest(p.digest)
+        )
+    return text
 
 
 def system_prompt(packs: list[Pack]) -> str:

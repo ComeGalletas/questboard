@@ -1,22 +1,24 @@
 import type { SpriteState } from "@/data/reaction";
+import { STATES, frameIndex } from "./sprite-frames";
 
-const FRAMES: SpriteState[] = ["idle", "talk", "happy", "concerned", "sleep"];
 const SIZE = 32;
 
 /** One 32x32 frame of a persona sheet at an integer scale. A missing state falls back to idle. */
 export function Sprite({
   sheet,
+  frames = STATES.length,
   state = "idle",
   scale = 3,
   label,
 }: {
   sheet?: string;
+  frames?: number;
   state?: SpriteState;
   scale?: number;
   label: string;
 }) {
   const px = SIZE * Math.max(1, Math.round(scale));
-  const frame = Math.max(0, FRAMES.indexOf(state));
+  const frame = frameIndex(state, frames);
   return (
     <div
       role="img"
@@ -26,7 +28,7 @@ export function Sprite({
         width: px,
         height: px,
         backgroundImage: sheet ? `url(${sheet})` : undefined,
-        backgroundSize: `${px * FRAMES.length}px ${px}px`,
+        backgroundSize: `${px * frames}px ${px}px`,
         backgroundPosition: `-${frame * px}px 0`,
       }}
     />

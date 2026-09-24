@@ -5,6 +5,7 @@
   python -m runner tick [--dry-run]          one evaluation, then exit
   python -m runner trigger JOB [--dry-run]   manual run of one job
   python -m runner vapid                     print a new VAPID key pair for Web Push
+  python -m runner packs                     check the persona packs (errors and warnings)
 
 --dry-run uses an in-memory DB with the default config. Output lists job decisions only,
 never data.
@@ -21,6 +22,7 @@ from questboard_schema.common_schema import JobName, ProviderName
 from questboard_schema.config_schema import Config
 from questboard_schema.llm_run_schema import Trigger
 
+from runner.engine.packs import inspect_packs
 from runner.jobs import HANDLERS
 from runner.notify.push import generate_vapid_keys, sender_from_env
 from runner.notify.step import run_notifications
@@ -94,11 +96,26 @@ def login() -> int:
     return 0
 
 
+def check_packs() -> int:
+    """Pack authoring aid: one line per pack, then its problems. Exit 1 if any is rejected."""
+    rejected = 0
+    for report in inspect_packs():
+        state = "rejected" if report.pack is None else "ok"
+        rejected += report.pack is None
+        print(f"{report.dir.name}: {state}")
+        for problem in report.errors:
+            print(f"  error: {problem}")
+        for problem in report.warnings:
+            print(f"  warning: {problem}")
+    return 1 if rejected else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="runner")
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("login")
     sub.add_parser("vapid")
+    sub.add_parser("packs")
     for name in ("run", "tick"):
         sub.add_parser(name).add_argument("--dry-run", action="store_true")
     trig = sub.add_parser("trigger")
@@ -109,6 +126,8 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
     if args.cmd == "login":
         return login()
+    if args.cmd == "packs":
+        return check_packs()
     if args.cmd == "vapid":
         private, public = generate_vapid_keys()
         print(f"QUESTBOARD_VAPID_PRIVATE_KEY={private}   # runner machine only (keep secret)")

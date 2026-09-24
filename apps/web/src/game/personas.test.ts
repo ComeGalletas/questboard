@@ -7,6 +7,7 @@ test("built-in packs are bundled with sprites and fallback lines", () => {
     const pack = packFor(slug);
     assert.ok(pack, slug);
     assert.equal(pack.assets.sprite, `/personas/${slug}/sprite.png`);
+    assert.equal(pack.assets.frames, 5);
     assert.ok(pack.lines.length >= 44);
   }
   assert.ok(PACKS.length >= 4);
