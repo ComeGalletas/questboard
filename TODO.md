@@ -16,7 +16,7 @@ Derived from `CLAUDE.md` and `docs/PLAN.md` (2026-09-24). Check items off as the
 | Persona packs | YAML + Markdown + PNG (+ optional GLB) | Pack loader with validation | 32x32 sprite sheets, 16x16 portraits. |
 | Art | — | Aseprite, SNES-style 32-color palette | Palette and accents defined in `CLAUDE.md`. |
 
-Tooling not named in the docs, adopted in the Phase 0 scaffold (swap before more code depends on it if you disagree):
+Tooling not named in the docs (confirmed 2026-09-24):
 - Monorepo: pnpm workspaces (+ Turborepo if builds get slow).
 - Python: `uv` for env/deps, `pytest` for tests, `ruff` for lint/format.
 - TS: ESLint + Prettier, `tsc --noEmit` in CI.
