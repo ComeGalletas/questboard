@@ -78,9 +78,9 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 
 ## Phase 5 — Voice (week 7)
 - [ ] PC capture with whisper.cpp; mobile Web Speech with clip fallback (P1).
-- [ ] Grammar parser (es/en); chrono-node / dateparser.
-- [ ] Confirmation card before any write.
-- [ ] LLM fallback for unparsed utterances.
+- [x] Grammar parser (es/en): create/complete/snooze/defer/what's next, dates and times; one grammar in TS and Python locked to shared fixtures (ADR 0001: not chrono-node / dateparser).
+- [x] Confirmation card before any write (Today board: hold-to-speak via Web Speech where available, or type; Confirm or spoken/typed "confirm").
+- [ ] LLM fallback for unparsed utterances. Open question: it must carry the utterance to the runner, and transcripts are never persisted. Options: send only a sanitized, short-lived request row deleted after the answer, or run the fallback only on the PC where the transcript is already local.
 
 ## Phase 6 — Custom personas, assets, 3D (week 8)
 - [x] Pack loader with validation (manifest, fallback lines, sprite frames, size limits); missing frames -> idle; `python -m runner packs`.

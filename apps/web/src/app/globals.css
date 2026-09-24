@@ -577,3 +577,52 @@ button:disabled {
 .patch-review dd {
   margin: 0;
 }
+
+/* Voice commands (Today) */
+.voice {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.voice-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.voice-bar input,
+.voice-bar select {
+  font: inherit;
+  color: var(--text);
+  background: var(--ground);
+  border: 2px solid var(--border);
+  padding: 6px 8px;
+  min-width: 0;
+}
+
+.voice-bar input {
+  flex: 1 1 180px;
+}
+
+.voice-bar .mic[aria-pressed="true"] {
+  background: var(--border);
+  border-color: var(--text);
+}
+
+.voice-card {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 0;
+}
+
+.voice-card p,
+.voice-notice {
+  margin: 0;
+}
+
+.quest-form-actions .muted {
+  align-self: center;
+  font-size: 13px;
+}

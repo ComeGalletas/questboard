@@ -11,6 +11,7 @@ import { QuestForm } from "./QuestForm";
 import { QuestRow } from "./QuestRow";
 import { StatsStrip } from "./StatsStrip";
 import { useQuestActions } from "./useQuestActions";
+import { VoiceBar } from "./VoiceBar";
 
 const TITLES: Record<Board, string> = { today: "Today", week: "This week", month: "This month" };
 
@@ -30,6 +31,7 @@ export function BoardView({ board }: { board: Board }) {
       <PersonaPanel summary={summary} />
       <StatsStrip summary={summary} showCapacity={board === "today"} />
       <section className="board-main">
+        {board === "today" && <VoiceBar act={act} next={summary.next} />}
         <ProposalStrip board={board} />
         <section className="panel board" aria-labelledby={`${board}-title`}>
           <div className="board-head">
