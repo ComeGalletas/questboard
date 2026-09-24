@@ -10,7 +10,7 @@ from __future__ import annotations
 import base64
 import json
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from typing import Any, Protocol
 
 import httpx
@@ -253,6 +253,43 @@ class SupabaseRepo:
         self._request("DELETE", "persona_lines", params, None, "return=minimal")
         if rows:
             self._request("POST", "persona_lines", None, rows, "return=minimal")
+
+    def insert_notifications(self, rows: list[dict[str, Any]]) -> None:
+        if rows:
+            self._request(
+                "POST",
+                "notifications",
+                {"on_conflict": "user_id,kind,target,dedup_date"},
+                rows,
+                "resolution=ignore-duplicates,return=minimal",
+            )
+
+    def list_undelivered_notifications(self, since: datetime) -> list[dict[str, Any]]:
+        params = {
+            "select": "id,kind,target,persona,title,body,channels,dedup_date,created_at",
+            "sent_at": "is.null",
+            "created_at": f"gte.{since.isoformat()}",
+            "order": "created_at",
+        }
+        return self._request("GET", "notifications", params)
+
+    def mark_notifications_sent(self, ids: list[str], at: datetime) -> None:
+        if ids:
+            self._request(
+                "PATCH",
+                "notifications",
+                {"id": f"in.({','.join(ids)})"},
+                {"sent_at": at},
+                "return=minimal",
+            )
+
+    def list_push_subscriptions(self) -> list[dict[str, Any]]:
+        return self._request("GET", "push_subscriptions", {"select": "id,endpoint,p256dh,auth"})
+
+    def delete_push_subscription(self, sub_id: str) -> None:
+        self._request(
+            "DELETE", "push_subscriptions", {"id": f"eq.{sub_id}"}, None, "return=minimal"
+        )
 
 
 def _run_to_row(fields: dict[str, Any]) -> dict[str, Any]:

@@ -4,6 +4,7 @@
   python -m runner run [--dry-run]           trigger loop (start, 5-min tick, network up)
   python -m runner tick [--dry-run]          one evaluation, then exit
   python -m runner trigger JOB [--dry-run]   manual run of one job
+  python -m runner vapid                     print a new VAPID key pair for Web Push
 
 --dry-run uses an in-memory DB with the default config. Output lists job decisions only,
 never data.
@@ -21,6 +22,8 @@ from questboard_schema.config_schema import Config
 from questboard_schema.llm_run_schema import Trigger
 
 from runner.jobs import HANDLERS
+from runner.notify.push import generate_vapid_keys, sender_from_env
+from runner.notify.step import run_notifications
 from runner.paths import data_dir
 from runner.providers import ClaudeCliProvider, Provider
 from runner.providers.claude_api import ClaudeApiProvider
@@ -70,7 +73,13 @@ def build(dry_run: bool) -> Scheduler:
         config = repo.get_config()
     except RepoUnavailable:
         config = Config.model_validate(DEFAULT_CONFIG)  # offline at boot: defaults until reconnect
-    return Scheduler(repo=repo, handlers=HANDLERS, providers=providers_for(config))
+    send = sender_from_env()
+    return Scheduler(
+        repo=repo,
+        handlers=HANDLERS,
+        providers=providers_for(config),
+        after_jobs=lambda r, cfg, now: run_notifications(r, cfg, now, send),
+    )
 
 
 def login() -> int:
@@ -89,6 +98,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="runner")
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("login")
+    sub.add_parser("vapid")
     for name in ("run", "tick"):
         sub.add_parser(name).add_argument("--dry-run", action="store_true")
     trig = sub.add_parser("trigger")
@@ -99,6 +109,11 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
     if args.cmd == "login":
         return login()
+    if args.cmd == "vapid":
+        private, public = generate_vapid_keys()
+        print(f"QUESTBOARD_VAPID_PRIVATE_KEY={private}   # runner machine only (keep secret)")
+        print(f"NEXT_PUBLIC_VAPID_PUBLIC_KEY={public}   # web app build")
+        return 0
     try:
         with InstanceLock(data_dir() / "runner.lock"):
             scheduler = build(args.dry_run)

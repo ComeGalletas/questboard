@@ -41,6 +41,12 @@ export interface Store {
   decideProposal(id: string, status: "accepted" | "rejected" | "superseded"): Promise<void>;
   /** Cache dialogue that came with an accepted add, now that the quest has an id. */
   insertLines(questId: string, persona: string, lines: FallbackLine[]): Promise<void>;
+  savePushSubscription(sub: {
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+    user_agent: string;
+  }): Promise<void>;
   recordFeedback(row: {
     quest_id: string | null;
     action: "accepted" | "rejected";

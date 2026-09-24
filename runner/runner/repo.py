@@ -7,7 +7,7 @@ talks to PostgREST as the signed-in user, so RLS applies to the runner like any 
 from __future__ import annotations
 
 import uuid
-from datetime import date
+from datetime import date, datetime
 from typing import Any, Protocol
 
 from questboard_schema.common_schema import JobName
@@ -47,6 +47,15 @@ class Repo(Protocol):
         """Drop unused board-level lines (quest_id null), then insert `rows`."""
         ...
 
+    def insert_notifications(self, rows: list[dict[str, Any]]) -> None:
+        """Insert, silently skipping rows that hit the (kind, target, dedup_date) key."""
+        ...
+
+    def list_undelivered_notifications(self, since: datetime) -> list[dict[str, Any]]: ...
+    def mark_notifications_sent(self, ids: list[str], at: datetime) -> None: ...
+    def list_push_subscriptions(self) -> list[dict[str, Any]]: ...
+    def delete_push_subscription(self, sub_id: str) -> None: ...
+
 
 class MemoryRepo:
     """In-process stand-in for the cloud DB."""
@@ -68,6 +77,9 @@ class MemoryRepo:
         self.feedback: list[dict[str, Any]] = []
         self.proposals: list[dict[str, Any]] = []
         self.lines: list[dict[str, Any]] = []
+        self.notifications: list[dict[str, Any]] = []
+        self.clock = lambda: datetime.now().astimezone()  # stands in for the DB's now()
+        self.push_subscriptions: list[dict[str, Any]] = []
 
     def _check(self) -> None:
         if not self.online:
@@ -162,3 +174,37 @@ class MemoryRepo:
             if not (line.get("quest_id") is None and line.get("used_at") is None)
         ]
         self.lines.extend(rows)
+
+    def insert_notifications(self, rows: list[dict[str, Any]]) -> None:
+        self._check()
+        seen = {(n["kind"], n["target"], n["dedup_date"]) for n in self.notifications}
+        for r in rows:
+            key = (r["kind"], r["target"], r["dedup_date"])
+            if key not in seen:
+                seen.add(key)
+                self.notifications.append(
+                    {
+                        "id": str(uuid.uuid4()),
+                        "sent_at": None,
+                        "created_at": self.clock(),
+                        **r,
+                    }
+                )
+
+    def list_undelivered_notifications(self, since: datetime) -> list[dict[str, Any]]:
+        self._check()
+        return [n for n in self.notifications if n["sent_at"] is None and n["created_at"] >= since]
+
+    def mark_notifications_sent(self, ids: list[str], at: datetime) -> None:
+        self._check()
+        for n in self.notifications:
+            if n["id"] in ids:
+                n["sent_at"] = at
+
+    def list_push_subscriptions(self) -> list[dict[str, Any]]:
+        self._check()
+        return list(self.push_subscriptions)
+
+    def delete_push_subscription(self, sub_id: str) -> None:
+        self._check()
+        self.push_subscriptions = [s for s in self.push_subscriptions if s["id"] != sub_id]

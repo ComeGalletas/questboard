@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { PushToggle } from "@/components/PushToggle";
 import { StatusPill } from "@/components/StatusPill";
 import { DemoStore } from "@/data/demo-store";
 import { demoEnabled, setDemo, subscribeDemo } from "@/data/demo-flag";
@@ -70,6 +71,7 @@ export default function BoardLayout({ children }: { children: React.ReactNode })
             <button type="button" className="link" onClick={signOut}>
               {store.kind === "demo" ? "Leave demo" : "Sign out"}
             </button>
+            <PushToggle />
             {store.kind === "demo" && (
               <button
                 type="button"

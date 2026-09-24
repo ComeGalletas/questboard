@@ -155,3 +155,36 @@ def test_daily_am_then_pm_through_rls(repo: SupabaseRepo) -> None:
     runs = repo.list_runs(JobName.daily_am, "AM", day.date())
     assert runs[-1].status == Status.succeeded
     print(json.dumps({"am_run": str(runs[-1].id), "quest": qid}))
+
+
+def test_notifications_dedup_and_push_subscriptions(repo: SupabaseRepo) -> None:
+    from runner.notify.step import run_notifications
+
+    now = datetime.now(BOGOTA).replace(hour=12)  # outside default quiet hours
+    target = f"questboard://quest/{uuid.uuid4()}"
+    row = {
+        "kind": "quest_due",
+        "target": target,
+        "persona": "coach",
+        "title": "Due soon",
+        "body": "Integration",
+        "channels": ["pc", "push"],
+        "dedup_date": now.date().isoformat(),
+    }
+    repo.insert_notifications([row])
+    repo.insert_notifications([row])  # same (kind, target, date): ignored, not an error
+    found = rest(repo, "GET", "notifications", params={"target": f"eq.{target}"}).json()
+    assert len(found) == 1
+
+    sub = rest(
+        repo,
+        "POST",
+        "push_subscriptions",
+        json={"endpoint": f"https://push.example/{uuid.uuid4()}", "p256dh": "k", "auth": "a"},
+    )
+    assert sub.status_code == 201, sub.text
+    sent: list[str] = []
+    run_notifications(repo, repo.get_config(), now, lambda s, body: sent.append(s["endpoint"]))
+    assert sub.json()[0]["endpoint"] in sent
+    after = rest(repo, "GET", "notifications", params={"target": f"eq.{target}"}).json()
+    assert after[0]["sent_at"] is not None
