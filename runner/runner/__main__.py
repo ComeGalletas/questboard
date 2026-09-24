@@ -6,6 +6,7 @@
   python -m runner trigger JOB [--dry-run]   manual run of one job
   python -m runner vapid                     print a new VAPID key pair for Web Push
   python -m runner packs                     check the persona packs (errors and warnings)
+  python -m runner vault                     open (or create) the local vault; prints counts only
 
 --dry-run uses an in-memory DB with the default config. Output lists job decisions only,
 never data.
@@ -110,12 +111,26 @@ def check_packs() -> int:
     return 1 if rejected else 0
 
 
+def check_vault() -> int:
+    """Opens vault.db with the keychain key (creating both on first run). Never prints values."""
+    from runner.sanitize.vault_store import SqlCipherVault, VaultError, default_path
+
+    try:
+        with SqlCipherVault() as vault:
+            print(f"vault: {default_path()} ({vault.count()} pseudonyms)")
+    except VaultError as exc:
+        print(f"vault: {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="runner")
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("login")
     sub.add_parser("vapid")
     sub.add_parser("packs")
+    sub.add_parser("vault")
     for name in ("run", "tick"):
         sub.add_parser(name).add_argument("--dry-run", action="store_true")
     trig = sub.add_parser("trigger")
@@ -128,6 +143,8 @@ def main(argv: list[str] | None = None) -> int:
         return login()
     if args.cmd == "packs":
         return check_packs()
+    if args.cmd == "vault":
+        return check_vault()
     if args.cmd == "vapid":
         private, public = generate_vapid_keys()
         print(f"QUESTBOARD_VAPID_PRIVATE_KEY={private}   # runner machine only (keep secret)")
