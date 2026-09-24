@@ -32,7 +32,7 @@ export type ActionResult =
   | { ok: true; patch: QuestPatch; trigger: Trigger; finish?: Finish }
   | { ok: false; reason: string };
 
-const ACTIVE: ReadonlySet<Quest["status"]> = new Set([
+export const ACTIVE: ReadonlySet<Quest["status"]> = new Set([
   "open",
   "in_progress",
   "snoozed",

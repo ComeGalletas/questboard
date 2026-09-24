@@ -16,6 +16,7 @@ export interface QuestboardSchemas {
   runner_state?: RunnerState;
   setup_request?: SetupRequest;
   setup_turn?: SetupTurn;
+  voice_command?: VoiceCommand;
 }
 /**
  * Shared enums and value types referenced by the other schemas.
@@ -708,4 +709,31 @@ export interface ConfigPatch {
    * via the `definition` "PersonaSlug".
    */
   persona_order?: string[];
+}
+/**
+ * What the deterministic voice grammar (P2, es/en) understood. Same output from the web parser and the runner parser (shared fixtures). Never written anywhere by itself: the app shows a confirmation card first (invariant 8). Dates are local calendar values, resolved against the reference day the parser was given.
+ */
+export interface VoiceCommand {
+  intent: "create" | "complete" | "snooze" | "defer" | "whats_next" | "confirm" | "cancel" | "unknown";
+  lang: "en" | "es";
+  /**
+   * create: the new quest's title.
+   */
+  title?: string;
+  /**
+   * complete / snooze / defer: how the user named the quest (matched in code).
+   */
+  quest?: string;
+  /**
+   * create: the day to schedule; defer: the new day.
+   */
+  date?: string;
+  /**
+   * create: local time of day, when one was said.
+   */
+  time?: string;
+  /**
+   * snooze: how long, when one was said.
+   */
+  minutes?: number;
 }
