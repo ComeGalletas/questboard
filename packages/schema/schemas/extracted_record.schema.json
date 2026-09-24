@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "extracted_record.schema.json",
+  "title": "ExtractedRecord",
+  "description": "Output of a deterministic email extractor. Money and dates enter the system only through this record.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["category", "kind", "entity_token", "instructions", "confidence"],
+  "properties": {
+    "category": { "$ref": "common.schema.json#/$defs/Category" },
+    "kind": {
+      "type": "string",
+      "enum": ["obligation", "completion"],
+      "description": "`completion` = receipt / delivered / confirmed signal that auto-resolves by reference_token."
+    },
+    "entity_token": { "$ref": "common.schema.json#/$defs/Token" },
+    "amount": {
+      "anyOf": [{ "$ref": "#/$defs/Money" }, { "type": "null" }]
+    },
+    "due_at": { "type": ["string", "null"], "format": "date-time" },
+    "event_at": { "type": ["string", "null"], "format": "date-time" },
+    "location": {
+      "type": ["string", "null"],
+      "maxLength": 200,
+      "description": "Sanitized location text or token."
+    },
+    "instructions": {
+      "type": "array",
+      "maxItems": 10,
+      "items": { "type": "string", "maxLength": 200 }
+    },
+    "reference_token": {
+      "anyOf": [{ "$ref": "common.schema.json#/$defs/Token" }, { "type": "null" }]
+    },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+  },
+  "$defs": {
+    "Money": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "currency"],
+      "properties": {
+        "value": { "type": "number", "minimum": 0 },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+      }
+    }
+  }
+}

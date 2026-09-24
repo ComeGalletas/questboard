@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "quest.schema.json",
+  "title": "Quest",
+  "description": "A quest as stored in the `quests` table.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "title",
+    "persona",
+    "cadence",
+    "category",
+    "status",
+    "estimate_min",
+    "priority",
+    "xp",
+    "carries",
+    "hard_deadline",
+    "source",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "notes": { "type": ["string", "null"], "maxLength": 2000 },
+    "persona": { "$ref": "common.schema.json#/$defs/PersonaSlug" },
+    "cadence": { "$ref": "common.schema.json#/$defs/Cadence" },
+    "category": { "$ref": "common.schema.json#/$defs/Category" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "in_progress",
+        "done",
+        "partial",
+        "snoozed",
+        "deferred",
+        "skipped",
+        "forgotten",
+        "overdue",
+        "abandoned"
+      ]
+    },
+    "estimate_min": { "type": "integer", "minimum": 1, "maximum": 1440 },
+    "actual_min": { "type": ["integer", "null"], "minimum": 0 },
+    "scheduled_for": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "Board day (daily), week start (weekly) or month start (monthly)."
+    },
+    "deadline": { "type": ["string", "null"], "format": "date-time" },
+    "hard_deadline": {
+      "type": "boolean",
+      "description": "Hard-deadline obligations always carry over, ignoring carry caps."
+    },
+    "priority": { "type": "integer", "minimum": 1, "maximum": 3, "description": "1 = highest." },
+    "xp": { "type": "integer", "minimum": 0 },
+    "carries": { "type": "integer", "minimum": 0 },
+    "source": {
+      "type": "string",
+      "enum": ["manual", "llm", "llm-proposed", "extractor", "calendar", "voice"]
+    },
+    "reference_token": {
+      "anyOf": [{ "$ref": "common.schema.json#/$defs/Token" }, { "type": "null" }],
+      "description": "Links an extractor-created quest to its completion signal."
+    },
+    "parent_id": { "type": ["string", "null"], "format": "uuid" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_line.schema.json",
+  "title": "PersonaLine",
+  "description": "One pre-authored dialogue line, as stored in `persona_lines`. Quest-level lines carry a quest_id; board-level lines do not.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["persona", "trigger", "variant", "condition", "text"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "quest_id": { "type": ["string", "null"], "format": "uuid" },
+    "persona": { "$ref": "common.schema.json#/$defs/PersonaSlug" },
+    "trigger": {
+      "type": "string",
+      "enum": [
+        "assigned",
+        "reminder_am",
+        "reminder_mid",
+        "reminder_pm",
+        "started",
+        "completed_early",
+        "completed_on_time",
+        "completed_late",
+        "partial",
+        "snoozed",
+        "deferred",
+        "skipped",
+        "forgotten",
+        "overdue_1d",
+        "overdue_3d",
+        "overdue_7d",
+        "carried_over",
+        "abandoned",
+        "all_done",
+        "half_by_noon",
+        "nothing_by_15",
+        "over_capacity"
+      ]
+    },
+    "variant": { "type": "integer", "minimum": 1, "maximum": 3 },
+    "condition": {
+      "type": "string",
+      "enum": ["any", "pleased", "neutral", "concerned"],
+      "description": "Mood bucket; mood itself is computed in code from completion rate."
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 280,
+      "description": "May contain runtime placeholders {time_left} {streak} {days_carried} {actual_vs_estimate} {next_quest}."
+    },
+    "used_at": { "type": ["string", "null"], "format": "date-time" }
+  }
+}

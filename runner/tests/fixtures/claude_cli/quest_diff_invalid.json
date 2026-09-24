@@ -1,0 +1,33 @@
+{
+  "type": "result",
+  "subtype": "success",
+  "is_error": false,
+  "duration_ms": 1573,
+  "num_turns": 2,
+  "session_id": "00000000-0000-0000-0000-000000000000",
+  "total_cost_usd": 0.0073,
+  "usage": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 1585,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 92
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "result": "{\"ops\": [{\"op\": \"add\", \"quest\": {\"title\": \"Pay the power bill\", \"persona\": \"quartermaster\", \"cadence\": \"daily\", \"category\": \"utilities\", \"estimate_min\": 10, \"priority\": 7}}]}",
+  "structured_output": {
+    "ops": [
+      {
+        "op": "add",
+        "quest": {
+          "title": "Pay the power bill",
+          "persona": "quartermaster",
+          "cadence": "daily",
+          "category": "utilities",
+          "estimate_min": 10,
+          "priority": 7
+        }
+      }
+    ]
+  }
+}

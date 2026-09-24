@@ -1,0 +1,18 @@
+{
+  "type": "result",
+  "subtype": "success",
+  "is_error": false,
+  "duration_ms": 1573,
+  "num_turns": 2,
+  "session_id": "00000000-0000-0000-0000-000000000000",
+  "total_cost_usd": 0.0073,
+  "usage": {
+    "input_tokens": 2,
+    "cache_creation_input_tokens": 1585,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 92
+  },
+  "permission_denials": [],
+  "terminal_reason": "completed",
+  "result": "```json\n{\n  \"summary\": \"Light day: one new quest, one estimate fix, one stale quest dropped.\",\n  \"ops\": [\n    {\n      \"op\": \"add\",\n      \"reason\": \"Goal 'run a 10k' has no quest this week.\",\n      \"quest\": {\n        \"title\": \"Easy 5 km run\",\n        \"persona\": \"coach\",\n        \"cadence\": \"daily\",\n        \"category\": \"general\",\n        \"estimate_min\": 40,\n        \"scheduled_for\": \"2026-09-25\",\n        \"deadline\": null,\n        \"priority\": 2\n      }\n    },\n    {\n      \"op\": \"update\",\n      \"reason\": \"Last three reviews took twice the estimate.\",\n      \"quest_id\": \"5b0e4c1e-2f5a-4d59-9b1a-3f0d3c8b7a10\",\n      \"changes\": {\n        \"estimate_min\": 60\n      }\n    },\n    {\n      \"op\": \"drop\",\n      \"reason\": \"Carried 3 times; superseded by the split below.\",\n      \"quest_id\": \"9f3c2d1b-7e6a-4b8c-a1d2-0e9f8c7b6a54\"\n    }\n  ]\n}\n```"
+}

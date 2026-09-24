@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "llm_run.schema.json",
+  "title": "LLMRun",
+  "description": "One attempt of a scheduled LLM job, as stored in `llm_runs`. Idempotent per (job, slot, date).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "job",
+    "date",
+    "trigger",
+    "attempt",
+    "status"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "job": {
+      "$ref": "common.schema.json#/$defs/JobName"
+    },
+    "slot": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "AM",
+            "PM"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Only daily jobs have a slot."
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "trigger": {
+      "type": "string",
+      "enum": [
+        "tick",
+        "start",
+        "network_up",
+        "manual"
+      ]
+    },
+    "provider_used": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/ProviderName"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "running",
+        "succeeded",
+        "failed",
+        "invalid_output",
+        "skipped"
+      ]
+    },
+    "tokens": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TokenUsage"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "error": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 500
+    },
+    "started_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "finished_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "TokenUsage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "output"
+      ],
+      "properties": {
+        "input": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "output": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}
