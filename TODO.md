@@ -34,7 +34,7 @@ Tooling not named in the docs (confirmed 2026-09-24):
 - [x] Local Supabase stack (`supabase/tests/live.sh`): migrations, single-user auth, RLS and runner jobs verified end to end; web app verified against it in a browser (sign-in, add, accept proposal, complete, realtime pill).
 - [ ] Create the hosted Supabase project, turn sign-ups off (keep the email provider on), `supabase db push` (needs your account; steps in README).
 - [x] Web app shell: auth, Today/Week/Month routes, status pill reading `runner_state`. (Static export for Vercel + Tauri; email/password sign-in so iOS stays in the PWA.)
-- [ ] PWA manifest + iOS install; Web Push registration (no sends yet). (Manifest + placeholder icons done; push registration waits on the `push_subscriptions` decision.)
+- [x] PWA manifest + iOS install; Web Push registration. (iOS install + real push: test on the phone once hosted.)
 - [ ] CI: lint, type-check, schema codegen check, runner tests. (Schema freshness + tsc + runner ruff/pytest done; web lint lands with `apps/web`.)
 - [x] `runner/providers/base.py` + `claude_cli.py` with a fixture-driven test validating a QuestDiff response (first task #4 in PLAN.md).
 
