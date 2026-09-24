@@ -31,9 +31,10 @@ Tooling not named in the docs (confirmed 2026-09-24):
 - [ ] Monorepo scaffold (pnpm workspace, `packages/schema`, `runner` done; `apps/*`, `personas`, `supabase` land with their PRs): `apps/web`, `apps/desktop`, `runner`, `packages/schema`, `personas`, `supabase`, `docs`.
 - [x] `packages/schema`: JSON Schemas for Quest, QuestDiff, PersonaLine, ExtractedRecord, Config, LLMRun; codegen to TS + Pydantic; CI check that generated code is fresh.
 - [x] Supabase migrations for the 15 core tables; single-user guard + owner-only RLS; realtime on `quests`, `persona_lines`, `runner_state`; tested on local Postgres in CI (`supabase/tests/run.sh`).
-- [ ] Create the hosted Supabase project, turn sign-ups off, apply migrations (needs your account).
+- [x] Local Supabase stack (`supabase/tests/live.sh`): migrations, single-user auth, RLS and runner jobs verified end to end; web app verified against it in a browser (sign-in, add, accept proposal, complete, realtime pill).
+- [ ] Create the hosted Supabase project, turn sign-ups off (keep the email provider on), `supabase db push` (needs your account; steps in README).
 - [x] Web app shell: auth, Today/Week/Month routes, status pill reading `runner_state`. (Static export for Vercel + Tauri; email/password sign-in so iOS stays in the PWA.)
-- [ ] PWA manifest + iOS install; Web Push registration (no sends yet). (Manifest + placeholder icons done; push registration waits on the `push_subscriptions` decision.)
+- [x] PWA manifest + iOS install; Web Push registration. (iOS install + real push: test on the phone once hosted.)
 - [ ] CI: lint, type-check, schema codegen check, runner tests. (Schema freshness + tsc + runner ruff/pytest done; web lint lands with `apps/web`.)
 - [x] `runner/providers/base.py` + `claude_cli.py` with a fixture-driven test validating a QuestDiff response (first task #4 in PLAN.md).
 
@@ -54,7 +55,9 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [x] App: review strip for pending proposals (accept applies the op in code and caches its lines; reject records feedback).
 - [x] `persona_lines` selection in the app. (Done in Phase 1.)
 - [ ] Tauri shell: dashboard window, tray, start-at-login, sidecar, OS notifications, deep links.
-- [ ] Notifications v1 with dedup and quiet hours; Web Push to PWA.
+- [x] Notifications v1 (runner): day_ready, day_recap, quest_due, quest_overdue, streak_risk; DB dedup, delivery after quiet hours, 12 h max age; Web Push (VAPID) with dead-endpoint cleanup.
+- [x] PWA: service worker + "Enable notifications on this device" (`push_subscriptions`). Needs a real device test: headless Chromium can't subscribe.
+- [ ] PC delivery of notifications (Tauri reads `notifications` over realtime) + sprite state.
 
 ## Phase 3 — Calendar, setup assistant, weekly/monthly (week 4)
 - [ ] Google OAuth (read-only) + `gcal.py`.
@@ -97,7 +100,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - Weekly carry-over (max 2) lands with the weekly job.
 - ~~Freshness cap meaning~~ → confirmed: LLM jobs wait for ingest data < 2 h old (only with an integration on); manual runs skip it.
 - ~~Where proposed QuestDiffs wait~~ → decided: `quest_proposals` table (one row per op, pending/accepted/rejected).
-- `push_subscriptions` table for Web Push (lands with the PWA item).
+- ~~`push_subscriptions`~~ → added with notifications v1.
 - `progress` table: game stats are computed from the quest log in the app; decide whether the runner/weekly jobs need the cached daily rows before writing them.
 - `goals` table vs `config.goals`: pick one source of truth before the setup assistant.
 1. Gmail restricted-scope verification vs. "testing" mode with own account.

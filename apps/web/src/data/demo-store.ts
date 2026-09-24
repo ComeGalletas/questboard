@@ -218,6 +218,10 @@ export class DemoStore implements Store {
     this.save(state);
   }
 
+  async savePushSubscription(): Promise<void> {
+    // Demo mode never sends pushes.
+  }
+
   async recordFeedback(): Promise<void> {
     // Demo mode keeps no feedback log.
   }

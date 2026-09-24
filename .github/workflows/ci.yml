@@ -64,3 +64,19 @@ jobs:
       - run: cd runner && uv sync --locked
       - name: Apply migrations to a throwaway Postgres 16
         run: supabase/tests/run.sh
+
+  live:
+    name: Live Supabase (auth + RLS + runner)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: astral-sh/setup-uv@v6
+      - run: pnpm install --frozen-lockfile
+      - run: cd runner && uv sync --locked
+      - name: Local stack + live integration tests
+        run: supabase/tests/live.sh

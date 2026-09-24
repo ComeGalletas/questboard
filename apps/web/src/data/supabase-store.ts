@@ -92,6 +92,18 @@ export class SupabaseStore implements Store {
     if (error) throw new Error(error.message);
   }
 
+  async savePushSubscription(sub: {
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+    user_agent: string;
+  }) {
+    const { error } = await this.db
+      .from("push_subscriptions")
+      .upsert(sub, { onConflict: "user_id,endpoint" });
+    if (error) throw new Error(error.message);
+  }
+
   async recordFeedback(row: {
     quest_id: string | null;
     action: "accepted" | "rejected";

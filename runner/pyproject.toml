@@ -9,6 +9,7 @@ dependencies = [
   "keyring>=25.7.0",
   "psutil>=7.2.2",
   "pydantic>=2.8,<3",
+  "pywebpush>=2.5.0",
   "pyyaml>=6.0.3",
   "questboard-schema",
   "tzdata>=2026.4",

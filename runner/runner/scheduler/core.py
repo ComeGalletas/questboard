@@ -10,6 +10,7 @@ Catch-up after boot / reconnect only ever looks at each job's most recent occurr
 from __future__ import annotations
 
 import contextlib
+import logging
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
@@ -30,6 +31,8 @@ from runner.scheduler.schedule import (
     in_window,
     latest_occurrence,
 )
+
+log = logging.getLogger("questboard.runner")
 
 MAX_ATTEMPTS = 3
 BACKOFF = (timedelta(minutes=5), timedelta(minutes=15), timedelta(minutes=60))
@@ -76,6 +79,8 @@ class Scheduler:
     providers: Mapping[ProviderName, Provider] = field(default_factory=dict)
     clock: Callable[[], datetime] = lambda: datetime.now(UTC)
     version: str = "0.0.0"
+    # P2 step after the jobs (notifications). Gets (repo, config, local now).
+    after_jobs: Callable[[Repo, Config, datetime], object] | None = None
 
     def evaluate(self, trigger: Trigger, only: JobName | None = None) -> list[Decision]:
         """One pass over the jobs. Never raises for job failures; returns what happened."""
@@ -100,6 +105,13 @@ class Scheduler:
             except RepoUnavailable as exc:
                 decision = Decision(job, "skip", f"{DB_DOWN}: {exc}")
             decisions.append(decision)
+        if self.after_jobs is not None:
+            try:
+                self.after_jobs(self.repo, config, now)
+            except RepoUnavailable:
+                pass  # next tick
+            except Exception as exc:  # noqa: BLE001 - never let notifications stop the loop
+                log.warning("notifications failed: %s", type(exc).__name__)
         self._heartbeat(now, config)
         return decisions
 
