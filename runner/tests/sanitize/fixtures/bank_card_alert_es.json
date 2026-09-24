@@ -1,0 +1,20 @@
+{
+ "name": "bank_card_alert_es",
+ "description": "Card alert: full card number without separators, amount and merchant",
+ "html": false,
+ "body": "Bancolombia le informa: compra por $1.250.000 en ALKOSTO con su tarjeta 4539578763621486 el 23/09/2026 a las 18:42. Si no reconoce esta transacción llame al #502 o al 01 8000 912 345.",
+ "secrets": [
+  "4539578763621486",
+  "1.250.000",
+  "8000 912 345"
+ ],
+ "keep": [
+  "23/09/2026",
+  "18:42"
+ ],
+ "kinds": [
+  "CARD",
+  "AMOUNT"
+ ],
+ "drop": null
+}

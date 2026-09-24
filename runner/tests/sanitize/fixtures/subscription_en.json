@@ -1,0 +1,22 @@
+{
+ "name": "subscription_en",
+ "description": "Subscription renewal with amount, last-4 and account email",
+ "html": false,
+ "body": "Hi Jessica Alvarez, your Spotify Premium plan renews on Oct 12 for $11.99 on the card ending in 4242. Account: jess.alvarez91@yahoo.com",
+ "secrets": [
+  "Jessica",
+  "Alvarez",
+  "11.99",
+  "jess.alvarez91"
+ ],
+ "keep": [
+  "renews on Oct 12",
+  "4242"
+ ],
+ "kinds": [
+  "PERSON",
+  "AMOUNT",
+  "EMAIL"
+ ],
+ "drop": null
+}

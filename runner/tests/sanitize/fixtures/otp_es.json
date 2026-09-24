@@ -1,0 +1,12 @@
+{
+ "name": "otp_es",
+ "description": "One-time code: whole message dropped (credentials)",
+ "html": false,
+ "body": "Nequi: Tu código de verificación es 482913. No lo compartas con nadie.",
+ "secrets": [
+  "482913"
+ ],
+ "keep": [],
+ "kinds": [],
+ "drop": "credentials"
+}

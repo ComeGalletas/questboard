@@ -1,0 +1,22 @@
+{
+ "name": "travel_booking_es",
+ "description": "Flight booking with passport, booking code and passenger",
+ "html": false,
+ "body": "Avianca: Reserva confirmada. Código de reserva: XK7P9Q. Pasajero: Mateo Vargas Ríos. Pasaporte AV1234567. Vuelo AV 205 Bogotá - Madrid el 14/11/2026 a las 22:15.",
+ "secrets": [
+  "Mateo",
+  "Vargas",
+  "AV1234567",
+  "1234567"
+ ],
+ "keep": [
+  "Reserva confirmada",
+  "14/11/2026",
+  "22:15"
+ ],
+ "kinds": [
+  "PERSON",
+  "IDNUM"
+ ],
+ "drop": null
+}

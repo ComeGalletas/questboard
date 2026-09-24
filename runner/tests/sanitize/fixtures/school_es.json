@@ -1,0 +1,21 @@
+{
+ "name": "school_es",
+ "description": "School notice with student name and enrollment code",
+ "html": false,
+ "body": "Estimada familia, el estudiante Tomás Herrera Quintero (matrícula 2026-45871) debe entregar el proyecto de ciencias el 30 de septiembre.",
+ "secrets": [
+  "Tomás",
+  "Herrera",
+  "Quintero",
+  "2026-45871"
+ ],
+ "keep": [
+  "proyecto de ciencias",
+  "30 de septiembre"
+ ],
+ "kinds": [
+  "PERSON",
+  "REF"
+ ],
+ "drop": null
+}

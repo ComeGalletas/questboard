@@ -1,0 +1,18 @@
+{
+ "name": "quoted_reply_es",
+ "description": "Reply thread: the quoted part (with PII) is removed before anything else",
+ "html": false,
+ "body": "Listo, nos vemos el jueves a las 3.\n\nEl mié, 23 sept 2026 a las 10:12, Pedro Salazar <pedro.salazar@gmail.com> escribió:\n> Mi número de cuenta es 0123456789 del Banco de Bogotá\n> y mi celular 315 222 3344",
+ "secrets": [
+  "Pedro",
+  "Salazar",
+  "pedro.salazar",
+  "0123456789",
+  "315 222 3344"
+ ],
+ "keep": [
+  "nos vemos el jueves"
+ ],
+ "kinds": [],
+ "drop": null
+}

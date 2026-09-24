@@ -1,0 +1,16 @@
+{
+ "name": "outlook_reply_en",
+ "description": "Outlook-style reply header",
+ "html": false,
+ "body": "Sounds good, see you Monday.\n\nFrom: Rachel Green <rachel.green@example.com>\nSent: Tuesday, September 22, 2026 9:14 AM\nTo: me\nSubject: Lunch\nMy SSN is 123-45-6789, don't lose it.",
+ "secrets": [
+  "Rachel",
+  "rachel.green",
+  "123-45-6789"
+ ],
+ "keep": [
+  "see you Monday"
+ ],
+ "kinds": [],
+ "drop": null
+}

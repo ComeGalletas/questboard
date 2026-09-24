@@ -1,0 +1,17 @@
+{
+ "name": "signature_es",
+ "description": "Signature block with phone and address removed",
+ "html": false,
+ "body": "Te confirmo la reunión del viernes para revisar el presupuesto.\n\nCordialmente,\nIng. Felipe Arango\nGerente de Proyectos\nCel. 318 999 0011\nCalle 72 # 10-07 Of. 501",
+ "secrets": [
+  "Felipe",
+  "Arango",
+  "318 999 0011",
+  "72 # 10-07"
+ ],
+ "keep": [
+  "reunión del viernes"
+ ],
+ "kinds": [],
+ "drop": null
+}

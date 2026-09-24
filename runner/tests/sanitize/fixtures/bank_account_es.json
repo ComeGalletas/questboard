@@ -1,0 +1,23 @@
+{
+ "name": "bank_account_es",
+ "description": "Bank transfer details: account number and holder",
+ "html": false,
+ "body": "Para el pago del arriendo consigna a la cuenta de ahorros No. 456-789012-34 de Davivienda, titular Andrés Felipe Mejía, valor $1.800.000 antes del 5 de octubre.",
+ "secrets": [
+  "456-789012-34",
+  "45678901234",
+  "Andrés Felipe",
+  "Mejía",
+  "1.800.000"
+ ],
+ "keep": [
+  "pago del arriendo",
+  "5 de octubre"
+ ],
+ "kinds": [
+  "ACCOUNT",
+  "PERSON",
+  "AMOUNT"
+ ],
+ "drop": null
+}

@@ -1,0 +1,28 @@
+{
+ "name": "health_appointment_es",
+ "description": "Medical appointment: patient, doctor, cédula, address, phone, prep instructions",
+ "html": false,
+ "body": "Paciente: Ana María Restrepo\nDocumento: CC 1036654321\nSu cita de medicina interna con la Dra. Patricia Londoño es el 8 de octubre a las 7:30 a. m.\nSede: Calle 10 Sur # 50-28, consultorio 402.\nIndicaciones: asistir en ayunas de 8 horas y traer exámenes previos.\nConfirmar al 604 444 1234 o al 310 555 7890.",
+ "secrets": [
+  "Ana María",
+  "Restrepo",
+  "1036654321",
+  "Patricia",
+  "Londoño",
+  "10 Sur # 50-28",
+  "444 1234",
+  "310 555 7890"
+ ],
+ "keep": [
+  "cita de medicina interna",
+  "8 de octubre",
+  "ayunas de 8 horas"
+ ],
+ "kinds": [
+  "PERSON",
+  "IDNUM",
+  "ADDRESS",
+  "PHONE"
+ ],
+ "drop": null
+}

@@ -1,0 +1,28 @@
+{
+ "name": "utilities_epm_es",
+ "description": "Utility bill (es): name, contract, amount, due date, address, cédula",
+ "html": false,
+ "body": "Señor(a): JUAN PABLO PÉREZ GÓMEZ\nCédula de ciudadanía No. 1.020.304.050\nContrato: 45123987\nDirección de instalación: Cra. 43A # 1 Sur-100, Apto 1502, Medellín\n\nSu factura de EPM del mes de septiembre ya está disponible.\nTotal a pagar: $ 152.300\nFecha límite de pago: 05/10/2026\nPague en línea en https://www.epm.com.co/pagos?c=45123987&u=jpperez\n",
+ "secrets": [
+  "JUAN PABLO",
+  "PÉREZ GÓMEZ",
+  "1.020.304.050",
+  "45123987",
+  "43A # 1 Sur-100",
+  "152.300",
+  "jpperez"
+ ],
+ "keep": [
+  "factura",
+  "Fecha límite de pago",
+  "05/10/2026"
+ ],
+ "kinds": [
+  "PERSON",
+  "IDNUM",
+  "REF",
+  "AMOUNT",
+  "URL"
+ ],
+ "drop": null
+}

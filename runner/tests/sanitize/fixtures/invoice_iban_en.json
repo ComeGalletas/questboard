@@ -1,0 +1,23 @@
+{
+ "name": "invoice_iban_en",
+ "description": "English invoice with IBAN, invoice number and address",
+ "html": false,
+ "body": "Invoice INV-2026-004417 from Northwind Ltd.\nAmount due: 1,250.00 EUR by 2026-10-20.\nPay to IBAN DE89 3704 0044 0532 0130 00 (BIC COBADEFFXXX).\nBilling address: 742 Evergreen Terrace, Springfield.",
+ "secrets": [
+  "2026-004417",
+  "1,250.00",
+  "DE89 3704 0044 0532 0130 00",
+  "3704004405320130",
+  "742 Evergreen"
+ ],
+ "keep": [
+  "Amount due",
+  "2026-10-20"
+ ],
+ "kinds": [
+  "REF",
+  "AMOUNT",
+  "IBAN"
+ ],
+ "drop": null
+}

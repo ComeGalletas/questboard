@@ -50,10 +50,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
       - run: uv sync --locked
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run pytest
+      - run: uv run pytest --ignore=tests/sanitize
+
+  # Release gate (CLAUDE.md): a failing sanitizer test blocks merge. Make this check required.
+  sanitizer:
+    name: Sanitizer release gate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: runner
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run pytest tests/sanitize -v
 
   supabase:
     name: Migrations + RLS + schema drift
