@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "runner_state.schema.json",
+  "title": "RunnerState",
+  "description": "The runner's heartbeat row (`runner_state`). The status pill reads heartbeat_at.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["user_id", "heartbeat_at", "last_am_success", "last_pm_success", "provider_health"],
+  "properties": {
+    "user_id": { "type": "string", "format": "uuid" },
+    "heartbeat_at": { "type": ["string", "null"], "format": "date-time" },
+    "last_am_success": { "type": ["string", "null"], "format": "date-time" },
+    "last_pm_success": { "type": ["string", "null"], "format": "date-time" },
+    "lock_holder": { "type": ["string", "null"] },
+    "lock_acquired_at": { "type": ["string", "null"], "format": "date-time" },
+    "provider_health": {
+      "type": "object",
+      "description": "Last reachability check per provider.",
+      "propertyNames": { "$ref": "common.schema.json#/$defs/ProviderName" },
+      "additionalProperties": { "$ref": "#/$defs/ProviderHealth" }
+    },
+    "runner_version": { "type": ["string", "null"] },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "ProviderHealth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reachable", "checked_at"],
+      "properties": {
+        "reachable": { "type": "boolean" },
+        "checked_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}
