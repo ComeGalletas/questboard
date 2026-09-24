@@ -1,0 +1,12 @@
+{
+  "name": "questboard",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "schema:gen": "pnpm --filter @questboard/schema generate",
+    "schema:check": "pnpm --filter @questboard/schema check",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "lint": "pnpm -r --if-present lint"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "common.schema.json",
+  "title": "Common",
+  "description": "Shared enums and value types referenced by the other schemas.",
+  "$defs": {
+    "PersonaSlug": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{1,31}$",
+      "description": "Persona pack slug (coach, teacher, mom, quartermaster, or a custom pack)."
+    },
+    "Token": {
+      "type": "string",
+      "pattern": "^[A-Z]+_[0-9]+$",
+      "description": "Pseudonym token issued by the local vault, e.g. PERSON_7, ORG_3, AMOUNT_2."
+    },
+    "AmountToken": {
+      "type": "string",
+      "pattern": "^AMOUNT_[0-9]+$",
+      "description": "Pseudonym for a money amount. Value and currency stay in the local vault."
+    },
+    "Cadence": {
+      "type": "string",
+      "enum": ["daily", "weekly", "monthly"]
+    },
+    "Category": {
+      "type": "string",
+      "enum": [
+        "general",
+        "ics",
+        "utilities",
+        "government",
+        "health",
+        "delivery",
+        "subscription",
+        "jobs",
+        "learning",
+        "personal",
+        "travel"
+      ],
+      "description": "Quest / record category. Non-general values match the email extractors."
+    },
+    "ProviderName": {
+      "type": "string",
+      "enum": ["claude-cli", "ollama", "claude-api"]
+    },
+    "JobName": {
+      "type": "string",
+      "enum": ["ingest", "daily_am", "daily_pm", "weekly", "monthly", "persona_digest"]
+    },
+    "LocalTime": {
+      "type": "string",
+      "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
+      "description": "Wall-clock time HH:MM in the configured timezone."
+    }
+  }
+}

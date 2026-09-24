@@ -1,0 +1,13 @@
+# Supabase CLI project config. Only settings Questboard depends on are listed; everything
+# else uses CLI defaults. Mirror these in the hosted project's dashboard.
+project_id = "questboard"
+
+[db]
+major_version = 15
+
+[auth]
+# Single user: create the account once from the dashboard, then keep sign-ups off.
+enable_signup = false
+
+[auth.email]
+enable_signup = false

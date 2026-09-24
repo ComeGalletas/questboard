@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "config.schema.json",
+  "title": "Config",
+  "description": "The single `config` row. Code owns schema, prompts and scoring; config owns goals, personas, capacity and toggles.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "timezone",
+    "goals",
+    "capacity",
+    "quiet_hours",
+    "xp_weights",
+    "llm",
+    "persona_order",
+    "integrations",
+    "features",
+    "notifications"
+  ],
+  "properties": {
+    "timezone": { "type": "string", "minLength": 1, "description": "IANA zone, e.g. America/Bogota." },
+    "goals": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Goal" }
+    },
+    "capacity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["weekday_hours", "weekend_hours", "focus_factor"],
+      "properties": {
+        "weekday_hours": { "type": "number", "minimum": 0, "maximum": 24 },
+        "weekend_hours": { "type": "number", "minimum": 0, "maximum": 24 },
+        "focus_factor": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+      }
+    },
+    "quiet_hours": { "$ref": "#/$defs/QuietHours" },
+    "xp_weights": {
+      "type": "object",
+      "additionalProperties": { "type": "number", "minimum": 0 },
+      "description": "Multiplier per category."
+    },
+    "llm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["providers"],
+      "properties": {
+        "providers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "common.schema.json#/$defs/ProviderName" },
+          "default": ["claude-cli", "ollama", "claude-api"]
+        },
+        "per_job": {
+          "type": "object",
+          "description": "Per-job provider order override, keyed by job name.",
+          "propertyNames": { "$ref": "common.schema.json#/$defs/JobName" },
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "$ref": "common.schema.json#/$defs/ProviderName" }
+          }
+        }
+      }
+    },
+    "persona_order": {
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/PersonaSlug" }
+    },
+    "integrations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gmail", "gcal"],
+      "properties": {
+        "gmail": { "type": "boolean" },
+        "gcal": { "type": "boolean" }
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["three_d", "mobile_rehydration"],
+      "properties": {
+        "three_d": { "type": "boolean" },
+        "mobile_rehydration": { "type": "boolean" }
+      }
+    },
+    "notifications": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["persona_speech_per_day", "persona_speech_on_mobile"],
+      "properties": {
+        "persona_speech_per_day": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "persona_speech_on_mobile": { "type": "boolean" }
+      }
+    }
+  },
+  "$defs": {
+    "Goal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "horizon"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "horizon": { "type": "string", "enum": ["week", "month", "quarter", "year"] },
+        "persona": {
+          "anyOf": [{ "$ref": "common.schema.json#/$defs/PersonaSlug" }, { "type": "null" }]
+        }
+      }
+    },
+    "QuietHours": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "$ref": "common.schema.json#/$defs/LocalTime" },
+        "end": { "$ref": "common.schema.json#/$defs/LocalTime" }
+      }
+    }
+  }
+}

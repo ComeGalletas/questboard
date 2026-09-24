@@ -16,7 +16,7 @@ Derived from `CLAUDE.md` and `docs/PLAN.md` (2026-09-24). Check items off as the
 | Persona packs | YAML + Markdown + PNG (+ optional GLB) | Pack loader with validation | 32x32 sprite sheets, 16x16 portraits. |
 | Art | — | Aseprite, SNES-style 32-color palette | Palette and accents defined in `CLAUDE.md`. |
 
-Tooling not named in the docs, proposed here (confirm before adopting):
+Tooling not named in the docs (confirmed 2026-09-24):
 - Monorepo: pnpm workspaces (+ Turborepo if builds get slow).
 - Python: `uv` for env/deps, `pytest` for tests, `ruff` for lint/format.
 - TS: ESLint + Prettier, `tsc --noEmit` in CI.
@@ -24,17 +24,18 @@ Tooling not named in the docs, proposed here (confirm before adopting):
 
 ## Housekeeping
 - [x] Move `CLAUDE.md` to the repo root and `PLAN.md` to `docs/PLAN.md`.
-- [ ] `git init`, add `.gitignore` (node, python, tauri, `vault.db`, `.env`).
-- [ ] Create `docs/adr/` with an ADR template (required for any invariant change).
+- [x] `git init`, add `.gitignore` (node, python, tauri, `vault.db`, `.env`).
+- [x] Create `docs/adr/` with an ADR template (required for any invariant change).
 
 ## Phase 0 — Foundations (week 1)
-- [ ] Monorepo scaffold: `apps/web`, `apps/desktop`, `runner`, `packages/schema`, `personas`, `supabase`, `docs`.
-- [ ] `packages/schema`: JSON Schemas for Quest, QuestDiff, PersonaLine, ExtractedRecord, Config, LLMRun; codegen to TS + Pydantic; CI check that generated code is fresh.
-- [ ] Supabase project: migrations for core tables (`config`, `integrations`, `goals`, `personas`, `quests`, `quest_feedback`, `progress`, `persona_lines`, `llm_runs`, `runner_state`, `pending_live_requests`, `senders`, `extracted_records`, `sanitization_log`, `notifications`); single-user auth; simple RLS; realtime on `quests`, `persona_lines`, `runner_state`.
+- [ ] Monorepo scaffold (pnpm workspace, `packages/schema`, `runner` done; `apps/*`, `personas`, `supabase` land with their PRs): `apps/web`, `apps/desktop`, `runner`, `packages/schema`, `personas`, `supabase`, `docs`.
+- [x] `packages/schema`: JSON Schemas for Quest, QuestDiff, PersonaLine, ExtractedRecord, Config, LLMRun; codegen to TS + Pydantic; CI check that generated code is fresh.
+- [x] Supabase migrations for the 15 core tables; single-user guard + owner-only RLS; realtime on `quests`, `persona_lines`, `runner_state`; tested on local Postgres in CI (`supabase/tests/run.sh`).
+- [ ] Create the hosted Supabase project, turn sign-ups off, apply migrations (needs your account).
 - [ ] Web app shell: auth, Today/Week/Month routes, status pill reading `runner_state`.
 - [ ] PWA manifest + iOS install; Web Push registration (no sends yet).
-- [ ] CI: lint, type-check, schema codegen check, runner tests.
-- [ ] `runner/providers/base.py` + `claude_cli.py` with a fixture-driven test validating a QuestDiff response (first task #4 in PLAN.md).
+- [ ] CI: lint, type-check, schema codegen check, runner tests. (Schema freshness + tsc + runner ruff/pytest done; web lint lands with `apps/web`.)
+- [x] `runner/providers/base.py` + `claude_cli.py` with a fixture-driven test validating a QuestDiff response (first task #4 in PLAN.md).
 
 Done when: log in on PC and phone and see an empty board with a "Runner offline" pill.
 
@@ -91,6 +92,9 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [ ] Encrypted backup/export of config, packs and vault.
 
 ## Open questions (decide when reached)
+- Where proposed QuestDiffs wait for accept/reject (no table for them yet; needed in Phase 2).
+- `push_subscriptions` table for Web Push (lands with the PWA item).
+- `goals` table vs `config.goals`: pick one source of truth before the setup assistant.
 1. Gmail restricted-scope verification vs. "testing" mode with own account.
 2. Mobile re-hydration of pseudonyms (default: no).
 3. Whisper model size (tiny vs small); measure latency first.
