@@ -107,6 +107,8 @@ def clean_quests(repo: SupabaseRepo):
 def test_daily_am_then_pm_through_rls(repo: SupabaseRepo, clean_quests) -> None:
     # A fresh day far from real data so reruns don't collide with earlier runs.
     day = datetime(2031, 1, 6 + uuid.uuid4().int % 20, 6, 0, tzinfo=BOGOTA)
+    # Idempotency is per (job, slot, date): forget earlier runs of this day on a reused DB.
+    rest(repo, "DELETE", "llm_runs", params={"date": f"eq.{day.date().isoformat()}"})
     created = rest(
         repo,
         "POST",
