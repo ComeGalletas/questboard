@@ -1,0 +1,32 @@
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Tauri / Rust
+target/
+apps/desktop/src-tauri/target/
+
+# Secrets and local-only data (see CLAUDE.md invariant 5)
+.env
+.env.*
+!.env.example
+vault.db
+*.db
+*.sqlite
+runner.lock
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
