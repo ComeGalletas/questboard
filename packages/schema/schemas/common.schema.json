@@ -48,6 +48,15 @@
       "type": "string",
       "enum": ["ingest", "daily_am", "daily_pm", "weekly", "monthly", "persona_digest"]
     },
+    "QuietHours": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "$ref": "#/$defs/LocalTime" },
+        "end": { "$ref": "#/$defs/LocalTime" }
+      }
+    },
     "LocalTime": {
       "type": "string",
       "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",

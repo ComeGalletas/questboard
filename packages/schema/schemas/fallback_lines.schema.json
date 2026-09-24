@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "fallback_lines.schema.json",
+  "title": "FallbackLines",
+  "description": "personas/<slug>/lines.fallback.json: static lines used when the dialogue cache has nothing for a trigger. Every trigger needs at least two lines (checked in tests).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lines"
+  ],
+  "properties": {
+    "lines": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/FallbackLine"
+      }
+    }
+  },
+  "$defs": {
+    "FallbackLine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trigger",
+        "variant",
+        "condition",
+        "text"
+      ],
+      "properties": {
+        "trigger": {
+          "type": "string",
+          "enum": [
+            "assigned",
+            "reminder_am",
+            "reminder_mid",
+            "reminder_pm",
+            "started",
+            "completed_early",
+            "completed_on_time",
+            "completed_late",
+            "partial",
+            "snoozed",
+            "deferred",
+            "skipped",
+            "forgotten",
+            "overdue_1d",
+            "overdue_3d",
+            "overdue_7d",
+            "carried_over",
+            "abandoned",
+            "all_done",
+            "half_by_noon",
+            "nothing_by_15",
+            "over_capacity"
+          ]
+        },
+        "variant": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "condition": {
+          "type": "string",
+          "enum": [
+            "any",
+            "pleased",
+            "neutral",
+            "concerned"
+          ],
+          "description": "Mood bucket; mood itself is computed in code from completion rate."
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 280,
+          "description": "May contain runtime placeholders {time_left} {streak} {days_carried} {actual_vs_estimate} {next_quest}."
+        }
+      }
+    }
+  }
+}

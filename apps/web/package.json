@@ -10,7 +10,12 @@
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "test": "node --test --experimental-strip-types --no-warnings 'src/**/*.test.ts'",
-    "icons": "python3 scripts/make-icons.py"
+    "icons": "python3 scripts/make-icons.py",
+    "personas": "node scripts/build-personas.mjs",
+    "predev": "pnpm -s personas",
+    "prebuild": "pnpm -s personas",
+    "pretypecheck": "pnpm -s personas",
+    "pretest": "pnpm -s personas"
   },
   "dependencies": {
     "@questboard/schema": "workspace:*",
@@ -26,6 +31,7 @@
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.6",
     "prettier": "3.9.9",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "yaml": "2.9.1"
   }
 }

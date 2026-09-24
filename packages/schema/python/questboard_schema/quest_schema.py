@@ -51,6 +51,16 @@ class Quest(BaseModel):
         description="Board day (daily), week start (weekly) or month start (monthly).",
     )
     deadline: AwareDatetime | None = None
+    started_at: AwareDatetime | None = None
+    completed_at: AwareDatetime | None = Field(
+        None, description="Set when status becomes done or partial."
+    )
+    snoozed_until: AwareDatetime | None = None
+    xp_awarded: int | None = Field(
+        None,
+        description="XP actually earned (after lateness / partial modifiers). Computed in code.",
+        ge=0,
+    )
     hard_deadline: bool = Field(
         ...,
         description="Hard-deadline obligations always carry over, ignoring carry caps.",

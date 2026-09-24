@@ -40,12 +40,12 @@ Tooling not named in the docs (confirmed 2026-09-24):
 Done when: log in on PC and phone and see an empty board with a "Runner offline" pill.
 
 ## Phase 1 — Manual quests and the board (week 2)
-- [ ] Quest CRUD + complete / partial / snooze / defer / skip with actual-time logging.
-- [ ] Capacity bar (manual free hours x focus factor vs planned effort).
-- [ ] Progress: XP, level, streaks, stats, all computed in code (P2).
-- [ ] Persona panel with mood from completion rate; `lines.fallback.json`.
+- [ ] Quest CRUD + complete / partial / snooze / defer / skip with actual-time logging. (Action rules + DB columns done; UI next.)
+- [ ] Capacity bar (manual free hours x focus factor vs planned effort). (Calculation done; bar UI next.)
+- [x] Progress: XP, level, streaks, stats, all computed in code (P2). (`apps/web/src/game/`; UI lands with the board PR.)
+- [ ] Persona panel with mood from completion rate; `lines.fallback.json`. (Mood + line selection + fallback lines done; panel UI next.)
 - [ ] Pixel UI kit: panels, bars, typewriter dialogue box, sprite component, palette tokens.
-- [ ] Built-in packs (coach, teacher, mom, quartermaster) with placeholder sprites.
+- [x] Built-in packs (coach, teacher, mom, quartermaster) with placeholder sprites.
 
 ## Phase 2 — Runner, providers, daily cache (week 3)
 - [ ] Runner skeleton: trigger loop, guards, lock file, heartbeat, `llm_runs` idempotency + backoff + catch-up.

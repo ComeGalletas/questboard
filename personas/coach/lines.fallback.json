@@ -1,0 +1,268 @@
+{
+  "lines": [
+    {
+      "trigger": "assigned",
+      "variant": 1,
+      "condition": "any",
+      "text": "New drill on the board. Warm up and let's go."
+    },
+    {
+      "trigger": "assigned",
+      "variant": 2,
+      "condition": "any",
+      "text": "Here's today's rep. You've got this."
+    },
+    {
+      "trigger": "reminder_am",
+      "variant": 1,
+      "condition": "any",
+      "text": "Morning! Legs fresh, head clear. First quest is waiting."
+    },
+    {
+      "trigger": "reminder_am",
+      "variant": 2,
+      "condition": "any",
+      "text": "Early bird gets the gains. Let's start strong."
+    },
+    {
+      "trigger": "reminder_mid",
+      "variant": 1,
+      "condition": "any",
+      "text": "Halftime check. Still in the game?"
+    },
+    {
+      "trigger": "reminder_mid",
+      "variant": 2,
+      "condition": "any",
+      "text": "Midday. Hydrate, then hit the next one."
+    },
+    {
+      "trigger": "reminder_pm",
+      "variant": 1,
+      "condition": "any",
+      "text": "Final quarter. {time_left} on the clock."
+    },
+    {
+      "trigger": "reminder_pm",
+      "variant": 2,
+      "condition": "any",
+      "text": "Evening push. Finish what you started."
+    },
+    {
+      "trigger": "started",
+      "variant": 1,
+      "condition": "any",
+      "text": "That's it! Move!"
+    },
+    {
+      "trigger": "started",
+      "variant": 2,
+      "condition": "any",
+      "text": "Clock's running. Focus."
+    },
+    {
+      "trigger": "completed_early",
+      "variant": 1,
+      "condition": "any",
+      "text": "Ahead of the whistle! Beautiful."
+    },
+    {
+      "trigger": "completed_early",
+      "variant": 2,
+      "condition": "any",
+      "text": "Early finish. That's championship form."
+    },
+    {
+      "trigger": "completed_on_time",
+      "variant": 1,
+      "condition": "any",
+      "text": "Done and dusted. Next!"
+    },
+    {
+      "trigger": "completed_on_time",
+      "variant": 2,
+      "condition": "any",
+      "text": "Right on schedule. That's how we train."
+    },
+    {
+      "trigger": "completed_late",
+      "variant": 1,
+      "condition": "any",
+      "text": "Late, but you crossed the line. Counts."
+    },
+    {
+      "trigger": "completed_late",
+      "variant": 2,
+      "condition": "any",
+      "text": "Finished is finished. Tighten the pace next time."
+    },
+    {
+      "trigger": "partial",
+      "variant": 1,
+      "condition": "any",
+      "text": "Half a set is better than none."
+    },
+    {
+      "trigger": "partial",
+      "variant": 2,
+      "condition": "any",
+      "text": "Partial rep. We build on it tomorrow."
+    },
+    {
+      "trigger": "snoozed",
+      "variant": 1,
+      "condition": "any",
+      "text": "Quick breather. Don't cool down too much."
+    },
+    {
+      "trigger": "snoozed",
+      "variant": 2,
+      "condition": "any",
+      "text": "Rest is part of training. Back in soon."
+    },
+    {
+      "trigger": "deferred",
+      "variant": 1,
+      "condition": "any",
+      "text": "Moved it. Make sure you show up for it."
+    },
+    {
+      "trigger": "deferred",
+      "variant": 2,
+      "condition": "any",
+      "text": "Rescheduled. The plan still stands."
+    },
+    {
+      "trigger": "skipped",
+      "variant": 1,
+      "condition": "any",
+      "text": "Skipped. Shake it off."
+    },
+    {
+      "trigger": "skipped",
+      "variant": 2,
+      "condition": "any",
+      "text": "Rest day on this one. Own it."
+    },
+    {
+      "trigger": "forgotten",
+      "variant": 1,
+      "condition": "any",
+      "text": "We missed one yesterday. No drama, just back to it."
+    },
+    {
+      "trigger": "forgotten",
+      "variant": 2,
+      "condition": "any",
+      "text": "Dropped the ball. Pick it up today."
+    },
+    {
+      "trigger": "overdue_1d",
+      "variant": 1,
+      "condition": "any",
+      "text": "One day late. Let's close it out."
+    },
+    {
+      "trigger": "overdue_1d",
+      "variant": 2,
+      "condition": "any",
+      "text": "This one's waiting on the bench. Get it in."
+    },
+    {
+      "trigger": "overdue_3d",
+      "variant": 1,
+      "condition": "any",
+      "text": "Three days now. Break it into a smaller rep?"
+    },
+    {
+      "trigger": "overdue_3d",
+      "variant": 2,
+      "condition": "any",
+      "text": "It's been three days. Small step today."
+    },
+    {
+      "trigger": "overdue_7d",
+      "variant": 1,
+      "condition": "any",
+      "text": "A week on this. Time to decide: do it or drop it."
+    },
+    {
+      "trigger": "overdue_7d",
+      "variant": 2,
+      "condition": "any",
+      "text": "Seven days. Let's talk strategy on this one."
+    },
+    {
+      "trigger": "carried_over",
+      "variant": 1,
+      "condition": "any",
+      "text": "Carried again. Day {days_carried}. Let's finish it."
+    },
+    {
+      "trigger": "carried_over",
+      "variant": 2,
+      "condition": "any",
+      "text": "Back on the board. Today we close it."
+    },
+    {
+      "trigger": "abandoned",
+      "variant": 1,
+      "condition": "any",
+      "text": "Cutting it loose. Smart coaches adjust."
+    },
+    {
+      "trigger": "abandoned",
+      "variant": 2,
+      "condition": "any",
+      "text": "Off the roster. Focus on what matters."
+    },
+    {
+      "trigger": "all_done",
+      "variant": 1,
+      "condition": "any",
+      "text": "Clean sweep! Full board cleared!"
+    },
+    {
+      "trigger": "all_done",
+      "variant": 2,
+      "condition": "any",
+      "text": "Everything done. That's a winning day."
+    },
+    {
+      "trigger": "half_by_noon",
+      "variant": 1,
+      "condition": "any",
+      "text": "Half the board by noon. You're on fire!"
+    },
+    {
+      "trigger": "half_by_noon",
+      "variant": 2,
+      "condition": "any",
+      "text": "Halfway before lunch. Keep that tempo."
+    },
+    {
+      "trigger": "nothing_by_15",
+      "variant": 1,
+      "condition": "any",
+      "text": "Three o'clock and nothing done. One quick win, now."
+    },
+    {
+      "trigger": "nothing_by_15",
+      "variant": 2,
+      "condition": "any",
+      "text": "Afternoon slump? Pick the smallest quest and go."
+    },
+    {
+      "trigger": "over_capacity",
+      "variant": 1,
+      "condition": "any",
+      "text": "Too many drills for one day. Drop or move one."
+    },
+    {
+      "trigger": "over_capacity",
+      "variant": 2,
+      "condition": "any",
+      "text": "Board's overloaded. Even pros rest."
+    }
+  ]
+}

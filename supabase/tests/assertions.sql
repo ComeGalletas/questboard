@@ -51,6 +51,11 @@ values ('Easy 5 km run', 'coach', 'daily', 40, 'manual');
 select pg_temp.expect_eq((select count(*) from public.quests), 1, 'owner sees quest');
 select pg_temp.expect_eq((select count(*) from public.config), 1, 'owner sees config');
 
+-- A finished quest must say when it finished.
+select pg_temp.expect_error(
+  $$update public.quests set status = 'done'$$, 'done without completed_at');
+update public.quests set status = 'done', completed_at = now(), xp_awarded = 10;
+
 -- Idempotency: one successful run per (job, slot, date), including slot-less jobs.
 insert into public.llm_runs (job, slot, date, trigger, attempt, status)
 values ('daily_am', 'AM', '2026-09-25', 'tick', 1, 'succeeded'),

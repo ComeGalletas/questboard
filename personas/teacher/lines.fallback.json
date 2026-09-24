@@ -1,0 +1,268 @@
+{
+  "lines": [
+    {
+      "trigger": "assigned",
+      "variant": 1,
+      "condition": "any",
+      "text": "A new assignment is on your desk."
+    },
+    {
+      "trigger": "assigned",
+      "variant": 2,
+      "condition": "any",
+      "text": "Here is today's lesson. Take it one step at a time."
+    },
+    {
+      "trigger": "reminder_am",
+      "variant": 1,
+      "condition": "any",
+      "text": "Good morning. The mind is sharpest early."
+    },
+    {
+      "trigger": "reminder_am",
+      "variant": 2,
+      "condition": "any",
+      "text": "Morning review: what will you learn today?"
+    },
+    {
+      "trigger": "reminder_mid",
+      "variant": 1,
+      "condition": "any",
+      "text": "A midday check-in. How is the work going?"
+    },
+    {
+      "trigger": "reminder_mid",
+      "variant": 2,
+      "condition": "any",
+      "text": "Pause, reread your notes, continue."
+    },
+    {
+      "trigger": "reminder_pm",
+      "variant": 1,
+      "condition": "any",
+      "text": "Evening. {time_left} left for today's work."
+    },
+    {
+      "trigger": "reminder_pm",
+      "variant": 2,
+      "condition": "any",
+      "text": "Before the day ends, one more page."
+    },
+    {
+      "trigger": "started",
+      "variant": 1,
+      "condition": "any",
+      "text": "Good. Begin with the hardest part."
+    },
+    {
+      "trigger": "started",
+      "variant": 2,
+      "condition": "any",
+      "text": "You've started. That's the difficult bit."
+    },
+    {
+      "trigger": "completed_early",
+      "variant": 1,
+      "condition": "any",
+      "text": "Handed in early. Excellent discipline."
+    },
+    {
+      "trigger": "completed_early",
+      "variant": 2,
+      "condition": "any",
+      "text": "Ahead of schedule. Well done."
+    },
+    {
+      "trigger": "completed_on_time",
+      "variant": 1,
+      "condition": "any",
+      "text": "Submitted on time. Well done."
+    },
+    {
+      "trigger": "completed_on_time",
+      "variant": 2,
+      "condition": "any",
+      "text": "Complete. Note what you learned."
+    },
+    {
+      "trigger": "completed_late",
+      "variant": 1,
+      "condition": "any",
+      "text": "Late, but complete. Plan more margin next time."
+    },
+    {
+      "trigger": "completed_late",
+      "variant": 2,
+      "condition": "any",
+      "text": "Finished. We'll talk about pacing."
+    },
+    {
+      "trigger": "partial",
+      "variant": 1,
+      "condition": "any",
+      "text": "Partial credit is still credit."
+    },
+    {
+      "trigger": "partial",
+      "variant": 2,
+      "condition": "any",
+      "text": "Progress noted. Continue tomorrow."
+    },
+    {
+      "trigger": "snoozed",
+      "variant": 1,
+      "condition": "any",
+      "text": "A short break helps memory. Return soon."
+    },
+    {
+      "trigger": "snoozed",
+      "variant": 2,
+      "condition": "any",
+      "text": "Paused. Don't let it drift."
+    },
+    {
+      "trigger": "deferred",
+      "variant": 1,
+      "condition": "any",
+      "text": "Rescheduled. Put it in your planner."
+    },
+    {
+      "trigger": "deferred",
+      "variant": 2,
+      "condition": "any",
+      "text": "Moved. Make sure it's realistic this time."
+    },
+    {
+      "trigger": "skipped",
+      "variant": 1,
+      "condition": "any",
+      "text": "Skipped. Consider why."
+    },
+    {
+      "trigger": "skipped",
+      "variant": 2,
+      "condition": "any",
+      "text": "Noted as skipped. We'll revisit."
+    },
+    {
+      "trigger": "forgotten",
+      "variant": 1,
+      "condition": "any",
+      "text": "Yesterday's assignment went missing. Shall we recover it?"
+    },
+    {
+      "trigger": "forgotten",
+      "variant": 2,
+      "condition": "any",
+      "text": "It slipped. Let's make room for it today."
+    },
+    {
+      "trigger": "overdue_1d",
+      "variant": 1,
+      "condition": "any",
+      "text": "This is one day overdue."
+    },
+    {
+      "trigger": "overdue_1d",
+      "variant": 2,
+      "condition": "any",
+      "text": "Overdue. A little today is enough."
+    },
+    {
+      "trigger": "overdue_3d",
+      "variant": 1,
+      "condition": "any",
+      "text": "Three days overdue. Perhaps it needs splitting."
+    },
+    {
+      "trigger": "overdue_3d",
+      "variant": 2,
+      "condition": "any",
+      "text": "This has waited three days. What's blocking it?"
+    },
+    {
+      "trigger": "overdue_7d",
+      "variant": 1,
+      "condition": "any",
+      "text": "A week overdue. Decide: revise the plan or drop it."
+    },
+    {
+      "trigger": "overdue_7d",
+      "variant": 2,
+      "condition": "any",
+      "text": "Seven days. The syllabus needs adjusting."
+    },
+    {
+      "trigger": "carried_over",
+      "variant": 1,
+      "condition": "any",
+      "text": "Carried over, day {days_carried}. Let's finish it."
+    },
+    {
+      "trigger": "carried_over",
+      "variant": 2,
+      "condition": "any",
+      "text": "Back on the list. Smaller steps today."
+    },
+    {
+      "trigger": "abandoned",
+      "variant": 1,
+      "condition": "any",
+      "text": "Removed from the syllabus. That's allowed."
+    },
+    {
+      "trigger": "abandoned",
+      "variant": 2,
+      "condition": "any",
+      "text": "Dropped. Better to focus than to scatter."
+    },
+    {
+      "trigger": "all_done",
+      "variant": 1,
+      "condition": "any",
+      "text": "All assignments complete. Top marks today."
+    },
+    {
+      "trigger": "all_done",
+      "variant": 2,
+      "condition": "any",
+      "text": "Everything handed in. Rest well."
+    },
+    {
+      "trigger": "half_by_noon",
+      "variant": 1,
+      "condition": "any",
+      "text": "Half the work by noon. Admirable."
+    },
+    {
+      "trigger": "half_by_noon",
+      "variant": 2,
+      "condition": "any",
+      "text": "Good pace this morning."
+    },
+    {
+      "trigger": "nothing_by_15",
+      "variant": 1,
+      "condition": "any",
+      "text": "It's three o'clock. Start with ten minutes."
+    },
+    {
+      "trigger": "nothing_by_15",
+      "variant": 2,
+      "condition": "any",
+      "text": "Nothing yet today. Open the first book."
+    },
+    {
+      "trigger": "over_capacity",
+      "variant": 1,
+      "condition": "any",
+      "text": "Today's plan exceeds your time. Remove something."
+    },
+    {
+      "trigger": "over_capacity",
+      "variant": 2,
+      "condition": "any",
+      "text": "Too much on the syllabus today. Let's trim it."
+    }
+  ]
+}

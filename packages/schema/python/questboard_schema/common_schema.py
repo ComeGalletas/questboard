@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Any
 
-from pydantic import Field, RootModel
+from pydantic import BaseModel, ConfigDict, Field, RootModel
 
 
 class Common(RootModel[Any]):
@@ -81,3 +81,11 @@ class LocalTime(RootModel[str]):
         description="Wall-clock time HH:MM in the configured timezone.",
         pattern="^([01][0-9]|2[0-3]):[0-5][0-9]$",
     )
+
+
+class QuietHours(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    start: LocalTime
+    end: LocalTime
