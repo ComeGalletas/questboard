@@ -25,7 +25,9 @@ export function SetupChat() {
   const [done, setDone] = useState(false);
   const bottom = useRef<HTMLDivElement>(null);
 
-  useEffect(() => bottom.current?.scrollIntoView({ block: "end" }), [messages, waiting]);
+  useEffect(() => {
+    bottom.current?.scrollIntoView({ block: "end" });
+  }, [messages, waiting]);
 
   useEffect(() => {
     if (!waiting) return;

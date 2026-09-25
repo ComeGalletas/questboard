@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router = useRouter();
-  useEffect(() => router.replace("/today"), [router]);
+  useEffect(() => {
+    router.replace("/today");
+  }, [router]);
   return null;
 }
