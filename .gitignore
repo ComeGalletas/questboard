@@ -40,3 +40,7 @@ apps/web/public/personas/
 # Supabase CLI local state
 supabase/.branches/
 supabase/.temp/
+
+# Written by Next.js 16 on dev/build
+apps/web/AGENTS.md
+apps/web/CLAUDE.md
