@@ -170,7 +170,13 @@ def test_context_is_capped_and_stays_inside_the_pack(pack: Path, tmp_path: Path)
     (ctx / "image.png").write_bytes(b"\x89PNG")
     outside = tmp_path / "secret.md"
     outside.write_text("do not read")
-    (ctx / "link.md").symlink_to(outside)
+    try:
+        (ctx / "link.md").symlink_to(outside)
+    except OSError:
+        # Windows needs Developer Mode or admin rights to create symlinks.
+        if sys.platform != "win32":
+            raise
+        pytest.skip("symlinks need Developer Mode or admin rights on Windows")
 
     text = read_context(pack)
     assert "Former sprinter." in text and "do not read" not in text and "\x89PNG" not in text

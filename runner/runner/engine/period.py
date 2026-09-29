@@ -3,7 +3,9 @@
 Both: carry open quests of that cadence into the new period (code), then ask the provider chain
 for a QuestDiff for the period and store it as proposals. The model may break an open quest of
 the job's cadence into sub-quests one level down (weekly -> daily, monthly -> weekly) via
-parent_id. Nothing is applied until the user accepts (invariant 3).
+parent_id. Sub-quests don't count against the period budget; they use the capacity of the day
+(weekly budget of the week) they land on, checked per slot. Nothing is applied until the user
+accepts (invariant 3).
 """
 
 from __future__ import annotations
@@ -22,7 +24,13 @@ from runner.engine.carry import period_carry_patch
 from runner.engine.daily import HISTORY_DAYS, _outcomes, _quest_view, capacity_minutes
 from runner.engine.packs import Pack, load_packs
 from runner.engine.prompts import period_system_prompt, period_user_prompt
-from runner.engine.validators import MONEY_CATEGORIES, _line_problems, summary_problems
+from runner.engine.rollup import rollup, sub_quests
+from runner.engine.validators import (
+    CAPACITY_SLACK,
+    MONEY_CATEGORIES,
+    _line_problems,
+    summary_problems,
+)
 from runner.providers.base import GenerationRequest, run_with_fallback
 from runner.repo import ACTIVE
 from runner.scheduler.core import JobContext, JobResult
@@ -57,10 +65,59 @@ def budget_minutes(config: Config, period: Period) -> int:
     return round(total * BUDGET_SHARE[period.cadence])
 
 
+def slots(
+    config: Config, period: Period, open_q: list[Quest], today: date
+) -> dict[date, dict[str, int]]:
+    """Where sub-quests may go and how much room each slot has: the period's days from today
+    (weekly job) or its weeks starting on a Monday from today (monthly job)."""
+    out: dict[date, dict[str, int]] = {}
+    if period.cadence == "weekly":
+        for day in period.days():
+            if day < today:
+                continue
+            planned = sum(
+                q.estimate_min
+                for q in open_q
+                if q.cadence.value == "daily"
+                and q.scheduled_for is not None
+                and (q.scheduled_for == day or (day == today and q.scheduled_for < today))
+            )
+            out[day] = {"capacity_min": capacity_minutes(config, day), "planned_min": planned}
+        return out
+    for day in period.days():
+        if day < today or day.weekday() != 0:
+            continue
+        planned = sum(
+            q.estimate_min for q in open_q if q.cadence.value == "weekly" and q.scheduled_for == day
+        )
+        week = Period("weekly", day, day + timedelta(days=6))
+        out[day] = {"capacity_min": budget_minutes(config, week), "planned_min": planned}
+    return out
+
+
+def needs_breakdown(period: Period, quests: list[Quest]) -> list[dict[str, Any]]:
+    """Open quests of the period's cadence with work left and no open sub-quest."""
+    out = []
+    for q in quests:
+        if q.cadence.value != period.cadence or q.status.value not in ACTIVE:
+            continue
+        if q.scheduled_for != period.start:
+            continue
+        if any(s.status.value in ACTIVE for s in sub_quests(q, quests)):
+            continue
+        r = rollup(q, quests)
+        if r.remaining_min > 0:
+            out.append({"id": str(q.id), "title": q.title, "remaining_min": r.remaining_min})
+    return out
+
+
 def check_period(diff: QuestDiff, ctx: dict[str, Any]) -> list[str]:
     period: Period = ctx["period"]
     open_q: dict[str, Quest] = ctx["open"]
     sub = SUB_CADENCE[period.cadence]
+    today: date = ctx["today"]
+    slot_room: dict[date, dict[str, int]] = ctx["slots"]
+    slot_new: dict[date, int] = {}
     problems: list[str] = summary_problems("summary", diff.summary)
     planned = ctx["planned_min"]
     for i, wrapped in enumerate(diff.ops):
@@ -87,10 +144,15 @@ def check_period(diff: QuestDiff, ctx: dict[str, Any]) -> list[str]:
                     problems.append(
                         f"{path}: {cad} sub-quests need an open {period.cadence} parent"
                     )
-                if q.scheduled_for is None or not period.start <= q.scheduled_for <= period.end:
+                day = q.scheduled_for
+                if day is None or not period.start <= day <= period.end:
                     problems.append(f"{path}: sub-quests must be scheduled inside the period")
-                if sub == "weekly" and q.scheduled_for and q.scheduled_for.weekday() != 0:
+                elif day < today:
+                    problems.append(f"{path}: sub-quests may not be scheduled before today")
+                elif sub == "weekly" and day.weekday() != 0:
                     problems.append(f"{path}: weekly sub-quests are scheduled on a Monday")
+                else:
+                    slot_new[day] = slot_new.get(day, 0) + q.estimate_min
             else:
                 problems.append(f"{path}: this job only adds {period.cadence} or {sub} quests")
             problems += _line_problems(f"{path}.quest.title", q.title)
@@ -115,11 +177,24 @@ def check_period(diff: QuestDiff, ctx: dict[str, Any]) -> list[str]:
         op = wrapped.root
         if op.op == "drop" and str(op.quest_id) in parents:
             problems.append(f"ops[{i}]: keep a quest you split open; its sub-quests belong to it")
-    if planned > ctx["budget_min"]:
+    # Only a diff that grows the period's total can break the budget; one that leaves it
+    # alone (e.g. only sub-quests) passes even when the open quests already fill it.
+    if planned > ctx["budget_min"] and planned > ctx["planned_min"]:
         problems.append(
             f"{period.cadence} plan is {planned} min against a budget of {ctx['budget_min']} min; "
             "drop or shrink quests"
         )
+    # Sub-quests don't use the period budget; they use the room on the day (week) they land on.
+    for day, added in sorted(slot_new.items()):
+        room = slot_room.get(day)
+        if room is None:
+            continue
+        total = room["planned_min"] + added
+        if total > room["capacity_min"] * CAPACITY_SLACK:
+            problems.append(
+                f"{sub} sub-quests on {day} bring it to {total} min against "
+                f"{room['capacity_min']} min of capacity; move or shrink them"
+            )
     return problems
 
 
@@ -158,10 +233,17 @@ def period_job(cadence: str, ctx: JobContext, packs: list[Pack] | None = None) -
     ]
     budget = budget_minutes(ctx.config, period)
     planned = sum(q.estimate_min for q in in_period)
+    today = ctx.now.date()
+    room = slots(ctx.config, period, list(open_q.values()), today)
     prompt_ctx = {
         "period": {"cadence": cadence, "start": period.start, "end": period.end},
+        "today": today,
         "budget_min": budget,
         "planned_min": planned,
+        "needs_breakdown": needs_breakdown(period, quests),
+        ("days" if cadence == "weekly" else "weeks"): [
+            {"date": day, "weekday": day.strftime("%A"), **r} for day, r in room.items()
+        ],
         "goals": [g.model_dump(mode="json", exclude_none=True) for g in ctx.config.goals],
         "open_quests": [_quest_view(q) for q in open_q.values()],
         "recent_outcomes": _outcomes(quests, period.start),
@@ -173,6 +255,8 @@ def period_job(cadence: str, ctx: JobContext, packs: list[Pack] | None = None) -
         "personas": {p.slug for p in packs},
         "budget_min": budget,
         "planned_min": planned,
+        "today": today,
+        "slots": room,
     }
     request = GenerationRequest(
         job=ctx.occurrence.job,
