@@ -22,6 +22,7 @@ from runner.engine.calibration import WINDOW_DAYS, calibration
 from runner.engine.carry import carry_patch
 from runner.engine.packs import Pack, load_packs
 from runner.engine.prompts import system_prompt, user_prompt
+from runner.engine.rollup import period_end, rollup, sub_quests
 from runner.engine.validators import PlanContext, check_plan
 from runner.providers.base import GenerationRequest, run_with_fallback
 from runner.repo import ACTIVE
@@ -63,7 +64,46 @@ def _quest_view(q: Quest) -> dict[str, Any]:
     if q.deadline:
         view["deadline"] = q.deadline
         view["hard_deadline"] = q.hard_deadline
+    if q.parent_id:
+        view["parent_id"] = str(q.parent_id)
     return view
+
+
+def period_work(quests: list[Quest], today: date) -> list[dict[str, Any]]:
+    """Open weekly/monthly quests of the current period that still need a step today: no active
+    daily sub-quest on today's board and work left that no open sub-quest carries. A monthly
+    quest already split into weekly sub-quests is worked through those instead."""
+    out = []
+    for q in quests:
+        end = period_end(q)
+        if q.cadence.value == "daily" or q.status.value not in ACTIVE or end is None:
+            continue
+        if not (q.scheduled_for is not None and q.scheduled_for <= today <= end):
+            continue
+        subs = [s for s in sub_quests(q, quests) if s.status.value in ACTIVE]
+        if any(_on_today(s, today) for s in subs):
+            continue
+        if any(s.cadence.value == "weekly" for s in subs):
+            continue
+        r = rollup(q, quests)
+        if r.unplanned_min == 0:
+            continue
+        out.append(
+            {
+                "id": str(q.id),
+                "title": q.title,
+                "cadence": q.cadence.value,
+                "persona": q.persona.root,
+                "category": q.category.value,
+                "priority": q.priority,
+                "target_min": r.target_min,
+                "done_min": r.done_min,
+                "steps_done": r.done,
+                "unplanned_min": r.unplanned_min,
+                "days_left": (end - today).days + 1,
+            }
+        )
+    return out
 
 
 def _outcomes(quests: list[Quest], today: date) -> dict[str, Any]:
@@ -88,6 +128,7 @@ def build_context(
         "goals": [g.model_dump(mode="json", exclude_none=True) for g in config.goals],
         "open_quests": [_quest_view(q) for q in open_quests],
         "todays_board": [str(q.id) for q in todays],
+        "period_work": period_work(quests, today),
         "recent_outcomes": _outcomes(quests, today),
         "estimate_calibration": calibration(quests, today),
         "recent_feedback": [

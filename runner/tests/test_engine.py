@@ -14,7 +14,13 @@ from questboard_schema.llm_run_schema import LLMRun, Status, Trigger
 from questboard_schema.quest_schema import Quest
 
 from runner.engine.carry import carry_patch
-from runner.engine.daily import build_context, capacity_minutes, daily_am, daily_pm
+from runner.engine.daily import (
+    build_context,
+    capacity_minutes,
+    daily_am,
+    daily_pm,
+    period_work,
+)
 from runner.engine.packs import load_packs
 from runner.engine.prompts import system_prompt
 from runner.engine.validators import BOARD_TRIGGERS, QUEST_TRIGGERS, PlanContext, check_plan
@@ -354,3 +360,83 @@ def test_daily_pm_carries_over_without_a_model() -> None:
 
 def test_system_prompt_is_stable_for_caching() -> None:
     assert system_prompt(PACKS) == system_prompt(load_packs())
+
+
+# -- daily steps of weekly/monthly quests ----------------------------------------------------
+
+WEEK_START = "2026-09-21"  # the Monday of TODAY's week
+
+
+def test_period_work_lists_weekly_quests_without_a_step_today() -> None:
+    gym = quest(cadence="weekly", scheduled_for=WEEK_START, title="Gym", estimate_min=240)
+    tuesday = quest(
+        parent_id=str(gym.id),
+        scheduled_for="2026-09-22",
+        status="done",
+        actual_min=70,
+        completed_at="2026-09-22T20:00:00Z",
+    )
+    stepped = quest(cadence="weekly", scheduled_for=WEEK_START, title="Read")
+    step_today = quest(parent_id=str(stepped.id))
+    planned = quest(cadence="weekly", scheduled_for=WEEK_START, estimate_min=30)
+    saturday = quest(parent_id=str(planned.id), scheduled_for="2026-09-26", estimate_min=30)
+    month = quest(cadence="monthly", scheduled_for="2026-09-01", title="Course")
+    month_week = quest(cadence="weekly", parent_id=str(month.id), scheduled_for=WEEK_START)
+    last_week = quest(cadence="weekly", scheduled_for="2026-09-14")
+    quests = [gym, tuesday, stepped, step_today, planned, saturday, month, month_week, last_week]
+
+    work = period_work(quests, TODAY)
+    # Read has a step today, Planned's Saturday step carries all its work, Course is worked
+    # through its weekly sub-quest (which itself shows up), last week's quest is out of period.
+    assert [w["id"] for w in work] == [str(gym.id), str(month_week.id)]
+    assert work[0] == {
+        "id": str(gym.id),
+        "title": "Gym",
+        "cadence": "weekly",
+        "persona": "coach",
+        "category": "health",
+        "priority": 2,
+        "target_min": 240,
+        "done_min": 70,
+        "steps_done": 1,
+        "unplanned_min": 170,
+        "days_left": 3,  # Friday to Sunday
+    }
+
+
+def test_daily_steps_may_point_at_an_open_weekly_or_monthly_parent() -> None:
+    gym = quest(cadence="weekly", scheduled_for=WEEK_START, title="Gym", estimate_min=240)
+    daily = quest()
+    ql = [{"quest": str(daily.id), "persona": "coach", "lines": lines("coach")}]
+
+    def check(**over: Any) -> list[str]:
+        op = {**ADD_RUN, "quest": {**ADD_RUN["quest"], **over}}
+        bundles = ql + [{"quest": "new:0", "persona": "coach", "lines": lines("coach")}]
+        return check_plan(DailyPlan.model_validate(plan([op], bundles)), ctx_for([gym, daily]))
+
+    assert check(parent_id=str(gym.id)) == []
+    assert any("parent_id must be an open weekly" in p for p in check(parent_id=str(daily.id)))
+    assert any("parent_id must be an open weekly" in p for p in check(parent_id=str(uuid.uuid4())))
+    weekly_child = check(parent_id=str(gym.id), cadence="weekly", scheduled_for=WEEK_START)
+    assert any("only daily adds may have a parent" in p for p in weekly_child)
+    # Steps use today's capacity like any daily quest (60 min, 20 already planned).
+    assert any("of capacity" in p for p in check(parent_id=str(gym.id), estimate_min=60))
+
+
+def test_daily_am_prompt_asks_for_todays_share_of_period_quests() -> None:
+    gym = quest(cadence="weekly", scheduled_for=WEEK_START, title="Gym", estimate_min=240)
+    repo = MemoryRepo(CONFIG)
+    repo.quests = [gym]
+    step = {**ADD_RUN, "quest": {**ADD_RUN["quest"], "parent_id": str(gym.id)}}
+    provider = ScriptedProvider(
+        plan([step], [{"quest": "new:0", "persona": "coach", "lines": lines("coach")}])
+    )
+    [d] = scheduler(repo, provider, NOW).evaluate(Trigger.tick, only=JobName.daily_am)
+    assert (d.status, d.reason) == (Status.succeeded, "ok, 1 ops")
+    [request] = provider.requests
+    assert "period_work lists open weekly/monthly quests" in request.system
+    assert "parent_id = the entry's id" in request.system
+    context = json.loads(request.prompt.split("\n\n", 1)[1])
+    assert [w["id"] for w in context["period_work"]] == [str(gym.id)]
+    [proposal] = repo.proposals
+    assert proposal["payload"]["quest"]["parent_id"] == str(gym.id)

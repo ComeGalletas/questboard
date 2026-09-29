@@ -27,6 +27,14 @@ Return one JSON object with:
    - Never add utilities or subscription quests and never set or change deadlines: bills and
      dates come only from the user's own records.
    - A quest carried 3 times should be split (drop it, add 2-3 smaller quests) or dropped.
+   - period_work lists open weekly/monthly quests with no step on today's board yet. Weekly and
+     monthly quests only get done through daily steps, so for each entry add today's share as a
+     daily quest: parent_id = the entry's id, same persona and category, scheduled_for today,
+     sized to one sitting of about unplanned_min / days_left minutes (e.g. one gym session, one
+     work block; never the whole remainder at once). Steps use today's capacity like any daily
+     quest: if they don't all fit, keep the most urgent (fewest days_left, highest priority) and
+     say so in the summary. The parent stays open and tracks the whole; do not update it. Only
+     daily adds may set parent_id, and only to an open weekly or monthly quest.
    - Use goals and recent outcomes; respect each persona's categories.
    - estimate_calibration gives, per category, how long quests really take vs their estimate
      (ratio 1.4 = 40 % longer). Scale estimates in adds and updates by it; propose updates for
@@ -91,31 +99,55 @@ act: you propose changes the user accepts or rejects.
 
 Return a QuestDiff (ops + summary):
 - add {cadence} quests for the period (scheduled_for = period start) that move the goals forward;
-- or break an open {cadence} quest into {sub} sub-quests: set parent_id to that quest's id and
-  schedule each inside the period{sub_rule}. Keep the parent open: it tracks the whole;
-  lower its estimate_min if the sub-quests now carry the work;
+- break down every quest in needs_breakdown (open {cadence} quests with no open sub-quests) into
+  {sub} sub-quests: parent_id = that quest's id, one sub-quest per {step} on a concrete {slot}
+  from {slots} (inside the period, never before today){sub_rule}; together they should cover the
+  parent's remaining_min. Keep the parent open and leave its estimate_min alone: it is the target
+  its sub-quests roll up into. A {cadence} quest you add now gets its sub-quests later;
 - update or drop open {cadence} quests that no longer fit (carries show what keeps slipping).
+Two separate budgets:
+- {cadence} quests (adds, estimate updates, drops) must fit budget_min; planned_min of it is
+  already taken.
+- {sub} sub-quests do NOT count against budget_min. Each one uses the capacity of the {slot} it is
+  scheduled on: on every {slot} in {slots}, planned_min plus your sub-quests there must fit
+  capacity_min. Spread them out and skip {slot}s that are full. A used-up budget_min is never a
+  reason to skip a breakdown.
 Scale estimates by estimate_calibration (per-category actual/estimate ratio) when present.
 Coverage: each goal should have at least one open quest moving it forward this period. For
 every goal that no open quest covers, add a {cadence} quest sized to the goal, as long as the
-{cadence} total still fits budget_min (planned_min of it is already taken). An empty ops list
-is right only when every goal is already covered by open quests or budget_min is used up.
-Rules: the {cadence} total must fit budget_min; never add utilities or subscription quests and
-never set or change deadlines; keep titles short, concrete and free of personal data
-(no names of real people, emails, phone or ID numbers, amounts of money, links).
+{cadence} total still fits budget_min. An empty ops list is right only when every goal is
+already covered by open quests (or budget_min is used up) and needs_breakdown is empty (or no
+{slot} has room).
+Rules: never add utilities or subscription quests and never set or change deadlines; keep titles
+short, concrete and free of personal data (no names of real people, emails, phone or ID numbers,
+amounts of money, links).
 Give every op a one-sentence reason. Prefer few, high-value ops.
 Always write summary: one or two sentences on what you proposed and why; if ops is empty, say
-whether the goals are already covered or the budget is used. Same personal-data rules.
+why (goals covered, budget used, no room on any {slot}). Same personal-data rules.
 
 Personas:
 {personas}"""
 
 
+SUB_WORDING = {
+    "weekly": {
+        "sub": "daily",
+        "step": "session or work block",
+        "slot": "day",
+        "slots": "days",
+        "sub_rule": "",
+    },
+    "monthly": {
+        "sub": "weekly",
+        "step": "week's share",
+        "slot": "week",
+        "slots": "weeks",
+        "sub_rule": "; scheduled_for is the week's Monday",
+    },
+}
+
+
 def period_system_prompt(packs: list[Pack], cadence: str) -> str:
-    sub = "daily" if cadence == "weekly" else "weekly"
     return PERIOD_TEMPLATE.format(
-        cadence=cadence,
-        sub=sub,
-        sub_rule=" (weekly sub-quests on a Monday)" if sub == "weekly" else "",
-        personas=_persona_section(packs),
+        cadence=cadence, personas=_persona_section(packs), **SUB_WORDING[cadence]
     )
