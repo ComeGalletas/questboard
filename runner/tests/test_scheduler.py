@@ -221,18 +221,23 @@ def test_force_adds_attempts_to_a_succeeded_occurrence_up_to_the_cap() -> None:
     sched, repo, clock = make(local(2026, 9, 28, 8, 0), weekly=h)  # catch-up of Sunday 09-27
     assert sched.evaluate(Trigger.start)[0].status == Status.succeeded
     [first] = repo.runs
-    repo.proposals = [{"id": "p1", "run_id": str(first.id), "status": "pending", "op": "add"}]
-    repo.proposals.append({"id": "p2", "run_id": "other-run", "status": "pending", "op": "add"})
+    daily_run = repo.insert_run(first.model_copy(update={"job": JobName.daily_am, "slot": "AM"}))
+    repo.proposals = [
+        {"id": "p1", "run_id": str(first.id), "status": "pending", "op": "add"},
+        {"id": "p2", "run_id": str(daily_run.id), "status": "pending", "op": "add"},
+    ]
     assert sched.evaluate(Trigger.manual)[0].reason == "already done"
     with pytest.raises(ValueError):
         sched.evaluate(Trigger.tick, force=True)
 
     d = sched.evaluate(Trigger.manual, force=True)[0]
     assert d.status == Status.succeeded
-    assert [(r.attempt, r.trigger, r.forced) for r in repo.runs] == [
+    weekly_runs = [r for r in repo.runs if r.job == JobName.weekly]
+    assert [(r.attempt, r.trigger, r.forced) for r in weekly_runs] == [
         (1, Trigger.start, False),
         (2, Trigger.manual, True),
     ]
+    # Only the earlier weekly attempt's proposals give way; daily_am's stay pending.
     assert [p["status"] for p in repo.proposals] == ["superseded", "pending"]
     assert sched.evaluate(Trigger.tick)[0].reason == "already done"  # scheduled runs stay put
     clock.advance(minutes=1)

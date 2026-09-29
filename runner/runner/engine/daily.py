@@ -13,6 +13,7 @@ from collections import Counter
 from datetime import date, datetime, timedelta
 from typing import Any
 
+from questboard_schema.common_schema import JobName
 from questboard_schema.config_schema import Config
 from questboard_schema.daily_plan_schema import DailyPlan
 from questboard_schema.quest_schema import Quest
@@ -149,7 +150,8 @@ def write_plan(ctx: JobContext, plan: DailyPlan, todays_ids: list[str]) -> None:
             row["quest_id"] = str(op.quest_id)
         proposals.append(row)
 
-    repo.supersede_pending_proposals()  # yesterday's unanswered ideas give way to today's
+    # Yesterday's unanswered ideas give way to today's; weekly/monthly proposals stay put.
+    repo.supersede_pending_proposals(JobName.daily_am)
     repo.insert_proposals(proposals)
     refreshed = sorted({r["quest_id"] for r in existing_rows} | set(todays_ids))
     repo.replace_quest_lines(refreshed, existing_rows)
