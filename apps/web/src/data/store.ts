@@ -14,6 +14,7 @@ import type {
 } from "@questboard/schema";
 import type { QuestPatch } from "../game/actions.ts";
 import type { QuestChangesPatch } from "../game/proposals.ts";
+import type { PlanRun } from "../lib/planner.ts";
 
 export type NewQuest = Pick<
   Quest,
@@ -41,6 +42,8 @@ export interface Store {
   getRunnerState(): Promise<RunnerState | null>;
   listPendingProposals(): Promise<QuestProposal[]>;
   decideProposal(id: string, status: "accepted" | "rejected" | "superseded"): Promise<void>;
+  /** Recent successful planning runs (daily_am, weekly, monthly), for "proposed nothing". */
+  listPlanRuns(): Promise<PlanRun[]>;
   /** Cache dialogue that came with an accepted add, now that the quest has an id. */
   insertLines(questId: string, persona: string, lines: FallbackLine[]): Promise<void>;
   /** P1 request for the runner; resolves with its id. */

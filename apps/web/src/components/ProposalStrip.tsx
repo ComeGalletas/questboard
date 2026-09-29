@@ -5,14 +5,18 @@ import type { QuestProposal } from "@questboard/schema";
 import { useLog } from "@/data/log";
 import { useReaction } from "@/data/reaction";
 import { BOARD_CADENCE, type Board } from "@/lib/board";
+import { useNow } from "@/lib/hooks";
+import { emptyPlanNotice } from "@/lib/planner";
 import { cadenceOf, describe, planAcceptance, proposalPersona } from "@/game/proposals";
 import { packFor } from "@/game/personas";
 import { Portrait } from "@/ui/Sprite";
 
-/** Model proposals waiting for the user. Nothing changes until Accept (invariant 3). */
+/** Model proposals waiting for the user. Nothing changes until Accept (invariant 3).
+ * When the board's latest planning run proposed nothing, says so with the planner's summary. */
 export function ProposalStrip({ board }: { board: Board }) {
-  const { store, quests, proposals, config, reload } = useLog();
+  const { store, quests, proposals, planRuns, config, reload } = useLog();
   const { react } = useReaction();
+  const now = useNow(60_000);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,7 +24,17 @@ export function ProposalStrip({ board }: { board: Board }) {
     const cadence = cadenceOf(p, quests);
     return cadence === null || cadence === BOARD_CADENCE[board];
   });
-  if (mine.length === 0) return null;
+  if (mine.length === 0) {
+    const notice = emptyPlanNotice(board, planRuns, now);
+    if (!notice) return null;
+    return (
+      <section className="panel proposals" aria-label="Suggestions">
+        <h2>Suggestions</h2>
+        <p className="muted">{notice.text}</p>
+        {notice.summary && <p className="plan-summary">Planner: {notice.summary}</p>}
+      </section>
+    );
+  }
 
   async function decide(p: QuestProposal, accept: boolean) {
     setBusy(p.id);
