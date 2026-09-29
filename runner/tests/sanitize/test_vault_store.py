@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import secrets
+import sys
 from pathlib import Path
 
 import pytest
@@ -39,7 +40,9 @@ def test_file_is_encrypted_and_needs_the_key(tmp_path: Path) -> None:
         assert plain not in raw
     with pytest.raises(VaultError):
         SqlCipherVault(path, StaticMasterKey(secrets.token_bytes(32)))
-    assert oct(path.stat().st_mode)[-3:] == "600"
+    # Windows has no POSIX mode bits (stat always reports 666); the profile dir's ACL guards it.
+    if sys.platform != "win32":
+        assert oct(path.stat().st_mode)[-3:] == "600"
 
 
 def test_values_are_sealed_even_inside_the_database(tmp_path: Path) -> None:
