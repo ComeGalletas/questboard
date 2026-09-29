@@ -227,11 +227,20 @@ class SupabaseRepo:
         }
         return self._request("GET", "quest_feedback", params)
 
-    def supersede_pending_proposals(self) -> int:
+    def supersede_pending_proposals(self, job: JobName) -> int:
+        # PostgREST can't filter a PATCH through an embed: find the ids first, then mark them.
+        params = {
+            "select": "id,llm_runs!inner(job)",
+            "status": "eq.pending",
+            "llm_runs.job": f"eq.{job.value}",
+        }
+        ids = [r["id"] for r in self._request("GET", "quest_proposals", params)]
+        if not ids:
+            return 0
         rows = self._request(
             "PATCH",
             "quest_proposals",
-            {"status": "eq.pending", "select": "id"},
+            {"id": f"in.({','.join(ids)})", "status": "eq.pending", "select": "id"},
             {"status": "superseded"},
             "return=representation",
         )

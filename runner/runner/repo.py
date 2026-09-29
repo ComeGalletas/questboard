@@ -37,7 +37,10 @@ class Repo(Protocol):
 
     def update_quest(self, quest_id: str, fields: dict[str, Any]) -> None: ...
     def list_feedback(self, since: date) -> list[dict[str, Any]]: ...
-    def supersede_pending_proposals(self) -> int: ...
+    def supersede_pending_proposals(self, job: JobName) -> int:
+        """Mark pending proposals written by runs of `job` superseded; other jobs' stay."""
+        ...
+
     def insert_proposals(self, rows: list[dict[str, Any]]) -> None: ...
     def replace_quest_lines(self, quest_ids: list[str], rows: list[dict[str, Any]]) -> None:
         """Drop unused cached lines for these quests, then insert `rows`."""
@@ -148,9 +151,12 @@ class MemoryRepo:
         self._check()
         return [f for f in self.feedback if f["created_at"][:10] >= since.isoformat()]
 
-    def supersede_pending_proposals(self) -> int:
+    def supersede_pending_proposals(self, job: JobName) -> int:
         self._check()
-        pending = [p for p in self.proposals if p["status"] == "pending"]
+        runs = {str(r.id) for r in self.runs if r.job == job}
+        pending = [
+            p for p in self.proposals if p["status"] == "pending" and p.get("run_id") in runs
+        ]
         for p in pending:
             p["status"] = "superseded"
         return len(pending)
