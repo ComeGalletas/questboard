@@ -50,7 +50,12 @@ class LLMRun(BaseModel):
     date: date_aliased
     trigger: Trigger
     provider_used: common_schema.ProviderName | None = None
-    attempt: int = Field(..., ge=1, le=3)
+    attempt: int = Field(
+        ...,
+        description="1-3 for scheduled and plain manual runs; forced manual re-runs may go up to 10.",
+        ge=1,
+        le=10,
+    )
     status: Status
     forced: bool | None = Field(
         False,

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "replan_request.schema.json",
+  "title": "ReplanRequest",
+  "description": "Payload of a `replan` pending_live_requests row: the user asked for new suggestions now. The runner answers with a forced manual run of the planning job (proposals only).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["job"],
+  "properties": {
+    "job": { "type": "string", "enum": ["daily_am", "weekly", "monthly"] }
+  }
+}

@@ -13,6 +13,8 @@ export interface QuestboardSchemas {
   quest?: Quest;
   quest_diff?: QuestDiff;
   quest_proposal?: QuestProposal;
+  replan_request?: ReplanRequest;
+  replan_result?: ReplanResult;
   runner_state?: RunnerState;
   setup_request?: SetupRequest;
   setup_turn?: SetupTurn;
@@ -391,6 +393,9 @@ export interface LLMRun {
   date: string;
   trigger: "tick" | "start" | "network_up" | "manual";
   provider_used?: ("claude-cli" | "ollama" | "claude-api") | null;
+  /**
+   * 1-3 for scheduled and plain manual runs; forced manual re-runs may go up to 10.
+   */
   attempt: number;
   status: "queued" | "running" | "succeeded" | "failed" | "invalid_output" | "skipped";
   /**
@@ -638,6 +643,20 @@ export interface QuestProposal {
   status: "pending" | "accepted" | "rejected" | "superseded";
   decided_at?: string | null;
   created_at: string;
+}
+/**
+ * Payload of a `replan` pending_live_requests row: the user asked for new suggestions now. The runner answers with a forced manual run of the planning job (proposals only).
+ */
+export interface ReplanRequest {
+  job: "daily_am" | "weekly" | "monthly";
+}
+/**
+ * Result of a `replan` live request. The plan itself lands in quest_proposals; ops_count and the summary are on the llm_runs row.
+ */
+export interface ReplanResult {
+  status: "succeeded" | "skipped" | "failed" | "invalid_output";
+  reason: string;
+  ops_count?: number | null;
 }
 /**
  * The runner's heartbeat row (`runner_state`). The status pill reads heartbeat_at.

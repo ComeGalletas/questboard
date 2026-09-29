@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "replan_result.schema.json",
+  "title": "ReplanResult",
+  "description": "Result of a `replan` live request. The plan itself lands in quest_proposals; ops_count and the summary are on the llm_runs row.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "reason"],
+  "properties": {
+    "status": { "type": "string", "enum": ["succeeded", "skipped", "failed", "invalid_output"] },
+    "reason": { "type": "string", "maxLength": 200 },
+    "ops_count": { "type": ["integer", "null"], "minimum": 0 }
+  }
+}
