@@ -4,13 +4,15 @@
 // home screen and a tap to ask for permission.
 
 import type { Store } from "@/data/store";
+import { isDesktop } from "@/lib/desktop";
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
 export type PushSupport = "ok" | "unsupported" | "not-configured";
 
 export function pushSupport(): PushSupport {
-  if (typeof window === "undefined") return "unsupported";
+  // The desktop shell shows PC notifications itself; Web Push is for the phone.
+  if (typeof window === "undefined" || isDesktop()) return "unsupported";
   if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window))
     return "unsupported";
   return VAPID_PUBLIC_KEY ? "ok" : "not-configured";

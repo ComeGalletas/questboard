@@ -9,7 +9,8 @@ Start with [`CLAUDE.md`](CLAUDE.md) (invariants and architecture) and
 
 | Path | What |
 |---|---|
-| `apps/web` | Next.js app (static export) for the PWA and, later, the Tauri shell |
+| `apps/web` | Next.js app (static export) for the PWA and the desktop shell |
+| `apps/desktop` | Tauri 2 desktop shell (Windows): dashboard window, tray, start at login, deep links |
 | `runner` | Python 3.12 runner: scheduler, providers, engine (`uv`) |
 | `packages/schema` | JSON Schemas → generated TS + Pydantic (`pnpm schema:gen`) |
 | `personas` | Built-in persona packs |
@@ -41,6 +42,29 @@ uv run python -m runner login   # Supabase URL + anon key, then email/password
 uv run python -m runner run     # trigger loop; `tick` or `trigger daily_am` for one pass
 ```
 
+## Desktop shell (Windows)
+
+`apps/desktop` wraps the web app's static build in a Tauri 2 window. Needs Rust (rustup,
+`stable-x86_64-pc-windows-msvc`) and the Visual Studio 2022 Build Tools with the "Desktop
+development with C++" workload; WebView2 ships with Windows 11. Put the Supabase URL and anon key
+in `apps/web/.env.local` (gitignored); they are baked into the build.
+
+```sh
+cd apps/desktop
+pnpm dev                        # next dev + the shell window, with reload
+pnpm build                      # installer (NSIS) in src-tauri/target/release/bundle/
+pnpm tauri build --debug --no-bundle   # quick local exe in src-tauri/target/debug/
+```
+
+- Closing the window hides it; the app stays in the tray (open, start at login, quit).
+- Start at login is turned on the first time a release build runs (launched `--minimized`,
+  straight to the tray); the tray toggle owns it after that. Dev builds never touch it.
+- `questboard://today|week|month|quest/<id>` links open the matching board in the running app
+  (or start it). Each launch registers the scheme to the executable being run, so after trying a
+  dev build, run the installed app once to point links back at it.
+- Web Push is off inside the shell; PC notifications come from the shell (next PR), and the
+  runner still runs from a terminal until the shell hosts it.
+
 ## Persona packs
 
 A pack is a folder in `personas/` (see CLAUDE.md "Persona packs" for the layout). Check one
@@ -56,6 +80,7 @@ cached on the runner machine, and added to planning prompts. It shapes the voice
 pnpm schema:check && pnpm typecheck
 (cd apps/web && pnpm lint && pnpm test)
 (cd runner && uv run ruff check . && uv run pytest)
+(cd apps/desktop/src-tauri && cargo fmt --check && cargo clippy --all-targets -- -D warnings)
 supabase/tests/run.sh           # migrations on plain Postgres: RLS, constraints, schema drift
 supabase/tests/live.sh          # real Supabase stack: auth, RLS, runner jobs end to end
 ```
