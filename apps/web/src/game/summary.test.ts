@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DEMO_CONFIG } from "../data/demo-store.ts";
-import { boardRows, isQuietHours, summarize } from "./summary.ts";
+import { boardRows, idleCue, isQuietHours, summarize } from "./summary.ts";
 import { at, quest } from "./fixtures.ts";
 
 const now = at("2026-09-25", 10);
@@ -66,4 +66,21 @@ test("summary picks the busiest persona as speaker and the next quest", () => {
   assert.equal(s.next?.title, "b");
   assert.equal(s.mood, "neutral");
   assert.equal(s.level.level, 1);
+});
+
+test("a quest forgotten yesterday makes its persona speak the forgotten line", () => {
+  const forgot = quest({ persona: "teacher", title: "read", forgotten_on: ["2026-09-24"] });
+  const qs = [quest({ persona: "mom" }), quest({ persona: "mom" }), forgot];
+  const s = summarize(qs, DEMO_CONFIG, "today", now);
+  assert.equal(s.speaker, "mom");
+  assert.equal(s.forgotten?.title, "read");
+  assert.equal(boardRows(qs, "today", now).find((r) => r.quest === forgot)?.closed, false);
+  assert.deepEqual(idleCue(s, 10), { trigger: "forgotten", quest: forgot });
+  // all_done still wins; other boards and a clean log fall back to board lines / reminders.
+  assert.equal(idleCue({ ...s, trigger: "all_done" }, 10).trigger, "all_done");
+  assert.equal(summarize(qs, DEMO_CONFIG, "week", now).forgotten, null);
+  const plain = summarize([quest()], DEMO_CONFIG, "today", now);
+  assert.deepEqual(idleCue(plain, 10), { trigger: "reminder_am", quest: null });
+  assert.equal(idleCue({ ...plain, trigger: "over_capacity" }, 18).trigger, "over_capacity");
+  assert.equal(idleCue(plain, 18).trigger, "reminder_pm");
 });

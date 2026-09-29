@@ -577,17 +577,7 @@ export interface Quest {
     | "learning"
     | "personal"
     | "travel";
-  status:
-    | "open"
-    | "in_progress"
-    | "done"
-    | "partial"
-    | "snoozed"
-    | "deferred"
-    | "skipped"
-    | "forgotten"
-    | "overdue"
-    | "abandoned";
+  status: "open" | "in_progress" | "done" | "partial" | "snoozed" | "deferred" | "skipped" | "overdue" | "abandoned";
   estimate_min: number;
   actual_min?: number | null;
   /**
@@ -615,6 +605,10 @@ export interface Quest {
   priority: number;
   xp: number;
   carries: number;
+  /**
+   * Board days the quest sat never started when daily_pm ran. Forgotten is an event, not a status: the quest carries as open, and the app fires the `forgotten` line and counts each day as a miss from this list.
+   */
+  forgotten_on?: string[];
   source: "manual" | "llm" | "llm-proposed" | "extractor" | "calendar" | "voice";
   /**
    * Links an extractor-created quest to its completion signal.

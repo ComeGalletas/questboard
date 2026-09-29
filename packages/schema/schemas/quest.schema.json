@@ -38,7 +38,6 @@
         "snoozed",
         "deferred",
         "skipped",
-        "forgotten",
         "overdue",
         "abandoned"
       ]
@@ -70,6 +69,12 @@
     "priority": { "type": "integer", "minimum": 1, "maximum": 3, "description": "1 = highest." },
     "xp": { "type": "integer", "minimum": 0 },
     "carries": { "type": "integer", "minimum": 0 },
+    "forgotten_on": {
+      "type": "array",
+      "items": { "type": "string", "format": "date" },
+      "default": [],
+      "description": "Board days the quest sat never started when daily_pm ran. Forgotten is an event, not a status: the quest carries as open, and the app fires the `forgotten` line and counts each day as a miss from this list."
+    },
     "source": {
       "type": "string",
       "enum": ["manual", "llm", "llm-proposed", "extractor", "calendar", "voice"]
