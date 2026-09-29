@@ -32,13 +32,20 @@ Tooling not named in the docs (confirmed 2026-09-24):
 - [x] `packages/schema`: JSON Schemas for Quest, QuestDiff, PersonaLine, ExtractedRecord, Config, LLMRun; codegen to TS + Pydantic; CI check that generated code is fresh.
 - [x] Supabase migrations for the 15 core tables; single-user guard + owner-only RLS; realtime on `quests`, `persona_lines`, `runner_state`; tested on local Postgres in CI (`supabase/tests/run.sh`).
 - [x] Local Supabase stack (`supabase/tests/live.sh`): migrations, single-user auth, RLS and runner jobs verified end to end; web app verified against it in a browser (sign-in, add, accept proposal, complete, realtime pill).
-- [ ] Create the hosted Supabase project, turn sign-ups off (keep the email provider on), `supabase db push` (needs your account; steps in README).
+- [x] Hosted Supabase project (`rhekvhdfrtjuosflhadh`): all migrations pushed, sign-ups off (email provider on), anon role refused on every table. Web app on Vercel (`questboard-lemon.vercel.app`) built against it; sign-in tested in a browser; `runner tick` against it OK. Verified 2026-09-29.
 - [x] Web app shell: auth, Today/Week/Month routes, status pill reading `runner_state`. (Static export for Vercel + Tauri; email/password sign-in so iOS stays in the PWA.)
-- [x] PWA manifest + iOS install; Web Push registration. (iOS install + real push: test on the phone once hosted.)
+- [x] PWA manifest + iOS install; Web Push registration. (Pending: iPhone test, see "Pending device tests".)
 - [x] CI: lint, type-check, schema codegen check, runner tests. (`.github/workflows/ci.yml`: schema freshness + tsc, web lint/test/build, runner ruff/pytest, sanitizer gate, migrations, live Supabase.) All six jobs are required checks on `main` (ruleset "main", 2026-09-29).
 - [x] `runner/providers/base.py` + `claude_cli.py` with a fixture-driven test validating a QuestDiff response (first task #4 in PLAN.md).
 
-Done when: log in on PC and phone and see an empty board with a "Runner offline" pill.
+Done when: log in on PC and phone and see an empty board with a "Runner offline" pill. (PC done 2026-09-29; phone pending.)
+
+### Pending device tests (iPhone, on the hosted app)
+- [ ] Install the PWA from Safari (Share → Add to Home Screen); it opens standalone and stays signed in.
+- [ ] Sign in on the phone and see the board with the runner status pill.
+- [ ] "Enable notifications on this device" creates a `push_subscriptions` row (needs VAPID keys: `python -m runner vapid`).
+- [ ] A real Web Push from the runner arrives on the phone and its deep link opens the right screen.
+- [ ] Voice hold-to-speak on iOS (Web Speech where available, typed fallback otherwise) + confirmation card.
 
 ## Phase 1 — Manual quests and the board (week 2)
 - [x] Quest create + complete / partial / snooze / defer / skip with actual-time logging. (Edit/delete of a quest's fields: later, when needed.)
@@ -56,7 +63,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [x] `persona_lines` selection in the app. (Done in Phase 1.)
 - [ ] Tauri shell: dashboard window, tray, start-at-login, sidecar, OS notifications, deep links.
 - [x] Notifications v1 (runner): day_ready, day_recap, quest_due, quest_overdue, streak_risk; DB dedup, delivery after quiet hours, 12 h max age; Web Push (VAPID) with dead-endpoint cleanup.
-- [x] PWA: service worker + "Enable notifications on this device" (`push_subscriptions`). Needs a real device test: headless Chromium can't subscribe.
+- [x] PWA: service worker + "Enable notifications on this device" (`push_subscriptions`). Pending: real device test (see "Pending device tests"); headless Chromium can't subscribe.
 - [ ] PC delivery of notifications (Tauri reads `notifications` over realtime) + sprite state.
 
 ## Phase 3 — Calendar, setup assistant, weekly/monthly (week 4)
@@ -69,7 +76,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 
 ## Phase 4 — Email pipeline (weeks 5–6)
 - [ ] Outlook mail adapter (read-only, Microsoft Graph, runner only), allow/deny lists, `senders` classification (ADR 0002; Gmail later).
-- [x] Sanitizer: Presidio + spaCy es/en NER, custom recognizers (cédula, NIT with check digit, CO phones, Luhn cards, IBAN mod-97, amounts, CO/US addresses, account/reference numbers, OTP codes and passwords), residual pass for leftover numbers/codes, stable salted tokens, reply/signature stripping, 1200-char window + 800-char cap, `log_rows` for `sanitization_log` (written by the Gmail pipeline). Tokens come from a `Vault` protocol; `MemoryVault` for now.
+- [x] Sanitizer: Presidio + spaCy es/en NER, custom recognizers (cédula, NIT with check digit, CO phones, Luhn cards, IBAN mod-97, amounts, CO/US addresses, account/reference numbers, OTP codes and passwords), residual pass for leftover numbers/codes, stable salted tokens, reply/signature stripping, 1200-char window + 800-char cap, `log_rows` for `sanitization_log` (written by the mail pipeline). Tokens come from a `Vault` protocol; `MemoryVault` for now.
 - [x] Vault: `vault.db` (SQLCipher) + AES-GCM sealed values, master key in the OS keychain (runner via `keyring`; Tauri reads the same entry later), stable tokens across restarts, `rehydrate()` for the PC UI; `python -m runner vault`. Key loss = mapping loss until the encrypted backup (Phase 7).
 - [x] Make "Sanitizer release gate" a required check (issue #14): ruleset "main" (active, default branch) requires it plus the other five CI checks, and blocks deletion and force-push. Verified 2026-09-29.
 - [ ] Category profiles + extractors in order: ics, utilities, government, delivery, subscription, health, jobs, learning, travel, personal.
