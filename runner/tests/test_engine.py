@@ -10,7 +10,7 @@ import pytest
 from questboard_schema.common_schema import JobName, ProviderName
 from questboard_schema.config_schema import Config
 from questboard_schema.daily_plan_schema import DailyPlan
-from questboard_schema.llm_run_schema import Status, Trigger
+from questboard_schema.llm_run_schema import LLMRun, Status, Trigger
 from questboard_schema.quest_schema import Quest
 
 from runner.engine.carry import carry_patch
@@ -233,11 +233,21 @@ def scheduler(repo: MemoryRepo, provider: Provider, at: datetime) -> Scheduler:
     )
 
 
+def past_proposal(repo: MemoryRepo, job: JobName, day: date, q: Quest) -> dict[str, Any]:
+    """A pending drop proposal left behind by an earlier successful run of `job`."""
+    run = repo.insert_run(
+        LLMRun(job=job, date=day, trigger=Trigger.tick, attempt=1, status=Status.succeeded)
+    )
+    reason = f"from {job.value}"
+    row = {"id": reason, "run_id": str(run.id), "status": "pending", "op": "drop"}
+    return {**row, "quest_id": str(q.id), "payload": {"op": "drop", "reason": reason}}
+
+
 def test_daily_am_caches_proposals_and_dialogue_without_touching_quests() -> None:
     q = quest()
     repo = MemoryRepo(CONFIG)
     repo.quests = [q]
-    repo.proposals = [{"id": "old", "status": "pending", "op": "drop"}]
+    repo.proposals = [past_proposal(repo, JobName.daily_am, TODAY - timedelta(days=1), q)]
     repo.lines = [{"quest_id": str(q.id), "trigger": "assigned", "used_at": None, "text": "stale"}]
     good = plan(
         [ADD_RUN],
@@ -258,12 +268,40 @@ def test_daily_am_caches_proposals_and_dialogue_without_touching_quests() -> Non
     assert add["op"] == "add" and add["quest_id"] is None
     assert add["payload"]["quest"]["title"] == "Easy 3 km run"
     assert len(add["lines"]) == 2 * len(QUEST_TRIGGERS)
-    assert add["run_id"] == str(repo.runs[0].id)
+    assert add["run_id"] == str(repo.runs[-1].id)
     quest_lines = [line for line in repo.lines if line.get("quest_id") == str(q.id)]
     assert len(quest_lines) == 2 * len(QUEST_TRIGGERS)
     assert "stale" not in {line["text"] for line in quest_lines}
     board_lines = [line for line in repo.lines if line.get("quest_id") is None]
     assert {line["trigger"] for line in board_lines} == set(BOARD_TRIGGERS)
+
+
+def test_daily_am_supersedes_only_earlier_daily_proposals() -> None:
+    q = quest()
+    repo = MemoryRepo(CONFIG)
+    repo.quests = [q]
+    sunday = TODAY - timedelta(days=5)
+    repo.proposals = [
+        past_proposal(repo, JobName.daily_am, TODAY - timedelta(days=1), q),
+        past_proposal(repo, JobName.weekly, sunday, q),
+        past_proposal(repo, JobName.monthly, TODAY.replace(day=1), q),
+    ]
+    good = plan(
+        [ADD_RUN],
+        [
+            {"quest": str(q.id), "persona": "coach", "lines": lines("coach")},
+            {"quest": "new:0", "persona": "coach", "lines": lines("coach")},
+        ],
+    )
+    [d] = scheduler(repo, ScriptedProvider(good), NOW).evaluate(Trigger.tick, only=JobName.daily_am)
+
+    assert d.status == Status.succeeded
+    assert {p["id"]: p["status"] for p in repo.proposals if p["op"] == "drop"} == {
+        "from daily_am": "superseded",
+        "from weekly": "pending",  # the user hasn't seen Sunday's plan yet
+        "from monthly": "pending",
+    }
+    assert [p["status"] for p in repo.proposals if p["op"] == "add"] == ["pending"]
 
 
 def test_daily_am_prompt_carries_state_and_persona_voices() -> None:

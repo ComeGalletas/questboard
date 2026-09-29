@@ -92,28 +92,44 @@ class FakeSupabase:
         def match(row: dict[str, Any]) -> bool:
             for col, cond in filters.items():
                 op, _, value = cond.partition(".")
-                if op == "eq" and str(row.get(col)) != value:
+                embed, _, col = col.rpartition(".")
+                target = row.get(embed) or {} if embed else row
+                if op == "eq" and str(target.get(col)) != value:
                     return False
-                if op == "is" and row.get(col) is not None:
+                if op == "is" and target.get(col) is not None:
+                    return False
+                if op == "in" and str(target.get(col)) not in value.strip("()").split(","):
                     return False
             return True
 
         if req.method == "GET":
+            select = req.url.params.get("select", "*")
+            cols = select.split(",")
+            # Only the `llm_runs!inner(...)` embed via quest_proposals.run_id is modelled.
+            embeds = [c for c in cols if c.startswith("llm_runs!inner(")]
+            if embeds:
+                runs = {r["id"]: r for r in self.tables["llm_runs"]}
+                rows = [
+                    {**r, "llm_runs": runs[r["run_id"]]} for r in rows if r.get("run_id") in runs
+                ]
             found = [r for r in rows if match(r)]
             if "order" in req.url.params:
                 found.sort(key=lambda r: r[req.url.params["order"]])
-            select = req.url.params.get("select", "*")
             if select != "*":
-                found = [{c: r.get(c) for c in select.split(",")} for r in found]
+                found = [
+                    {c.partition("!")[0]: r.get(c.partition("!")[0]) for c in cols} for r in found
+                ]
             return httpx.Response(200, json=found)
         if req.method == "POST":
             row = {"id": str(uuid.uuid4()), "user_id": USER, **json.loads(req.content)}
             rows.append(row)
             return httpx.Response(201, json=[{k: v for k, v in row.items() if k != "user_id"}])
         if req.method == "PATCH":
-            for r in rows:
-                if match(r):
-                    r.update(json.loads(req.content))
+            hit = [r for r in rows if match(r)]
+            for r in hit:
+                r.update(json.loads(req.content))
+            if req.headers.get("prefer") == "return=representation":
+                return httpx.Response(200, json=[{"id": r["id"]} for r in hit])
             return httpx.Response(204)
         return httpx.Response(405)
 
@@ -201,6 +217,41 @@ def test_offline_and_lost_session() -> None:
     tokens.token = "revoked"
     with pytest.raises(AuthError):
         repo.ping()
+
+
+def test_supersede_touches_only_pending_proposals_of_the_given_job() -> None:
+    repo, fake, _ = make()
+    runs = {
+        job: repo.insert_run(
+            LLMRun(
+                job=job,
+                date=date(2026, 9, 20),
+                trigger=Trigger.tick,
+                attempt=1,
+                status=Status.succeeded,
+            )
+        )
+        for job in (JobName.daily_am, JobName.weekly)
+    }
+
+    def proposal(job: JobName, status: str = "pending") -> dict[str, Any]:
+        return {"id": str(uuid.uuid4()), "run_id": str(runs[job].id), "status": status}
+
+    fake.tables["quest_proposals"] = [
+        daily := proposal(JobName.daily_am),
+        weekly := proposal(JobName.weekly),
+        accepted := proposal(JobName.daily_am, "accepted"),
+        orphan := {"id": str(uuid.uuid4()), "run_id": None, "status": "pending"},
+    ]
+
+    assert repo.supersede_pending_proposals(JobName.daily_am) == 1
+    assert daily["status"] == "superseded"
+    assert (weekly["status"], accepted["status"], orphan["status"]) == (
+        "pending",
+        "accepted",
+        "pending",
+    )
+    assert repo.supersede_pending_proposals(JobName.daily_am) == 0
 
 
 def test_scheduler_runs_end_to_end_on_the_supabase_repo() -> None:
