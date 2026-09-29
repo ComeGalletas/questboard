@@ -11,7 +11,9 @@ from runner.voice.grammar import parse_command
 from runner.voice.match import match_quest
 
 FIXTURES = json.loads(
-    (Path(__file__).resolve().parents[2] / "packages/schema/fixtures/voice.json").read_text()
+    (Path(__file__).resolve().parents[2] / "packages/schema/fixtures/voice.json").read_text(
+        encoding="utf-8"
+    )
 )
 
 

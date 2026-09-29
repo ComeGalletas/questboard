@@ -33,15 +33,17 @@ def test_built_in_packs_present() -> None:
 
 @pytest.mark.parametrize("pack", PACKS, ids=lambda p: p.name)
 def test_pack_manifest(pack: Path) -> None:
-    manifest = PersonaPack.model_validate(yaml.safe_load((pack / "persona.yaml").read_text()))
+    manifest = PersonaPack.model_validate(
+        yaml.safe_load((pack / "persona.yaml").read_text(encoding="utf-8"))
+    )
     assert manifest.slug.root == pack.name
-    assert (pack / "system.md").read_text().strip()
+    assert (pack / "system.md").read_text(encoding="utf-8").strip()
 
 
 @pytest.mark.parametrize("pack", PACKS, ids=lambda p: p.name)
 def test_fallback_lines_cover_every_trigger(pack: Path) -> None:
     lines = FallbackLines.model_validate(
-        json.loads((pack / "lines.fallback.json").read_text())
+        json.loads((pack / "lines.fallback.json").read_text(encoding="utf-8"))
     ).lines
     for trigger in Trigger:
         mine = [line for line in lines if line.trigger == trigger]
