@@ -22,6 +22,8 @@ class JobSpec:
     window: tuple[time, time] | None = None  # inclusive local-time window for the slot
     every: timedelta | None = None
     needs_provider: bool | None = None  # default: same as uses_llm
+    # Planners have nothing to plan before setup (no goals); they skip without an llm_runs row.
+    needs_setup: bool = False
 
     @property
     def provider_required(self) -> bool:
@@ -37,9 +39,11 @@ SPECS: dict[JobName, JobSpec] = {
         at=time(5, 30),
         slot="AM",
         window=(time(5, 0), time(11, 59, 59)),
+        needs_setup=True,
     ),
     # daily_pm is bookkept like an LLM job (slot, idempotency, backoff) but its accounting
-    # is pure code, so it must not wait for a model (P0 is never blocked).
+    # is pure code, so it must not wait for a model (P0 is never blocked). It also runs before
+    # setup: carry-over applies to whatever quests exist (voice, extractors) and costs no tokens.
     JobName.daily_pm: JobSpec(
         JobName.daily_pm,
         "daily",
@@ -49,8 +53,10 @@ SPECS: dict[JobName, JobSpec] = {
         window=(time(17, 0), time(23, 59, 59)),
         needs_provider=False,
     ),
-    JobName.weekly: JobSpec(JobName.weekly, "weekly", True, at=time(18, 0), weekday=6),
-    JobName.monthly: JobSpec(JobName.monthly, "monthly", True, at=time(8, 0)),
+    JobName.weekly: JobSpec(
+        JobName.weekly, "weekly", True, at=time(18, 0), weekday=6, needs_setup=True
+    ),
+    JobName.monthly: JobSpec(JobName.monthly, "monthly", True, at=time(8, 0), needs_setup=True),
     JobName.persona_digest: JobSpec(
         JobName.persona_digest, "weekly", True, at=time(17, 0), weekday=6
     ),

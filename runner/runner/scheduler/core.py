@@ -1,9 +1,10 @@
 """The scheduler: decides which P0 jobs run on each trigger and records every LLM attempt.
 
 Guards (CLAUDE.md "Scheduler rules"), checked in this order for LLM jobs:
-  DB reachable -> slot window -> idempotent per (job, slot, date) -> max 3 attempts ->
-  retry backoff 5/15/60 min -> input freshness (2 h) -> a provider reachable.
-Manual triggers skip the window, backoff and freshness guards, never idempotency or the cap.
+  DB reachable -> slot window -> configured (planners only) -> idempotent per (job, slot, date)
+  -> max 3 attempts -> retry backoff 5/15/60 min -> input freshness (2 h) -> a provider reachable.
+Manual triggers skip the window, backoff and freshness guards, never setup, idempotency or the cap.
+"Not configured" (no goals yet) writes no llm_runs row, so the slot stays open for after setup.
 Catch-up after boot / reconnect only ever looks at each job's most recent occurrence.
 """
 
@@ -135,6 +136,8 @@ class Scheduler:
         occ = latest_occurrence(spec, now)
         if not manual and not in_window(spec, occ, now):
             return Decision(spec.name, "skip", "outside slot window")
+        if spec.needs_setup and not config.goals:
+            return Decision(spec.name, "skip", "not configured (no goals; finish setup first)")
 
         runs = self.repo.list_runs(spec.name, occ.slot, occ.date)
         if any(r.status == Status.succeeded for r in runs):
