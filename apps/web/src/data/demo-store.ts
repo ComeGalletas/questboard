@@ -202,6 +202,10 @@ export class DemoStore implements Store {
     this.save(state);
   }
 
+  async listPlanRuns(): Promise<[]> {
+    return []; // no runner in demo mode
+  }
+
   async insertLines(questId: string, persona: string, lines: FallbackLine[]) {
     const state = this.load();
     const created = new Date().toISOString();

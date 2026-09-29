@@ -5,6 +5,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import type { Config, PersonaLine, Quest, QuestProposal, RunnerState } from "@questboard/schema";
+import type { PlanRun } from "@/lib/planner";
 import type { Store } from "./store";
 import { DEMO_CONFIG } from "./demo-store";
 
@@ -14,6 +15,7 @@ export type Log = {
   config: Config;
   lines: PersonaLine[];
   proposals: QuestProposal[];
+  planRuns: PlanRun[];
   runner: RunnerState | null;
   loaded: boolean;
   error: string | null;
@@ -29,6 +31,7 @@ export function LogProvider({ store, children }: { store: Store; children: React
     config: DEMO_CONFIG,
     lines: [],
     proposals: [],
+    planRuns: [],
     runner: null,
     loaded: false,
     error: null,
@@ -37,11 +40,12 @@ export function LogProvider({ store, children }: { store: Store; children: React
 
   const reload = useCallback(async () => {
     try {
-      const [quests, config, lines, proposals, runner] = await Promise.all([
+      const [quests, config, lines, proposals, planRuns, runner] = await Promise.all([
         store.listQuests(),
         store.getConfig(),
         store.listLines(),
         store.listPendingProposals(),
+        store.listPlanRuns(),
         store.getRunnerState(),
       ]);
       if (!alive.current) return;
@@ -50,6 +54,7 @@ export function LogProvider({ store, children }: { store: Store; children: React
         config: config ?? DEMO_CONFIG,
         lines,
         proposals,
+        planRuns,
         runner,
         loaded: true,
         error: null,

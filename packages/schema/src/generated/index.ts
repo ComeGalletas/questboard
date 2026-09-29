@@ -393,7 +393,19 @@ export interface LLMRun {
   provider_used?: ("claude-cli" | "ollama" | "claude-api") | null;
   attempt: number;
   status: "queued" | "running" | "succeeded" | "failed" | "invalid_output" | "skipped";
+  /**
+   * A manual `trigger --force` attempt for an occurrence that had already succeeded.
+   */
+  forced?: boolean;
   tokens?: TokenUsage | null;
+  /**
+   * Planning jobs: how many diff ops the run proposed. 0 means the planner proposed nothing.
+   */
+  ops_count?: number | null;
+  /**
+   * Planning jobs: the model's own summary of its diff (pseudonymized, PII-checked like dialogue).
+   */
+  summary?: string | null;
   error?: string | null;
   started_at?: string | null;
   finished_at?: string | null;

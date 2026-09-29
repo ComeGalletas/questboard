@@ -5,12 +5,14 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+import pytest
 from questboard_schema.common_schema import JobName, ProviderName
 from questboard_schema.llm_run_schema import Status, Trigger
 from questboard_schema.quest_diff_schema import QuestDiff
 
 from runner.engine.carry import period_carry_patch
 from runner.engine.period import budget_minutes, check_period, period_for, period_job
+from runner.engine.prompts import period_system_prompt, period_user_prompt
 from runner.repo import MemoryRepo
 from runner.scheduler.core import Scheduler
 
@@ -136,3 +138,41 @@ def test_weekly_job_carries_then_proposes() -> None:
     assert [p["op"] for p in repo.proposals] == ["add", "update"]
     assert repo.quests[0].estimate_min == carried.estimate_min  # proposals only
     assert "plan the weekly quests" in provider.requests[0].system
+
+
+def test_empty_weekly_diff_keeps_the_summary_on_the_run() -> None:
+    summary = "The gym quest already covers the week; nothing else fits the budget."
+    provider = ScriptedProvider({"ops": [], "summary": summary})
+    repo = MemoryRepo(CONFIG)
+    sched = Scheduler(
+        repo=repo,
+        handlers={JobName.weekly: lambda c: period_job("weekly", c, PACKS)},
+        providers={ProviderName.claude_cli: provider},
+        clock=lambda: SUNDAY.astimezone(UTC),
+    )
+    [d] = sched.evaluate(Trigger.tick)
+    assert (d.status, d.reason) == (Status.succeeded, "ok, 0 ops")
+    assert repo.proposals == []
+    [run] = repo.runs
+    assert (run.ops_count, run.summary) == (0, summary)
+
+
+def test_summary_is_checked_for_personal_data() -> None:
+    leaky = QuestDiff.model_validate({"ops": [], "summary": "Call me at 300 555 1234 first."})
+    assert any("summary" in p and "long number" in p for p in check_period(leaky, ctx_for([])))
+    ok = QuestDiff.model_validate({"ops": [], "summary": "Goals are covered."})
+    assert check_period(ok, ctx_for([])) == []
+
+
+@pytest.mark.parametrize(("cadence", "sub"), [("weekly", "daily"), ("monthly", "weekly")])
+def test_period_prompt_asks_for_goal_coverage(cadence: str, sub: str) -> None:
+    system = period_system_prompt(PACKS, cadence)
+    # Uncovered goals should get adds; empty is only for covered goals or a used budget.
+    assert "For\nevery goal that no open quest covers, add a " + cadence + " quest" in system
+    assert "An empty ops list\nis right only when every goal is already covered" in system
+    assert "an empty list is fine" not in system
+    assert "Always write summary" in system
+    assert f"{sub} sub-quests" in system
+    prompt = period_user_prompt(cadence, {"budget_min": 600})
+    assert prompt.startswith(f"Current state (JSON). Propose the {cadence} diff for this period.")
+    assert "today's diff and dialogue" not in prompt

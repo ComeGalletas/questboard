@@ -27,8 +27,8 @@ KEYRING_SERVICE = "questboard-runner"
 KEYRING_USER = "supabase-refresh-token"
 TIMEOUT = 15.0
 RUN_COLUMNS = (
-    "id,job,slot,date,trigger,provider_used,attempt,status,tokens_input,tokens_output,"
-    "error,started_at,finished_at"
+    "id,job,slot,date,trigger,provider_used,attempt,status,forced,tokens_input,tokens_output,"
+    "ops_count,summary,error,started_at,finished_at"
 )
 
 
@@ -227,13 +227,17 @@ class SupabaseRepo:
         }
         return self._request("GET", "quest_feedback", params)
 
-    def supersede_pending_proposals(self, job: JobName) -> int:
+    def supersede_pending_proposals(self, job: JobName, run_ids: list[str] | None = None) -> int:
+        if run_ids is not None and not run_ids:
+            return 0
         # PostgREST can't filter a PATCH through an embed: find the ids first, then mark them.
         params = {
             "select": "id,llm_runs!inner(job)",
             "status": "eq.pending",
             "llm_runs.job": f"eq.{job.value}",
         }
+        if run_ids is not None:
+            params["run_id"] = f"in.({','.join(run_ids)})"
         ids = [r["id"] for r in self._request("GET", "quest_proposals", params)]
         if not ids:
             return 0

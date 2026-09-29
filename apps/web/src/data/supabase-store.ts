@@ -11,6 +11,7 @@ import type {
 import type { LiveRequest } from "./store.ts";
 import type { QuestPatch } from "../game/actions.ts";
 import type { QuestChangesPatch } from "../game/proposals.ts";
+import { PLANNING_JOBS, type PlanRun } from "../lib/planner.ts";
 import type { NewQuest, Store } from "./store.ts";
 
 /** How far back the log is loaded; enough for streaks, mood and XP totals for now. */
@@ -85,6 +86,19 @@ export class SupabaseStore implements Store {
       .update({ status, decided_at: new Date().toISOString() })
       .eq("id", id);
     if (error) throw new Error(error.message);
+  }
+
+  async listPlanRuns(): Promise<PlanRun[]> {
+    const since = new Date(Date.now() - 40 * 86_400_000).toISOString().slice(0, 10);
+    const { data, error } = await this.db
+      .from("llm_runs")
+      .select("job,date,ops_count,summary,finished_at")
+      .in("job", [...PLANNING_JOBS])
+      .eq("status", "succeeded")
+      .gte("date", since)
+      .order("finished_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return data as PlanRun[];
   }
 
   async insertLines(questId: string, persona: string, lines: FallbackLine[]) {

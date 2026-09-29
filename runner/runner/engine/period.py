@@ -21,8 +21,8 @@ from runner.engine.calibration import WINDOW_DAYS, calibration
 from runner.engine.carry import period_carry_patch
 from runner.engine.daily import HISTORY_DAYS, _outcomes, _quest_view, capacity_minutes
 from runner.engine.packs import Pack, load_packs
-from runner.engine.prompts import period_system_prompt, user_prompt
-from runner.engine.validators import MONEY_CATEGORIES, _line_problems
+from runner.engine.prompts import period_system_prompt, period_user_prompt
+from runner.engine.validators import MONEY_CATEGORIES, _line_problems, summary_problems
 from runner.providers.base import GenerationRequest, run_with_fallback
 from runner.repo import ACTIVE
 from runner.scheduler.core import JobContext, JobResult
@@ -61,7 +61,7 @@ def check_period(diff: QuestDiff, ctx: dict[str, Any]) -> list[str]:
     period: Period = ctx["period"]
     open_q: dict[str, Quest] = ctx["open"]
     sub = SUB_CADENCE[period.cadence]
-    problems: list[str] = []
+    problems: list[str] = summary_problems("summary", diff.summary)
     planned = ctx["planned_min"]
     for i, wrapped in enumerate(diff.ops):
         op = wrapped.root
@@ -177,14 +177,15 @@ def period_job(cadence: str, ctx: JobContext, packs: list[Pack] | None = None) -
     request = GenerationRequest(
         job=ctx.occurrence.job,
         system=period_system_prompt(packs, cadence),
-        prompt=user_prompt(prompt_ctx),
+        prompt=period_user_prompt(cadence, prompt_ctx),
         timeout_s=TIMEOUT_S,
     )
     result = run_with_fallback(
         ctx.providers, request, QuestDiff, check=lambda d: check_period(d, check_ctx)
     )
-    _write(ctx, result.output)
-    return JobResult(result.provider, result.usage)
+    diff = result.output
+    _write(ctx, diff)
+    return JobResult(result.provider, result.usage, ops_count=len(diff.ops), summary=diff.summary)
 
 
 def weekly(ctx: JobContext) -> JobResult:

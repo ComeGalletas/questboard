@@ -74,6 +74,11 @@
         "skipped"
       ]
     },
+    "forced": {
+      "type": "boolean",
+      "default": false,
+      "description": "A manual `trigger --force` attempt for an occurrence that had already succeeded."
+    },
     "tokens": {
       "anyOf": [
         {
@@ -83,6 +88,22 @@
           "type": "null"
         }
       ]
+    },
+    "ops_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Planning jobs: how many diff ops the run proposed. 0 means the planner proposed nothing."
+    },
+    "summary": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 500,
+      "description": "Planning jobs: the model's own summary of its diff (pseudonymized, PII-checked like dialogue)."
     },
     "error": {
       "type": [

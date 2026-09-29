@@ -187,6 +187,8 @@ def test_llm_runs_map_token_columns_both_ways() -> None:
             "status": Status.succeeded,
             "provider_used": ProviderName.claude_cli,
             "tokens": TokenUsage(input=120, output=30),
+            "ops_count": 0,
+            "summary": "Nothing new fits today.",
         },
     )
     stored = fake.tables["llm_runs"][0]
@@ -194,10 +196,38 @@ def test_llm_runs_map_token_columns_both_ways() -> None:
     assert "tokens" not in stored
     [again] = repo.list_runs(JobName.daily_am, "AM", date(2026, 9, 25))
     assert again.tokens == TokenUsage(input=120, output=30)
+    assert (again.forced, again.ops_count, again.summary) == (False, 0, "Nothing new fits today.")
     assert again.status == Status.succeeded
     assert repo.list_runs(JobName.weekly, None, date(2026, 9, 25)) == []
     get = [r for r in fake.requests if r.method == "GET" and "llm_runs" in r.url.path][-1]
     assert get.url.params["slot"] == "is.null"
+
+
+def test_supersede_can_narrow_to_runs_of_the_job() -> None:
+    repo, fake, _ = make()
+    first, second = (
+        repo.insert_run(
+            LLMRun(
+                job=JobName.weekly,
+                date=date(2026, 9, 27),
+                trigger=Trigger.tick,
+                attempt=n,
+                status=Status.succeeded,
+            )
+        )
+        for n in (1, 2)
+    )
+    fake.tables["quest_proposals"] = [
+        older := {"id": str(uuid.uuid4()), "run_id": str(first.id), "status": "pending"},
+        newer := {"id": str(uuid.uuid4()), "run_id": str(second.id), "status": "pending"},
+    ]
+    assert repo.supersede_pending_proposals(JobName.weekly, [str(first.id)]) == 1
+    assert (older["status"], newer["status"]) == ("superseded", "pending")
+    get = [r for r in fake.requests if r.method == "GET" and "quest_proposals" in r.url.path][-1]
+    assert get.url.params["run_id"] == f"in.({first.id})"
+    before = len(fake.requests)
+    assert repo.supersede_pending_proposals(JobName.weekly, []) == 0
+    assert len(fake.requests) == before  # nothing to supersede, no request
 
 
 def test_expired_access_token_is_refreshed_and_rotated() -> None:

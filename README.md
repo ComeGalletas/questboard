@@ -73,14 +73,22 @@ supabase/tests/live.sh          # real Supabase stack: auth, RLS, runner jobs en
 
 ## Re-running a job
 
-Each `(job, slot, date)` succeeds at most once (`llm_runs_one_success_idx`), and a manual
-`trigger` respects that. To plan a slot again (e.g. a period planned before setup), delete its
-runs in the Supabase SQL editor, then trigger it. The occurrence date is the slot's own day:
-the Sunday for `weekly`, the 1st for `monthly`, today for `daily_am` (`slot = 'AM'`).
+Scheduled runs and a plain manual `trigger` succeed at most once per `(job, slot, date)`
+(`llm_runs_one_success_idx`). To plan a slot again (e.g. an empty plan, or goals changed), force
+a new attempt; pending proposals from the earlier attempts are superseded first (ADR 0003):
+
+```sh
+uv run python -m runner trigger weekly --force
+```
+
+An occurrence gets at most 3 attempts in all, so after one success `--force` works twice. Past
+that, delete its runs in the Supabase SQL editor and trigger again. The occurrence date is the
+slot's own day: the Sunday for `weekly`, the 1st for `monthly`, today for `daily_am`
+(`slot = 'AM'`).
 
 ```sql
 delete from public.llm_runs where job = 'weekly' and date = '2026-09-27';
 ```
 
-Proposals from the deleted run keep their rows (`run_id` becomes null); reject any still pending
+Proposals from deleted runs keep their rows (`run_id` becomes null); reject any still pending
 on the board so they don't sit next to the new plan.

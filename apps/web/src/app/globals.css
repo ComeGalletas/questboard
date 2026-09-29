@@ -464,6 +464,20 @@ button:disabled {
   margin: 0 0 12px;
 }
 
+.proposals > p {
+  margin: 0;
+}
+
+.proposals > p + p {
+  margin-top: 6px;
+}
+
+.plan-summary {
+  font-size: 13px;
+  padding: 6px 10px;
+  border-left: 3px solid var(--border);
+}
+
 .proposal-list {
   list-style: none;
   margin: 0;

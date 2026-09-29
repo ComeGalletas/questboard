@@ -184,8 +184,9 @@ def daily_am(ctx: JobContext, packs: list[Pack] | None = None) -> JobResult:
     result = run_with_fallback(
         ctx.providers, request, DailyPlan, check=lambda plan: check_plan(plan, plan_ctx)
     )
+    diff = result.output.diff
     write_plan(ctx, result.output, todays_ids)
-    return JobResult(result.provider, result.usage)
+    return JobResult(result.provider, result.usage, ops_count=len(diff.ops), summary=diff.summary)
 
 
 def daily_pm(ctx: JobContext) -> JobResult:

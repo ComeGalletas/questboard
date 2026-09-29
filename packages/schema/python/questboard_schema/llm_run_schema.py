@@ -52,7 +52,21 @@ class LLMRun(BaseModel):
     provider_used: common_schema.ProviderName | None = None
     attempt: int = Field(..., ge=1, le=3)
     status: Status
+    forced: bool | None = Field(
+        False,
+        description="A manual `trigger --force` attempt for an occurrence that had already succeeded.",
+    )
     tokens: TokenUsage | None = None
+    ops_count: int | None = Field(
+        None,
+        description="Planning jobs: how many diff ops the run proposed. 0 means the planner proposed nothing.",
+        ge=0,
+    )
+    summary: str | None = Field(
+        None,
+        description="Planning jobs: the model's own summary of its diff (pseudonymized, PII-checked like dialogue).",
+        max_length=500,
+    )
     error: str | None = Field(None, max_length=500)
     started_at: AwareDatetime | None = None
     finished_at: AwareDatetime | None = None
