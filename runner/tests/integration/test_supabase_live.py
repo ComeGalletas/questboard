@@ -104,7 +104,12 @@ def clean_quests(repo: SupabaseRepo):
     wipe()
 
 
-def test_daily_am_then_pm_through_rls(repo: SupabaseRepo, clean_quests) -> None:
+def test_daily_am_then_pm_through_rls(repo: SupabaseRepo, clean_quests, monkeypatch) -> None:
+    # The stack's seeded config has no goals, and planners wait for setup: add one in memory.
+    seeded = repo.get_config()
+    goal = {"id": "it", "title": "Integration goal", "horizon": "week"}
+    configured = seeded.model_validate({**seeded.model_dump(mode="json"), "goals": [goal]})
+    monkeypatch.setattr(repo, "get_config", lambda: configured)
     # A fresh day far from real data so reruns don't collide with earlier runs.
     day = datetime(2031, 1, 6 + uuid.uuid4().int % 20, 6, 0, tzinfo=BOGOTA)
     # Idempotency is per (job, slot, date): forget earlier runs of this day on a reused DB.
