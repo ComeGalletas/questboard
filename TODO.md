@@ -45,6 +45,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [ ] Install the PWA from Safari (Share → Add to Home Screen); it opens standalone and stays signed in.
 - [ ] Sign in on the phone and see the board with the runner status pill.
 - [ ] "Enable notifications on this device" creates a `push_subscriptions` row (needs VAPID keys: `python -m runner vapid`).
+- [x] On-demand test notification: "Send test notification" (kind picker) in the app footer, or `python -m runner notify-test [kind]`; sends now to every device (no quiet hours, dedup or max age), marked `[Test]` / `test: true`, never written to `notifications`. Use it for the next item.
 - [ ] A real Web Push from the runner arrives on the phone and its deep link opens the right screen.
 - [ ] Voice hold-to-speak on iOS (Web Speech where available, typed fallback otherwise) + confirmation card.
 

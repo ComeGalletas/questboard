@@ -7,6 +7,9 @@
                                              manual run of one job; --force re-runs its latest
                                              occurrence even if it succeeded (new attempt, max 3)
   python -m runner vapid                     print a new VAPID key pair for Web Push
+  python -m runner notify-test [KIND]        send a test Web Push (default day_ready) to every
+                                             subscribed device now: no quiet hours, dedup or
+                                             max age; nothing written to notifications
   python -m runner packs                     check the persona packs (errors and warnings)
   python -m runner vault                     open (or create) the local vault; prints counts only
 
@@ -21,13 +24,14 @@ import getpass
 import logging
 import sys
 
-from questboard_schema.common_schema import JobName, ProviderName
+from questboard_schema.common_schema import JobName, NotificationKind, ProviderName
 from questboard_schema.config_schema import Config
 from questboard_schema.llm_run_schema import Trigger
 
 from runner.engine.packs import inspect_packs
 from runner.jobs import HANDLERS
 from runner.notify.push import generate_vapid_keys, sender_from_env
+from runner.notify.selftest import NotifyTestError, send_test
 from runner.notify.step import run_notifications
 from runner.paths import data_dir
 from runner.providers import ClaudeCliProvider, Provider
@@ -84,6 +88,7 @@ def build(dry_run: bool) -> Scheduler:
         handlers=HANDLERS,
         providers=providers_for(config),
         after_jobs=lambda r, cfg, now: run_notifications(r, cfg, now, send),
+        push=send,
     )
 
 
@@ -97,6 +102,30 @@ def login() -> int:
     repo.sign_in(input("Email: ").strip(), getpass.getpass("Password: "))
     print("Signed in; session stored in the OS keychain.")
     return 0
+
+
+OUTCOMES = {"sent": "sent", "removed": "expired endpoint removed", "failed": "failed"}
+
+
+def notify_test(kind: str, repo: Repo | None = None) -> int:
+    """Sends one test push to every device and prints per-device outcomes (no endpoints/keys).
+    Exit 1 when nothing was delivered."""
+    send = sender_from_env()
+    try:
+        if repo is None:
+            settings = Settings.load()
+            repo = SupabaseRepo(
+                settings.supabase_url, settings.supabase_anon_key, KeyringTokenStore()
+            )
+        result = send_test(repo, repo.get_config(), NotificationKind(kind), send)
+    except (NotifyTestError, RepoUnavailable, SettingsMissing) as exc:
+        print(f"notify-test: {exc}", file=sys.stderr)
+        return 1
+    print(f"test {result.kind.value} -> {result.target}")
+    for d in result.devices:
+        detail = f" ({d.error})" if d.error else ""
+        print(f"  {d.device}: {OUTCOMES[d.outcome.value]}{detail}")
+    return 0 if any(d.outcome.value == "sent" for d in result.devices) else 1
 
 
 def check_packs() -> int:
@@ -133,6 +162,10 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("vapid")
     sub.add_parser("packs")
     sub.add_parser("vault")
+    test = sub.add_parser("notify-test", help="send a test Web Push to every device now")
+    test.add_argument(
+        "kind", nargs="?", default="day_ready", choices=[k.value for k in NotificationKind]
+    )
     for name in ("run", "tick"):
         sub.add_parser(name).add_argument("--dry-run", action="store_true")
     trig = sub.add_parser("trigger")
@@ -152,6 +185,8 @@ def main(argv: list[str] | None = None) -> int:
         return check_packs()
     if args.cmd == "vault":
         return check_vault()
+    if args.cmd == "notify-test":
+        return notify_test(args.kind)  # no instance lock: works while `run` is going
     if args.cmd == "vapid":
         private, public = generate_vapid_keys()
         print(f"QUESTBOARD_VAPID_PRIVATE_KEY={private}   # runner machine only (keep secret)")

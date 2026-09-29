@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "notify_test_request.schema.json",
+  "title": "NotifyTestRequest",
+  "description": "Payload of a `notify_test` pending_live_requests row: send a test Web Push of this kind to every subscribed device now (no quiet hours, dedup or max age; nothing is written to notifications).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind"],
+  "properties": {
+    "kind": { "$ref": "common.schema.json#/$defs/NotificationKind" }
+  }
+}

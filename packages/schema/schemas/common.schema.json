@@ -48,6 +48,23 @@
       "type": "string",
       "enum": ["ingest", "daily_am", "daily_pm", "weekly", "monthly", "persona_digest"]
     },
+    "NotificationKind": {
+      "type": "string",
+      "enum": [
+        "day_ready",
+        "day_recap",
+        "week_ready",
+        "month_ready",
+        "quest_due",
+        "quest_overdue",
+        "capacity_alert",
+        "streak_risk",
+        "persona_speech",
+        "runner_stale",
+        "live_pending"
+      ],
+      "description": "Notification kinds (CLAUDE.md \"Notifications\"); same list as the notifications.kind check in the DB."
+    },
     "QuietHours": {
       "type": "object",
       "additionalProperties": false,

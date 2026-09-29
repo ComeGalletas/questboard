@@ -7,6 +7,8 @@ export interface QuestboardSchemas {
   extracted_record?: ExtractedRecord;
   fallback_lines?: FallbackLines;
   llm_run?: LLMRun;
+  notify_test_request?: NotifyTestRequest;
+  notify_test_result?: NotifyTestResult;
   persona_digest?: PersonaDigest;
   persona_line?: PersonaLine;
   persona_pack?: PersonaPack;
@@ -422,6 +424,61 @@ export interface LLMRun {
 export interface TokenUsage {
   input: number;
   output: number;
+}
+/**
+ * Payload of a `notify_test` pending_live_requests row: send a test Web Push of this kind to every subscribed device now (no quiet hours, dedup or max age; nothing is written to notifications).
+ */
+export interface NotifyTestRequest {
+  /**
+   * Notification kinds (CLAUDE.md "Notifications"); same list as the notifications.kind check in the DB.
+   *
+   * This interface was referenced by `Common`'s JSON-Schema
+   * via the `definition` "NotificationKind".
+   */
+  kind:
+    | "day_ready"
+    | "day_recap"
+    | "week_ready"
+    | "month_ready"
+    | "quest_due"
+    | "quest_overdue"
+    | "capacity_alert"
+    | "streak_risk"
+    | "persona_speech"
+    | "runner_stale"
+    | "live_pending";
+}
+/**
+ * Result of a `notify_test` live request: one entry per push subscription. Devices are named from their user agent and a short row id; endpoints and keys never appear.
+ */
+export interface NotifyTestResult {
+  /**
+   * Notification kinds (CLAUDE.md "Notifications"); same list as the notifications.kind check in the DB.
+   *
+   * This interface was referenced by `Common`'s JSON-Schema
+   * via the `definition` "NotificationKind".
+   */
+  kind:
+    | "day_ready"
+    | "day_recap"
+    | "week_ready"
+    | "month_ready"
+    | "quest_due"
+    | "quest_overdue"
+    | "capacity_alert"
+    | "streak_risk"
+    | "persona_speech"
+    | "runner_stale"
+    | "live_pending";
+  target: string;
+  devices: {
+    device: string;
+    /**
+     * removed = the push service said the endpoint is gone, so its row was deleted.
+     */
+    outcome: "sent" | "removed" | "failed";
+    error?: string | null;
+  }[];
 }
 /**
  * persona_digest output: a short style guide distilled from a pack's context/ folder. Flavor only: it can describe voice, never change schema, escalation caps or quiet hours (invariant 6). Cached on the runner machine and added to planning prompts, capped.

@@ -25,6 +25,7 @@ from questboard_schema.common_schema import JobName, ProviderName
 from questboard_schema.config_schema import Config
 from questboard_schema.llm_run_schema import LLMRun, Status, TokenUsage, Trigger
 
+from runner.notify.push import Sender
 from runner.providers.base import Provider, ProviderError, ProviderOutputError
 from runner.repo import Repo, RepoUnavailable
 from runner.scheduler.schedule import (
@@ -91,6 +92,8 @@ class Scheduler:
     version: str = "0.0.0"
     # P2 step after the jobs (notifications). Gets (repo, config, local now).
     after_jobs: Callable[[Repo, Config, datetime], object] | None = None
+    # Web Push sender (None without a VAPID key); answers `notify_test` live requests.
+    push: Sender | None = None
 
     def evaluate(
         self, trigger: Trigger, only: JobName | None = None, force: bool = False
@@ -250,7 +253,9 @@ class Scheduler:
         try:
             config = self.repo.get_config()
             providers = [self.providers[n] for n in config.llm.providers if n in self.providers]
-            return process_live(self.repo, config, providers, self.clock(), replan=self.replan)
+            return process_live(
+                self.repo, config, providers, self.clock(), replan=self.replan, push=self.push
+            )
         except RepoUnavailable:
             return 0
 

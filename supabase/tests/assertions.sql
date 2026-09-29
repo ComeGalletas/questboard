@@ -109,6 +109,9 @@ select pg_temp.expect_error(
     values ('quest_due', 'questboard://quest/1', '2026-09-25', '{push}')$$,
   'duplicate notification');
 
+-- Test notifications are a live request kind (the runner holds the VAPID key).
+insert into public.pending_live_requests (kind, payload) values ('notify_test', '{"kind": "day_ready"}');
+
 -- A different identity sees nothing and cannot write into the owner's rows.
 set request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
 select pg_temp.expect_eq((select count(*) from public.quests), 0, 'stranger sees quests');

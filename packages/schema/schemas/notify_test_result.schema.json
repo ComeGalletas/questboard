@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "notify_test_result.schema.json",
+  "title": "NotifyTestResult",
+  "description": "Result of a `notify_test` live request: one entry per push subscription. Devices are named from their user agent and a short row id; endpoints and keys never appear.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "target", "devices"],
+  "properties": {
+    "kind": { "$ref": "common.schema.json#/$defs/NotificationKind" },
+    "target": { "type": "string", "pattern": "^questboard://" },
+    "devices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["device", "outcome"],
+        "properties": {
+          "device": { "type": "string", "maxLength": 80 },
+          "outcome": {
+            "type": "string",
+            "enum": ["sent", "removed", "failed"],
+            "description": "removed = the push service said the endpoint is gone, so its row was deleted."
+          },
+          "error": { "type": ["string", "null"], "maxLength": 120 }
+        }
+      }
+    }
+  }
+}

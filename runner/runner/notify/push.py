@@ -8,7 +8,10 @@ import json
 import os
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any, Literal
+
+if TYPE_CHECKING:
+    from runner.repo import Repo
 
 SUBJECT = "mailto:questboard@localhost"
 
@@ -57,17 +60,50 @@ class PushResult:
     failed: int = 0
 
 
+Outcome = Literal["sent", "removed", "failed"]
+
+
+@dataclass(frozen=True)
+class Delivery:
+    sub_id: str
+    outcome: Outcome
+    error: str | None = None  # "push failed (403)" or an exception class name; never data
+
+
+def push_all(
+    repo: Repo, subs: list[dict[str, Any]], send: Sender, data: bytes, gone: set[str]
+) -> list[Delivery]:
+    """Send `data` to every subscription not in `gone`. Endpoints the push service reports
+    gone are deleted from the DB and added to `gone`; one bad endpoint never blocks the rest."""
+    out: list[Delivery] = []
+    for sub in subs:
+        if sub["id"] in gone:
+            continue
+        try:
+            send(sub, data)
+            out.append(Delivery(sub["id"], "sent"))
+        except Gone:
+            gone.add(sub["id"])
+            repo.delete_push_subscription(sub["id"])
+            out.append(Delivery(sub["id"], "removed"))
+        except RuntimeError as exc:  # webpush_sender's own "push failed (status)"
+            out.append(Delivery(sub["id"], "failed", str(exc)[:120]))
+        except Exception as exc:  # noqa: BLE001 - class name only: messages may carry data
+            out.append(Delivery(sub["id"], "failed", type(exc).__name__))
+    return out
+
+
 def payload(notification: dict[str, Any]) -> bytes:
-    return json.dumps(
-        {
-            "kind": notification["kind"],
-            "title": notification.get("title") or "Questboard",
-            "body": notification.get("body") or "",
-            "target": notification["target"],
-            "persona": notification.get("persona"),
-        },
-        separators=(",", ":"),
-    ).encode()
+    body = {
+        "kind": notification["kind"],
+        "title": notification.get("title") or "Questboard",
+        "body": notification.get("body") or "",
+        "target": notification["target"],
+        "persona": notification.get("persona"),
+    }
+    if notification.get("test"):
+        body["test"] = True  # on-demand test send (runner notify-test); never a real row
+    return json.dumps(body, separators=(",", ":")).encode()
 
 
 def generate_vapid_keys() -> tuple[str, str]:

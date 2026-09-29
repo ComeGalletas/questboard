@@ -6,7 +6,7 @@ from datetime import UTC, datetime, timedelta
 
 from questboard_schema.config_schema import Config
 
-from runner.notify.push import Gone, PushResult, Sender, payload
+from runner.notify.push import PushResult, Sender, payload, push_all
 from runner.notify.rules import deliverable, plan_notices
 from runner.repo import Repo
 
@@ -37,23 +37,13 @@ def run_notifications(repo: Repo, config: Config, now: datetime, send: Sender | 
     if not pending:
         return PushResult()
     subs = repo.list_push_subscriptions() if send else []
-    sent = removed = failed = 0
+    outcomes: list[str] = []
     gone: set[str] = set()
     for n in pending:
-        if "push" not in n.get("channels", []):
+        if send is None or "push" not in n.get("channels", []):
             continue
-        for sub in subs:
-            if sub["id"] in gone:
-                continue
-            try:
-                send(sub, payload(n))  # type: ignore[misc]
-                sent += 1
-            except Gone:
-                gone.add(sub["id"])
-                repo.delete_push_subscription(sub["id"])
-                removed += 1
-            except Exception:  # noqa: BLE001 - one bad endpoint must not block the rest
-                failed += 1
+        outcomes += [d.outcome for d in push_all(repo, subs, send, payload(n), gone)]
+    sent, removed, failed = (outcomes.count(k) for k in ("sent", "removed", "failed"))
     # Dispatched to every remote channel we have; the PC reads rows over realtime.
     repo.mark_notifications_sent([n["id"] for n in pending], datetime.now(UTC))
     return PushResult(sent, removed, failed)

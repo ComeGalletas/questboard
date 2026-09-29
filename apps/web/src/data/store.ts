@@ -5,6 +5,8 @@
 import type {
   Config,
   FallbackLine,
+  NotifyTestRequest,
+  NotifyTestResult,
   PersonaLine,
   Quest,
   QuestProposal,
@@ -73,6 +75,7 @@ export interface Store {
 export type LiveKinds = {
   setup_assistant: { payload: SetupRequest; result: SetupTurn };
   replan: { payload: ReplanRequest; result: ReplanResult };
+  notify_test: { payload: NotifyTestRequest; result: NotifyTestResult };
 };
 export type LiveKind = keyof LiveKinds;
 

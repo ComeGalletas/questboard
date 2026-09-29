@@ -59,7 +59,12 @@ class Repo(Protocol):
     def mark_notifications_sent(self, ids: list[str], at: datetime) -> None: ...
     def list_push_subscriptions(self) -> list[dict[str, Any]]: ...
     def delete_push_subscription(self, sub_id: str) -> None: ...
-    def list_pending_requests(self, limit: int) -> list[dict[str, Any]]: ...
+    def list_pending_requests(
+        self, limit: int, kinds: tuple[str, ...] | None = None
+    ) -> list[dict[str, Any]]:
+        """Oldest pending first; `kinds` narrows it (code-only kinds skip the LLM queue)."""
+        ...
+
     def update_request(self, request_id: str, fields: dict[str, Any]) -> None: ...
 
 
@@ -221,9 +226,15 @@ class MemoryRepo:
         self._check()
         self.push_subscriptions = [s for s in self.push_subscriptions if s["id"] != sub_id]
 
-    def list_pending_requests(self, limit: int) -> list[dict[str, Any]]:
+    def list_pending_requests(
+        self, limit: int, kinds: tuple[str, ...] | None = None
+    ) -> list[dict[str, Any]]:
         self._check()
-        pending = [r for r in self.requests if r["status"] == "pending"]
+        pending = [
+            r
+            for r in self.requests
+            if r["status"] == "pending" and (kinds is None or r["kind"] in kinds)
+        ]
         return sorted(pending, key=lambda r: r["created_at"])[:limit]
 
     def update_request(self, request_id: str, fields: dict[str, Any]) -> None:
