@@ -148,6 +148,15 @@ def test_valid_plan_passes() -> None:
     assert check_plan(p, ctx_for([q])) == []
 
 
+def test_plan_summary_is_checked_for_personal_data() -> None:
+    q = quest()
+    bundle = [{"quest": str(q.id), "persona": "coach", "lines": lines("coach")}]
+    leaky = plan([], bundle)
+    leaky["diff"]["summary"] = "Mail PERSON_3 at someone@example.com first."
+    problems = check_plan(DailyPlan.model_validate(leaky), ctx_for([q]))
+    assert any(p.startswith("diff.summary: contains an email address") for p in problems)
+
+
 @pytest.mark.parametrize(
     ("op", "problem"),
     [
@@ -250,8 +259,9 @@ def test_daily_am_caches_proposals_and_dialogue_without_touching_quests() -> Non
     provider = ScriptedProvider(bad, good)
     [d] = scheduler(repo, provider, NOW).evaluate(Trigger.tick, only=JobName.daily_am)
 
-    assert d.status == Status.succeeded
+    assert (d.status, d.reason) == (Status.succeeded, "ok, 1 ops")
     assert "board_lines: missing triggers" in provider.requests[1].prompt
+    assert (repo.runs[0].ops_count, repo.runs[0].summary) == (1, None)
     assert repo.quests == [q]  # the model proposes; it never acts
     assert [p["status"] for p in repo.proposals] == ["superseded", "pending"]
     add = repo.proposals[1]

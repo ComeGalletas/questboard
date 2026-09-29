@@ -70,8 +70,14 @@ def _line_problems(path: str, text: str) -> list[str]:
     return problems
 
 
+def summary_problems(path: str, summary: str | None) -> list[str]:
+    """The diff summary is stored on llm_runs and shown in the app, so it gets the PII check."""
+    pii = pii_problem(summary) if summary else None
+    return [f"{path}: {pii}; personal data is not allowed in the summary"] if pii else []
+
+
 def check_plan(plan: DailyPlan, ctx: PlanContext) -> list[str]:
-    problems: list[str] = []
+    problems: list[str] = summary_problems("diff.summary", plan.diff.summary)
     adds = []
     planned = ctx.today_planned_min
     for i, wrapped in enumerate(plan.diff.ops):

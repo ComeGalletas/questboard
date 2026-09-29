@@ -21,6 +21,7 @@ Return one JSON object with:
    - update: change an open quest (title, notes, persona, estimate_min, scheduled_for, priority).
    - drop: remove an open quest that no longer makes sense.
    Every op needs a short reason. Propose few, high-value changes; an empty ops list is fine.
+   diff.summary: one sentence on what you changed and why, or why nothing needed changing.
    Rules:
    - Today's daily plan (open daily quests + adds - drops) must fit the capacity in minutes.
    - Never add utilities or subscription quests and never set or change deadlines: bills and
@@ -74,27 +75,37 @@ def system_prompt(packs: list[Pack]) -> str:
     )
 
 
-def user_prompt(context: dict[str, Any]) -> str:
-    return "Current state (JSON). Propose today's diff and dialogue.\n\n" + json.dumps(
+def user_prompt(context: dict[str, Any], ask: str = "Propose today's diff and dialogue.") -> str:
+    return f"Current state (JSON). {ask}\n\n" + json.dumps(
         context, sort_keys=True, indent=1, default=str
     )
+
+
+def period_user_prompt(cadence: str, context: dict[str, Any]) -> str:
+    return user_prompt(context, f"Propose the {cadence} diff for this period.")
 
 
 PERIOD_TEMPLATE = """You are the planning author for Questboard, a single-user RPG quest board
 for real life. Today you plan the {cadence} quests for the period in the state below. You never
 act: you propose changes the user accepts or rejects.
 
-Return a QuestDiff (ops + optional summary):
+Return a QuestDiff (ops + summary):
 - add {cadence} quests for the period (scheduled_for = period start) that move the goals forward;
 - or break an open {cadence} quest into {sub} sub-quests: set parent_id to that quest's id and
   schedule each inside the period{sub_rule}. Keep the parent open: it tracks the whole;
   lower its estimate_min if the sub-quests now carry the work;
 - update or drop open {cadence} quests that no longer fit (carries show what keeps slipping).
 Scale estimates by estimate_calibration (per-category actual/estimate ratio) when present.
+Coverage: each goal should have at least one open quest moving it forward this period. For
+every goal that no open quest covers, add a {cadence} quest sized to the goal, as long as the
+{cadence} total still fits budget_min (planned_min of it is already taken). An empty ops list
+is right only when every goal is already covered by open quests or budget_min is used up.
 Rules: the {cadence} total must fit budget_min; never add utilities or subscription quests and
 never set or change deadlines; keep titles short, concrete and free of personal data
 (no names of real people, emails, phone or ID numbers, amounts of money, links).
-Give every op a one-sentence reason. Few, high-value ops; an empty list is fine.
+Give every op a one-sentence reason. Prefer few, high-value ops.
+Always write summary: one or two sentences on what you proposed and why; if ops is empty, say
+whether the goals are already covered or the budget is used. Same personal-data rules.
 
 Personas:
 {personas}"""
