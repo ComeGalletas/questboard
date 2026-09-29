@@ -119,10 +119,12 @@ def test_carry_moves_unfinished_daily_quests_to_tomorrow_up_to_three_times() -> 
         "scheduled_for": "2026-09-26",
         "carries": 1,
         "snoozed_until": None,
+        "forgotten_on": ["2026-09-25"],
     }
     assert carry_patch(quest(carries=3), TODAY, evening) == {
         "status": "abandoned",
         "snoozed_until": None,
+        "forgotten_on": ["2026-09-25"],
     }
     hard = quest(carries=5, hard_deadline=True, deadline="2026-09-25T12:00:00Z")
     assert carry_patch(hard, TODAY, evening)["status"] == "overdue"
@@ -135,6 +137,46 @@ def test_carry_ignores_done_future_and_non_daily() -> None:
     assert carry_patch(done, TODAY, evening) is None
     assert carry_patch(quest(scheduled_for="2026-09-27", status="deferred"), TODAY, evening) is None
     assert carry_patch(quest(cadence="weekly"), TODAY, evening) is None
+
+
+def test_forgotten_marks_never_started_quests_and_they_still_carry() -> None:
+    evening = datetime(2026, 9, 25, 21, 0, tzinfo=BOGOTA)
+    # Carried from yesterday and forgotten again: the day is appended, the quest carries open.
+    again = carry_patch(quest(carries=1, forgotten_on=["2026-09-24"]), TODAY, evening)
+    assert again["forgotten_on"] == ["2026-09-24", "2026-09-25"]
+    assert (again["status"], again["carries"]) == ("open", 2)
+    # Hard deadline past due: forgotten, overdue, and carries past the cap.
+    hard = quest(carries=4, hard_deadline=True, deadline="2026-09-25T12:00:00Z")
+    assert carry_patch(hard, TODAY, evening) == {
+        "status": "overdue",
+        "scheduled_for": "2026-09-26",
+        "carries": 5,
+        "snoozed_until": None,
+        "forgotten_on": ["2026-09-25"],
+    }
+    # A deferred quest whose day came and went untouched is forgotten too.
+    assert "forgotten_on" in carry_patch(quest(status="deferred"), TODAY, evening)
+    # Started at 20:30 Bogota (01:30Z the next day): not forgotten.
+    late_start = quest(status="in_progress", started_at="2026-09-26T01:30:00Z")
+    assert "forgotten_on" not in carry_patch(late_start, TODAY, evening)
+    # Started, then snoozed or put back open the same day: not forgotten either.
+    assert "forgotten_on" not in carry_patch(
+        quest(status="snoozed", snoozed_until="2026-09-25T23:00:00Z"), TODAY, evening
+    )
+    reopened = quest(status="open", started_at="2026-09-25T14:00:00Z")
+    assert "forgotten_on" not in carry_patch(reopened, TODAY, evening)
+    # Started on an earlier day doesn't count for today.
+    stale = quest(status="overdue", carries=1, started_at="2026-09-24T14:00:00Z")
+    assert carry_patch(stale, TODAY, evening)["forgotten_on"] == ["2026-09-25"]
+    # A re-run the same evening doesn't record the day twice.
+    marked = quest(forgotten_on=["2026-09-25"])
+    assert "forgotten_on" not in carry_patch(marked, TODAY, evening)
+
+
+def test_planner_sees_recent_forgotten_days() -> None:
+    q = quest(carries=2, forgotten_on=["2026-09-10", "2026-09-23", "2026-09-24"])
+    prompt_ctx, _, _ = build_context(CONFIG, [q], [], TODAY)
+    assert prompt_ctx["recent_outcomes"]["forgotten_days"] == 2
 
 
 # -- validators ---------------------------------------------------------------------------
@@ -355,7 +397,9 @@ def test_daily_pm_carries_over_without_a_model() -> None:
     assert pm.status == Status.succeeded
     moved = repo.quests[0]
     assert (moved.scheduled_for, moved.carries) == (TODAY + timedelta(days=1), 1)
+    assert (moved.status.value, moved.forgotten_on) == ("open", [TODAY])
     assert repo.quests[1].status.value == "done"
+    assert repo.quests[1].forgotten_on == []
 
 
 def test_system_prompt_is_stable_for_caching() -> None:

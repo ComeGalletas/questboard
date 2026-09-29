@@ -51,6 +51,13 @@ values ('Easy 5 km run', 'coach', 'daily', 40, 'manual');
 select pg_temp.expect_eq((select count(*) from public.quests), 1, 'owner sees quest');
 select pg_temp.expect_eq((select count(*) from public.config), 1, 'owner sees config');
 
+-- Forgotten is a day list (daily_pm), not a status.
+select pg_temp.expect_eq(
+  (select cardinality(forgotten_on) from public.quests), 0, 'forgotten_on defaults empty');
+update public.quests set forgotten_on = array['2026-09-28'::date];
+select pg_temp.expect_error(
+  $$update public.quests set status = 'forgotten'$$, 'forgotten status');
+
 -- A finished quest must say when it finished.
 select pg_temp.expect_error(
   $$update public.quests set status = 'done'$$, 'done without completed_at');

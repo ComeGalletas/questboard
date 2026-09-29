@@ -41,6 +41,7 @@ Tooling not named in the docs (confirmed 2026-09-24):
 Done when: log in on PC and phone and see an empty board with a "Runner offline" pill. (PC done 2026-09-29; phone pending.)
 
 ### Pending device tests (iPhone, on the hosted app)
+- [ ] On-demand test notification first (needed to run the tests below easily): `python -m runner notify-test [kind]` plus a "Send test notification" button in the app (queued to the runner as a live request, since only the runner holds the VAPID key). It sends a real Web Push of any kind to every subscribed device right away, marked as a test, ignoring quiet hours and dedup.
 - [ ] Install the PWA from Safari (Share → Add to Home Screen); it opens standalone and stays signed in.
 - [ ] Sign in on the phone and see the board with the runner status pill.
 - [ ] "Enable notifications on this device" creates a `push_subscriptions` row (needs VAPID keys: `python -m runner vapid`).
@@ -59,6 +60,8 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [x] Runner skeleton: trigger loop, guards, lock file, heartbeat, `llm_runs` idempotency + backoff + catch-up. (Tested against an in-memory DB; Supabase connection next.)
 - [x] Providers: `ollama.py`, `claude_api.py`; output validation, one retry, fallthrough. Supabase connection for the runner (signs in as the user; refresh token in the OS keychain).
 - [x] Engine: prompt assembly, `daily_am` (QuestDiffs + capacity fit + dialogue bundles), `daily_pm` (accounting + carry-over rules). Proposals wait in `quest_proposals`. "Suggest quests now" (Today/Week/Month button, or `python -m runner trigger JOB --force`) re-runs daily_am/weekly/monthly on demand as a forced manual attempt (up to 10 per occurrence; scheduled runs keep 3); a manual daily_am before 05:30 plans today.
+- [ ] Weekly/monthly quests don't turn into daily quests. First real run (2026-09-29): the weekly plan had two weekly quests (gym 300 min, pygame 450 min) and no daily steps. The weekly prompt makes the daily breakdown optional, and the model read the 773-min weekly budget as full; daily sub-quests don't count against that budget in `check_period`. The daily_am prompt never asks for today's share of open weekly/monthly quests. Fix: weekly breaks each weekly quest into daily sub-quests on concrete days (parent_id); daily_am pulls today's share into the daily plan within capacity; finishing sub-quests advances the parent.
+- [x] daily_pm "forgotten" accounting (decided 2026-09-29): a daily quest never started by daily_pm (no start / in-progress that day; snoozed or deferred-to-later quests don't count) gets the day appended to `quests.forgotten_on` and still carries under the normal rules (max 3, hard deadlines always, overdue past deadline, abandoned past the cap). Forgotten is an event, not a status: `forgotten` left the status enum (migration `20260929000200`). The app says the quest's `forgotten` line the next day until the quest is touched, counts each forgotten day as a miss for mood (a quest forgotten and abandoned the same day counts once), and leaves XP and streaks alone; daily_am sees `recent_outcomes.forgotten_days`.
 - [x] App: review strip for pending proposals (accept applies the op in code and caches its lines; reject records feedback).
 - [x] `persona_lines` selection in the app. (Done in Phase 1.)
 - [ ] Tauri shell: dashboard window, tray, start-at-login, sidecar, OS notifications, deep links.
@@ -67,7 +70,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [ ] PC delivery of notifications (Tauri reads `notifications` over realtime) + sprite state.
 
 ## Phase 3 — Calendar, setup assistant, weekly/monthly (week 4)
-- [ ] Microsoft 365 / Outlook calendar (read-only, Microsoft Graph) + `outlook_cal.py` (ADR 0002: Outlook first, Google later).
+- [ ] Microsoft 365 / Outlook calendar (read-only, Microsoft Graph) + `outlook_cal.py` (ADR 0002: Outlook first, Google later). Gitignore every local file the adapter writes (token/MSAL caches, Graph response caches, account/tenant config, captured real events); fixtures stay synthetic.
 - [x] Setup assistant (P1): chat on /setup -> pending_live_requests -> runner answers between ticks (5 s poll) with a reply + config patch (goals, capacity, quiet hours, timezone, persona order); the user reviews before/after and applies. Seeding first weekly/monthly quests: until config has goals, daily_am/weekly/monthly skip as "not configured" without an `llm_runs` row, so after setup `python -m runner trigger weekly` (or `monthly`, `daily_am`) plans the current period. A slot that already succeeded stays "already done"; `trigger JOB --force` or the board's "Suggest quests" button adds a new attempt (stored with `forced = true`, max 10 attempts per occurrence; ADR 0003). A run that proposes nothing shows "The planner proposed nothing this week" plus its summary on the board.
 - [x] `weekly` / `monthly` jobs: carry-over in code, period plans as proposals with sub-quest breakdown (weekly -> daily, monthly -> weekly), budget = 40 % / 25 % of the period's free time.
 - [ ] Retro questions and milestone line pools (need new line triggers + a UI; later).
@@ -75,7 +78,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [ ] Companion overlay window (frameless, transparent, always-on-top, click-through outside sprite).
 
 ## Phase 4 — Email pipeline (weeks 5–6)
-- [ ] Outlook mail adapter (read-only, Microsoft Graph, runner only), allow/deny lists, `senders` classification (ADR 0002; Gmail later).
+- [ ] Outlook mail adapter (read-only, Microsoft Graph, runner only), allow/deny lists, `senders` classification (ADR 0002; Gmail later). Gitignore every local file the adapter writes (mail dumps, Graph caches, token caches, captured real messages); fixtures stay synthetic.
 - [x] Sanitizer: Presidio + spaCy es/en NER, custom recognizers (cédula, NIT with check digit, CO phones, Luhn cards, IBAN mod-97, amounts, CO/US addresses, account/reference numbers, OTP codes and passwords), residual pass for leftover numbers/codes, stable salted tokens, reply/signature stripping, 1200-char window + 800-char cap, `log_rows` for `sanitization_log` (written by the mail pipeline). Tokens come from a `Vault` protocol; `MemoryVault` for now.
 - [x] Vault: `vault.db` (SQLCipher) + AES-GCM sealed values, master key in the OS keychain (runner via `keyring`; Tauri reads the same entry later), stable tokens across restarts, `rehydrate()` for the PC UI; `python -m runner vault`. Key loss = mapping loss until the encrypted backup (Phase 7).
 - [x] Make "Sanitizer release gate" a required check (issue #14): ruleset "main" (active, default branch) requires it plus the other five CI checks, and blocks deletion and force-push. Verified 2026-09-29.

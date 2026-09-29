@@ -19,7 +19,6 @@ class Status(StrEnum):
     snoozed = "snoozed"
     deferred = "deferred"
     skipped = "skipped"
-    forgotten = "forgotten"
     overdue = "overdue"
     abandoned = "abandoned"
 
@@ -68,6 +67,10 @@ class Quest(BaseModel):
     priority: int = Field(..., description="1 = highest.", ge=1, le=3)
     xp: int = Field(..., ge=0)
     carries: int = Field(..., ge=0)
+    forgotten_on: list[date] | None = Field(
+        [],
+        description="Board days the quest sat never started when daily_pm ran. Forgotten is an event, not a status: the quest carries as open, and the app fires the `forgotten` line and counts each day as a miss from this list.",
+    )
     source: Source
     reference_token: common_schema.Token | None = Field(
         None, description="Links an extractor-created quest to its completion signal."

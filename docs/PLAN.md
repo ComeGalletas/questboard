@@ -56,7 +56,7 @@ Checkboxes verified against the code on 2026-09-29; unchecked items with a "Part
 ### Phase 2 — Runner, providers, daily cache (week 3)
 - [x] Runner skeleton: trigger loop (tick, start, network-up, manual), guards, lock file, `runner_state` heartbeat, `llm_runs` idempotency + backoff + catch-up.
 - [x] Provider layer: `base.py` interface; `claude_cli.py` first (subprocess, timeout, single-flight), then `ollama.py` (schema format), then `claude_api.py`. Output validation + one retry + fallthrough.
-- [ ] Engine: prompt assembly (config, goals, open quests, feedback, outcomes), `daily_am` producing QuestDiffs + capacity fit + dialogue bundles; `daily_pm` doing forgotten/partial/overdue accounting and carry-over rules. (Partial: carry-over, overdue and abandon rules done; nothing sets `forgotten` yet.)
+- [x] Engine: prompt assembly (config, goals, open quests, feedback, outcomes), `daily_am` producing QuestDiffs + capacity fit + dialogue bundles; `daily_pm` doing forgotten/partial/overdue accounting and carry-over rules. (Forgotten, decided 2026-09-29: a day recorded in `quests.forgotten_on`, not a status; the quest still carries. Partial is set by the user's action, so daily_pm leaves it alone.)
 - [x] `persona_lines` selection in the app: trigger + condition + no-repeat + placeholder fill.
 - [ ] Tauri shell: dashboard window, tray, start-at-login, runner as sidecar, OS notifications, deep links.
 - [x] Notifications v1: `day_ready`, `day_recap`, `quest_due`, `quest_overdue`, `streak_risk` with dedup and quiet hours; Web Push to the PWA.

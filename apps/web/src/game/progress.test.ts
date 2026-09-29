@@ -4,6 +4,7 @@ import {
   boardTrigger,
   capacity,
   completionRate,
+  forgottenQuest,
   mood,
   stats,
   streak,
@@ -57,6 +58,56 @@ test("completion rate and mood", () => {
   assert.equal(mood(0.2), "concerned");
   assert.equal(mood(0.1, 2), "neutral");
   assert.equal(mood(null), "neutral");
+});
+
+test("forgotten days count as misses for mood while the quest carries open", () => {
+  const now = at("2026-09-25", 20);
+  const qs = [
+    done("2026-09-25"),
+    done("2026-09-24"),
+    // Forgotten twice, still open on today's board: two missed days, nothing settled today.
+    quest({ scheduled_for: "2026-09-25", carries: 2, forgotten_on: ["2026-09-23", "2026-09-24"] }),
+    // Forgotten, carried, then done: one miss plus one finish.
+    done("2026-09-24", 10, { carries: 1, forgotten_on: ["2026-09-23"] }),
+    // Forgotten on the day it hit the cap and was abandoned: one miss, not two.
+    quest({ status: "abandoned", scheduled_for: "2026-09-22", forgotten_on: ["2026-09-22"] }),
+    quest({ forgotten_on: ["2026-09-10"] }), // outside the window
+  ];
+  assert.deepEqual(completionRate(qs, now), { rate: 3 / 7, settled: 7 });
+  assert.equal(mood(completionRate(qs, now).rate, 7), "neutral");
+  // Without the forgotten records the same log reads as a perfect week.
+  const clean = qs.map((q) => ({ ...q, forgotten_on: [] }));
+  assert.deepEqual(completionRate(clean, now), { rate: 3 / 4, settled: 4 });
+  // Streak and XP ignore forgotten days.
+  assert.equal(streak(qs, now).days, 2);
+  assert.equal(totalXp(qs), totalXp(clean));
+});
+
+test("forgottenQuest picks yesterday's forgotten quest until it is touched", () => {
+  const morning = at("2026-09-25", 8);
+  const low = quest({ title: "low", priority: 3, forgotten_on: ["2026-09-24"] });
+  const high = quest({
+    title: "high",
+    priority: 1,
+    status: "overdue",
+    forgotten_on: ["2026-09-24"],
+  });
+  assert.equal(forgottenQuest([low, high], morning)?.title, "high");
+  // Started, snoozed or deferred since: no longer called out.
+  for (const status of ["in_progress", "snoozed", "deferred", "done"] as const) {
+    assert.equal(forgottenQuest([{ ...high, status }], morning), null);
+  }
+  // Only yesterday's record counts (the lines say "yesterday"); older ones are history.
+  assert.equal(forgottenQuest([quest({ forgotten_on: ["2026-09-22"] })], morning), null);
+  assert.equal(
+    forgottenQuest([quest({ forgotten_on: ["2026-09-25"] })], at("2026-09-25", 22)),
+    null,
+  );
+  assert.equal(
+    forgottenQuest([quest({ cadence: "weekly", forgotten_on: ["2026-09-24"] })], morning),
+    null,
+  );
+  assert.equal(forgottenQuest([quest()], morning), null);
 });
 
 test("capacity compares open planned effort with focused free time", () => {
