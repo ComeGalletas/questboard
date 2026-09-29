@@ -447,6 +447,22 @@ def test_cli_dry_run_tick(tmp_path, monkeypatch, capsys) -> None:
     assert "ingest: run (ok)" in capsys.readouterr().out
 
 
+def test_cli_exit_codes_for_the_desktop_shell(tmp_path, monkeypatch, capsys) -> None:
+    from runner.__main__ import EXIT_ALREADY_RUNNING, EXIT_NOT_SIGNED_IN, main
+    from runner.scheduler.lock import InstanceLock
+
+    monkeypatch.setenv("QUESTBOARD_DATA_DIR", str(tmp_path))
+    monkeypatch.delenv("QUESTBOARD_SUPABASE_URL", raising=False)
+    monkeypatch.delenv("QUESTBOARD_SUPABASE_ANON_KEY", raising=False)
+    assert main(["tick"]) == EXIT_NOT_SIGNED_IN  # no runner.json in this data dir
+    assert "runner login" in capsys.readouterr().err
+
+    with InstanceLock(tmp_path / "runner.lock"):
+        assert main(["tick", "--dry-run"]) == EXIT_ALREADY_RUNNING
+    assert "another runner" in capsys.readouterr().err
+    assert (EXIT_ALREADY_RUNNING, EXIT_NOT_SIGNED_IN) == (3, 4)  # runner.rs matches on these
+
+
 def test_cli_trigger_force_is_passed_through(tmp_path, monkeypatch, capsys) -> None:
     from runner.__main__ import main
 

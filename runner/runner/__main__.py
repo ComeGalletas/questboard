@@ -44,6 +44,10 @@ from runner.scheduler.loop import Loop
 from runner.settings import Settings, SettingsMissing
 from runner.supabase_repo import KeyringTokenStore, SupabaseRepo
 
+# Exit codes the desktop shell tells apart (apps/desktop/src-tauri/src/runner.rs).
+EXIT_ALREADY_RUNNING = 3  # another runner holds the lock: leave it be
+EXIT_NOT_SIGNED_IN = 4  # no Supabase settings: `python -m runner login` first
+
 DEFAULT_CONFIG = {
     "timezone": "America/Bogota",
     "goals": [],
@@ -204,9 +208,12 @@ def main(argv: list[str] | None = None) -> int:
                 job = JobName(args.job)
                 for d in scheduler.evaluate(Trigger.manual, only=job, force=args.force):
                     print(f"{d.job.value}: {d.action} ({d.reason})")
-    except (AlreadyRunning, SettingsMissing) as exc:
+    except AlreadyRunning as exc:
         print(exc, file=sys.stderr)
-        return 1
+        return EXIT_ALREADY_RUNNING
+    except SettingsMissing as exc:
+        print(exc, file=sys.stderr)
+        return EXIT_NOT_SIGNED_IN
     return 0
 
 
