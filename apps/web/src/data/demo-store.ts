@@ -223,7 +223,7 @@ export class DemoStore implements Store {
   }
 
   async createLiveRequest(): Promise<string> {
-    throw new Error("The setup assistant needs the PC runner; it isn't available in demo mode.");
+    throw new Error("This needs the PC runner; it isn't available in demo mode.");
   }
 
   async getLiveRequest(): Promise<null> {

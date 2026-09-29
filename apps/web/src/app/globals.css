@@ -343,6 +343,21 @@ button:disabled {
   margin: 0;
 }
 
+.board-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.suggest-status {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 13px;
+  text-align: right;
+}
+
 .count {
   font-size: 10px;
 }
