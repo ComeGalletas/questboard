@@ -31,70 +31,72 @@ Consolidated as of 2026-09-24. Single-user, self-hosted, cache-driven RPG quest 
 
 Each phase ends with something usable. Estimates assume part-time work.
 
+Checkboxes verified against the code on 2026-09-29; unchecked items with a "Partial" note are started but not complete. `TODO.md` tracks the detail.
+
 ### Phase 0 — Foundations (week 1)
-- [ ] Monorepo scaffold: `apps/web`, `apps/desktop`, `runner`, `packages/schema`, `personas`, `supabase`.
-- [ ] `packages/schema`: JSON Schemas for Quest, QuestDiff, PersonaLine, ExtractedRecord, Config, LLMRun; codegen to TS + Pydantic.
-- [ ] Supabase project: migrations for core tables; single-user auth; realtime on `quests`, `persona_lines`, `runner_state`.
-- [ ] Web app shell: auth, Today/Week/Month routes, status pill reading `runner_state`.
-- [ ] PWA manifest + iOS install; Web Push registration (no sends yet).
-- [ ] CI: lint, type-check, schema codegen check, runner tests.
+- [ ] Monorepo scaffold: `apps/web`, `apps/desktop`, `runner`, `packages/schema`, `personas`, `supabase`. (Partial: `apps/desktop` not created yet.)
+- [x] `packages/schema`: JSON Schemas for Quest, QuestDiff, PersonaLine, ExtractedRecord, Config, LLMRun; codegen to TS + Pydantic.
+- [x] Supabase project: migrations for core tables; single-user auth; realtime on `quests`, `persona_lines`, `runner_state`. (Hosted project live since 2026-09-29.)
+- [x] Web app shell: auth, Today/Week/Month routes, status pill reading `runner_state`.
+- [x] PWA manifest + iOS install; Web Push registration (no sends yet). (iPhone install/push test pending; see TODO.md.)
+- [x] CI: lint, type-check, schema codegen check, runner tests.
 
 **Done when:** you can log in on PC and phone and see an empty board with a "Runner offline" pill.
 
 ### Phase 1 — Manual quests and the board (week 2)
-- [ ] Quest CRUD (title, persona, estimate, deadline, priority, XP); complete / partial / snooze / defer / skip with actual-time logging.
-- [ ] Capacity bar: free hours (manual for now) × focus factor vs planned effort.
-- [ ] Progress: XP, level, streaks, stats (Discipline/Health/Career); all computed in code (P2).
-- [ ] Persona panel with mood computed from completion rate; fallback lines from `lines.fallback.json`.
-- [ ] Pixel UI kit: panels, bars, dialogue box with typewriter, sprite component (integer scaling), palette tokens.
-- [ ] Built-in persona packs (coach, teacher, mom, quartermaster) with placeholder 32×32 sprite sheets.
+- [ ] Quest CRUD (title, persona, estimate, deadline, priority, XP); complete / partial / snooze / defer / skip with actual-time logging. (Partial: create and all actions done; no priority field in the form, no edit/delete yet.)
+- [x] Capacity bar: free hours (manual for now) × focus factor vs planned effort.
+- [x] Progress: XP, level, streaks, stats (Discipline/Health/Career); all computed in code (P2).
+- [x] Persona panel with mood computed from completion rate; fallback lines from `lines.fallback.json`.
+- [x] Pixel UI kit: panels, bars, dialogue box with typewriter, sprite component (integer scaling), palette tokens.
+- [x] Built-in persona packs (coach, teacher, mom, quartermaster) with placeholder 32×32 sprite sheets.
 
 **Done when:** the app is a usable pixel-art to-do board with reactions, offline, no LLM.
 
 ### Phase 2 — Runner, providers, daily cache (week 3)
-- [ ] Runner skeleton: trigger loop (tick, start, network-up, manual), guards, lock file, `runner_state` heartbeat, `llm_runs` idempotency + backoff + catch-up.
-- [ ] Provider layer: `base.py` interface; `claude_cli.py` first (subprocess, timeout, single-flight), then `ollama.py` (schema format), then `claude_api.py`. Output validation + one retry + fallthrough.
-- [ ] Engine: prompt assembly (config, goals, open quests, feedback, outcomes), `daily_am` producing QuestDiffs + capacity fit + dialogue bundles; `daily_pm` doing forgotten/partial/overdue accounting and carry-over rules.
-- [ ] `persona_lines` selection in the app: trigger + condition + no-repeat + placeholder fill.
+- [x] Runner skeleton: trigger loop (tick, start, network-up, manual), guards, lock file, `runner_state` heartbeat, `llm_runs` idempotency + backoff + catch-up.
+- [x] Provider layer: `base.py` interface; `claude_cli.py` first (subprocess, timeout, single-flight), then `ollama.py` (schema format), then `claude_api.py`. Output validation + one retry + fallthrough.
+- [ ] Engine: prompt assembly (config, goals, open quests, feedback, outcomes), `daily_am` producing QuestDiffs + capacity fit + dialogue bundles; `daily_pm` doing forgotten/partial/overdue accounting and carry-over rules. (Partial: carry-over, overdue and abandon rules done; nothing sets `forgotten` yet.)
+- [x] `persona_lines` selection in the app: trigger + condition + no-repeat + placeholder fill.
 - [ ] Tauri shell: dashboard window, tray, start-at-login, runner as sidecar, OS notifications, deep links.
-- [ ] Notifications v1: `day_ready`, `day_recap`, `quest_due`, `quest_overdue`, `streak_risk` with dedup and quiet hours; Web Push to the PWA.
+- [x] Notifications v1: `day_ready`, `day_recap`, `quest_due`, `quest_overdue`, `streak_risk` with dedup and quiet hours; Web Push to the PWA.
 
 **Done when:** the PC generates today's quests and lines at 05:30 (or on boot), and both devices show them.
 
 ### Phase 3 — Calendar, setup assistant, weekly/monthly (week 4)
 - [ ] Microsoft 365 / Outlook calendar (read-only, Microsoft Graph) + `outlook_cal.py` adapter; events → scheduled quests; free time → capacity. (ADR 0002: Outlook before Google.)
-- [ ] Setup assistant: multi-turn chat (P1) with `save_config` structured output; review screen; re-runnable; patches config as diffs; seeds first weekly/monthly quests.
-- [ ] `weekly` and `monthly` jobs with sub-quest breakdown, retro questions, board-level and milestone line pools.
-- [ ] `pending_live_requests` + mobile "waiting for PC" state.
+- [x] Setup assistant: multi-turn chat (P1) with `save_config` structured output; review screen; re-runnable; patches config as diffs; seeds first weekly/monthly quests. (First weekly/monthly quests come from the Suggest button on Week/Month or the next scheduled run.)
+- [ ] `weekly` and `monthly` jobs with sub-quest breakdown, retro questions, board-level and milestone line pools. (Partial: jobs and sub-quest breakdown done; retro questions and milestone line pools not yet.)
+- [x] `pending_live_requests` + mobile "waiting for PC" state.
 - [ ] Companion overlay window: frameless, transparent, always-on-top, click-through outside sprite, speech bubble, quick menu, hide on fullscreen, quiet hours.
 
 **Done when:** a fresh install can be configured by talking to the assistant and runs a full week unattended.
 
 ### Phase 4 — Email pipeline (weeks 5–6)
 - [ ] Outlook mail adapter (read-only, Microsoft Graph, runner only), allow/deny lists, `senders` classification with one-time LLM classify + cache. (ADR 0002: Gmail later.)
-- [ ] Sanitizer: Presidio pipeline, spaCy es/en, custom recognizers (cédula, NIT, CO phones, Luhn, IBAN, OTP-like), stable salted tokens, quoted-reply/signature stripping, 800-char cap, `sanitization_log`.
-- [ ] Vault: SQLCipher, key in OS keychain via Tauri; re-hydration in PC UI only; mobile opt-in flag.
+- [x] Sanitizer: Presidio pipeline, spaCy es/en, custom recognizers (cédula, NIT, CO phones, Luhn, IBAN, OTP-like), stable salted tokens, quoted-reply/signature stripping, 800-char cap, `sanitization_log`.
+- [ ] Vault: SQLCipher, key in OS keychain via Tauri; re-hydration in PC UI only; mobile opt-in flag. (Partial: runner vault with the key in the OS keychain, and the `mobile_rehydration` flag, done; Tauri key access and PC re-hydration UI wait for the desktop shell.)
 - [ ] Category profiles + extractors, in this order: `ics.py`, `utilities.py`, `government.py`, `delivery.py`, `subscription.py`, `health.py`, `jobs.py`, `learning.py`, `travel.py`, `personal.py`.
 - [ ] Quest templates per category with lead times, prep/execute splits, auto-complete on completion signals by `reference_token`.
-- [ ] LLM-proposed bucket for unmatched mail; PII output validator.
-- [ ] Fixture suite of adversarial emails (es/en, cards, cédulas, OTPs) as a CI release gate.
+- [ ] LLM-proposed bucket for unmatched mail; PII output validator. (Partial: PII output validator done; the bucket waits for the mail adapter.)
+- [x] Fixture suite of adversarial emails (es/en, cards, cédulas, OTPs) as a CI release gate.
 
 **Done when:** bills, appointments and invites become quests automatically, and nothing sensitive reaches the DB or a model.
 
 ### Phase 5 — Voice (week 7)
-- [ ] PC capture (hotkey + button) with whisper.cpp small; mobile hold-to-speak with Web Speech, clip fallback via runner (P1).
-- [ ] Grammar parser (es/en) for create/complete/snooze/defer/what's-next; date parsing (chrono-node / dateparser).
-- [ ] Confirmation card (title, when, persona, estimate) before any write; spoken "confirm".
+- [ ] PC capture (hotkey + button) with whisper.cpp small; mobile hold-to-speak with Web Speech, clip fallback via runner (P1). (Partial: mobile hold-to-speak with Web Speech done; whisper.cpp and the clip fallback not yet.)
+- [x] Grammar parser (es/en) for create/complete/snooze/defer/what's-next; date parsing (chrono-node / dateparser). (Dates use the shared es/en grammar instead of chrono-node / dateparser; ADR 0001.)
+- [x] Confirmation card (title, when, persona, estimate) before any write; spoken "confirm".
 - [ ] LLM fallback for unparsed utterances as P1 diffs.
 
 **Done when:** "create task visit grandma next Saturday at ten" works offline on both devices.
 
 ### Phase 6 — Custom personas, assets, 3D (week 8)
-- [ ] Pack loader with validation (yaml schema, sprite frame count, size limits); missing frames → idle.
-- [ ] `persona_digest` weekly job for `context/`; capped digest in daily prompts; guardrails on schema/escalation/quiet hours.
+- [x] Pack loader with validation (yaml schema, sprite frame count, size limits); missing frames → idle.
+- [x] `persona_digest` weekly job for `context/`; capped digest in daily prompts; guardrails on schema/escalation/quiet hours.
 - [ ] Setup assistant can draft a pack from a description.
 - [ ] Optional GLB renderer (three.js) in companion and dashboard header; clip names = five states; budget check (≈5 MB / 20k tris) with sprite fallback on battery.
-- [ ] Effort-calibration table (actual vs estimate per category) fed back into prompts.
+- [x] Effort-calibration table (actual vs estimate per category) fed back into prompts.
 
 ### Phase 7 — Polish and hardening (ongoing)
 - [ ] Final sprite sheets (Aseprite), portraits, animation timing.
