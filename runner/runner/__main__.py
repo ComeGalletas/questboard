@@ -3,7 +3,9 @@
   python -m runner login                     one-time: Supabase URL/key + sign in (keychain)
   python -m runner run [--dry-run]           trigger loop (start, 5-min tick, network up)
   python -m runner tick [--dry-run]          one evaluation, then exit
-  python -m runner trigger JOB [--dry-run]   manual run of one job
+  python -m runner trigger JOB [--dry-run] [--force]
+                                             manual run of one job; --force re-runs its latest
+                                             occurrence even if it succeeded (new attempt, max 3)
   python -m runner vapid                     print a new VAPID key pair for Web Push
   python -m runner packs                     check the persona packs (errors and warnings)
   python -m runner vault                     open (or create) the local vault; prints counts only
@@ -136,6 +138,11 @@ def main(argv: list[str] | None = None) -> int:
     trig = sub.add_parser("trigger")
     trig.add_argument("job", choices=[j.value for j in JobName])
     trig.add_argument("--dry-run", action="store_true")
+    trig.add_argument(
+        "--force",
+        action="store_true",
+        help="re-run the latest occurrence even if it succeeded (max 3 attempts)",
+    )
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
@@ -159,7 +166,8 @@ def main(argv: list[str] | None = None) -> int:
             elif args.cmd == "tick":
                 loop.step(first=True)
             else:
-                for d in scheduler.evaluate(Trigger.manual, only=JobName(args.job)):
+                job = JobName(args.job)
+                for d in scheduler.evaluate(Trigger.manual, only=job, force=args.force):
                     print(f"{d.job.value}: {d.action} ({d.reason})")
     except (AlreadyRunning, SettingsMissing) as exc:
         print(exc, file=sys.stderr)

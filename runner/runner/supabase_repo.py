@@ -27,8 +27,8 @@ KEYRING_SERVICE = "questboard-runner"
 KEYRING_USER = "supabase-refresh-token"
 TIMEOUT = 15.0
 RUN_COLUMNS = (
-    "id,job,slot,date,trigger,provider_used,attempt,status,tokens_input,tokens_output,"
-    "error,started_at,finished_at"
+    "id,job,slot,date,trigger,provider_used,attempt,status,forced,tokens_input,tokens_output,"
+    "ops_count,summary,error,started_at,finished_at"
 )
 
 
@@ -227,11 +227,16 @@ class SupabaseRepo:
         }
         return self._request("GET", "quest_feedback", params)
 
-    def supersede_pending_proposals(self) -> int:
+    def supersede_pending_proposals(self, run_ids: list[str] | None = None) -> int:
+        params = {"status": "eq.pending", "select": "id"}
+        if run_ids is not None:
+            if not run_ids:
+                return 0
+            params["run_id"] = f"in.({','.join(run_ids)})"
         rows = self._request(
             "PATCH",
             "quest_proposals",
-            {"status": "eq.pending", "select": "id"},
+            params,
             {"status": "superseded"},
             "return=representation",
         )

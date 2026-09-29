@@ -216,6 +216,67 @@ def test_stale_running_row_counts_as_a_failed_attempt() -> None:
     ]
 
 
+def test_force_adds_attempts_to_a_succeeded_occurrence_up_to_the_cap() -> None:
+    h = Handler()
+    sched, repo, clock = make(local(2026, 9, 28, 8, 0), weekly=h)  # catch-up of Sunday 09-27
+    assert sched.evaluate(Trigger.start)[0].status == Status.succeeded
+    [first] = repo.runs
+    repo.proposals = [{"id": "p1", "run_id": str(first.id), "status": "pending", "op": "add"}]
+    repo.proposals.append({"id": "p2", "run_id": "other-run", "status": "pending", "op": "add"})
+    assert sched.evaluate(Trigger.manual)[0].reason == "already done"
+    with pytest.raises(ValueError):
+        sched.evaluate(Trigger.tick, force=True)
+
+    d = sched.evaluate(Trigger.manual, force=True)[0]
+    assert d.status == Status.succeeded
+    assert [(r.attempt, r.trigger, r.forced) for r in repo.runs] == [
+        (1, Trigger.start, False),
+        (2, Trigger.manual, True),
+    ]
+    assert [p["status"] for p in repo.proposals] == ["superseded", "pending"]
+    assert sched.evaluate(Trigger.tick)[0].reason == "already done"  # scheduled runs stay put
+    clock.advance(minutes=1)
+    assert sched.evaluate(Trigger.manual, force=True)[0].status == Status.succeeded
+    assert sched.evaluate(Trigger.manual, force=True)[0].reason == "gave up after 3 attempts"
+    assert h.calls == 3
+
+
+def test_force_on_an_occurrence_without_a_success_is_a_normal_manual_run() -> None:
+    sched, repo, _ = make(local(2026, 9, 28, 8, 0), weekly=Handler())
+    assert sched.evaluate(Trigger.manual, force=True)[0].status == Status.succeeded
+    assert repo.runs[0].forced is False
+
+
+def test_planning_runs_record_op_count_and_summary() -> None:
+    sched, repo, _ = make(local(2026, 9, 28, 8, 0))
+    sched.handlers = {
+        JobName.weekly: lambda ctx: JobResult(
+            ProviderName.claude_cli, ops_count=0, summary="Both goals already have open quests."
+        )
+    }
+    [d] = sched.evaluate(Trigger.start)
+    assert (d.status, d.reason) == (Status.succeeded, "ok, 0 ops")
+    [run] = repo.runs
+    assert (run.ops_count, run.summary) == (0, "Both goals already have open quests.")
+
+
+def test_planning_jobs_wait_for_goals_or_capacity() -> None:
+    am, weekly, ingest = Handler(), Handler(), Handler()
+    sched, repo, _ = make(local(2026, 9, 28, 8, 0), ingest=ingest, daily_am=am, weekly=weekly)
+    data = CONFIG.model_dump(mode="json")
+    data["capacity"] = {"weekday_hours": 0, "weekend_hours": 0, "focus_factor": 0.7}
+    repo.config = Config.model_validate(data)
+    decisions = {d.job: d for d in sched.evaluate(Trigger.manual)}
+    assert decisions[JobName.daily_am].reason == "not configured (no goals and no capacity)"
+    assert decisions[JobName.weekly].reason == "not configured (no goals and no capacity)"
+    assert decisions[JobName.ingest].status == Status.succeeded
+    assert repo.runs == [] and am.calls == weekly.calls == 0
+
+    data["goals"] = [{"id": "g1", "title": "Gym 4x/week", "horizon": "week"}]
+    repo.config = Config.model_validate(data)
+    assert sched.evaluate(Trigger.manual, only=JobName.weekly)[0].status == Status.succeeded
+
+
 def test_no_provider_reachable() -> None:
     h = Handler()
     sched, _, _ = make(local(2026, 9, 25, 6, 0), daily_am=h)
@@ -305,6 +366,25 @@ def test_cli_dry_run_tick(tmp_path, monkeypatch, capsys) -> None:
     monkeypatch.setenv("QUESTBOARD_DATA_DIR", str(tmp_path))
     assert main(["trigger", "ingest", "--dry-run"]) == 0
     assert "ingest: run (ok)" in capsys.readouterr().out
+
+
+def test_cli_trigger_force_is_passed_through(tmp_path, monkeypatch, capsys) -> None:
+    from runner.__main__ import main
+
+    seen: list[tuple[Trigger, JobName | None, bool]] = []
+
+    def evaluate(self, trigger, only=None, force=False):
+        seen.append((trigger, only, force))
+        return []
+
+    monkeypatch.setenv("QUESTBOARD_DATA_DIR", str(tmp_path))
+    monkeypatch.setattr(Scheduler, "evaluate", evaluate)
+    assert main(["trigger", "weekly", "--dry-run", "--force"]) == 0
+    assert main(["trigger", "weekly", "--dry-run"]) == 0
+    assert seen == [
+        (Trigger.manual, JobName.weekly, True),
+        (Trigger.manual, JobName.weekly, False),
+    ]
 
 
 def test_providers_use_models_from_config() -> None:

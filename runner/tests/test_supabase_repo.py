@@ -170,6 +170,8 @@ def test_llm_runs_map_token_columns_both_ways() -> None:
             "status": Status.succeeded,
             "provider_used": ProviderName.claude_cli,
             "tokens": TokenUsage(input=120, output=30),
+            "ops_count": 0,
+            "summary": "Nothing new fits today.",
         },
     )
     stored = fake.tables["llm_runs"][0]
@@ -177,10 +179,23 @@ def test_llm_runs_map_token_columns_both_ways() -> None:
     assert "tokens" not in stored
     [again] = repo.list_runs(JobName.daily_am, "AM", date(2026, 9, 25))
     assert again.tokens == TokenUsage(input=120, output=30)
+    assert (again.forced, again.ops_count, again.summary) == (False, 0, "Nothing new fits today.")
     assert again.status == Status.succeeded
     assert repo.list_runs(JobName.weekly, None, date(2026, 9, 25)) == []
     get = [r for r in fake.requests if r.method == "GET" and "llm_runs" in r.url.path][-1]
     assert get.url.params["slot"] == "is.null"
+
+
+def test_supersede_pending_proposals_can_target_runs() -> None:
+    repo, fake, _ = make()
+    fake.tables["quest_proposals"] = []
+    repo.supersede_pending_proposals(run_ids=["r1", "r2"])
+    patch = [r for r in fake.requests if r.method == "PATCH"][-1]
+    assert patch.url.params["run_id"] == "in.(r1,r2)"
+    assert patch.url.params["status"] == "eq.pending"
+    before = len(fake.requests)
+    assert repo.supersede_pending_proposals(run_ids=[]) == 0
+    assert len(fake.requests) == before  # nothing to supersede, no request
 
 
 def test_expired_access_token_is_refreshed_and_rotated() -> None:

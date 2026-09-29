@@ -61,7 +61,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 
 ## Phase 3 — Calendar, setup assistant, weekly/monthly (week 4)
 - [ ] Google OAuth (read-only) + `gcal.py`.
-- [x] Setup assistant (P1): chat on /setup -> pending_live_requests -> runner answers between ticks (5 s poll) with a reply + config patch (goals, capacity, quiet hours, timezone, persona order); the user reviews before/after and applies. Seeding first weekly/monthly quests: run the weekly/monthly job manually after setup.
+- [x] Setup assistant (P1): chat on /setup -> pending_live_requests -> runner answers between ticks (5 s poll) with a reply + config patch (goals, capacity, quiet hours, timezone, persona order); the user reviews before/after and applies. Seeding first weekly/monthly quests: run the weekly/monthly job manually after setup (`python -m runner trigger weekly`; if that period's run already succeeded, e.g. an empty catch-up run, add `--force` for a new attempt, max 3 per occurrence). A run that proposes nothing shows "The planner proposed nothing this week" plus its summary on the board.
 - [x] `weekly` / `monthly` jobs: carry-over in code, period plans as proposals with sub-quest breakdown (weekly -> daily, monthly -> weekly), budget = 40 % / 25 % of the period's free time.
 - [ ] Retro questions and milestone line pools (need new line triggers + a UI; later).
 - [x] `pending_live_requests` + "waiting for your PC's runner" state (shown when the runner is offline).

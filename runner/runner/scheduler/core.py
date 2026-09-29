@@ -3,7 +3,11 @@
 Guards (CLAUDE.md "Scheduler rules"), checked in this order for LLM jobs:
   DB reachable -> slot window -> idempotent per (job, slot, date) -> max 3 attempts ->
   retry backoff 5/15/60 min -> input freshness (2 h) -> a provider reachable.
-Manual triggers skip the window, backoff and freshness guards, never idempotency or the cap.
+Manual triggers skip the window, backoff and freshness guards, never idempotency or the cap,
+except that a forced manual trigger (`trigger JOB --force`) adds an attempt to an occurrence
+that already succeeded (recorded with forced=true; still capped at MAX_ATTEMPTS, which the DB
+enforces too). Planning jobs are skipped as "not configured", with no llm_runs row, while the
+config has no goals and no capacity.
 Catch-up after boot / reconnect only ever looks at each job's most recent occurrence.
 """
 
@@ -42,6 +46,8 @@ STALE_ERROR = "stale run"
 DB_DOWN = "db unreachable"
 FINISHED_BAD = {Status.failed, Status.invalid_output}
 IN_FLIGHT = {Status.queued, Status.running}
+PLANNING = {JobName.daily_am, JobName.weekly, JobName.monthly}
+NOT_CONFIGURED = "not configured (no goals and no capacity)"
 
 
 @dataclass(frozen=True)
@@ -59,6 +65,9 @@ class JobContext:
 class JobResult:
     provider: ProviderName | None = None
     tokens: TokenUsage | None = None
+    # Planning jobs: how many diff ops were proposed, and the model's summary of them.
+    ops_count: int | None = None
+    summary: str | None = None
 
 
 JobHandler = Callable[[JobContext], JobResult]
@@ -82,8 +91,14 @@ class Scheduler:
     # P2 step after the jobs (notifications). Gets (repo, config, local now).
     after_jobs: Callable[[Repo, Config, datetime], object] | None = None
 
-    def evaluate(self, trigger: Trigger, only: JobName | None = None) -> list[Decision]:
-        """One pass over the jobs. Never raises for job failures; returns what happened."""
+    def evaluate(
+        self, trigger: Trigger, only: JobName | None = None, force: bool = False
+    ) -> list[Decision]:
+        """One pass over the jobs. Never raises for job failures; returns what happened.
+
+        `force` (manual only) re-runs an LLM job's latest occurrence even if it succeeded."""
+        if force and trigger != Trigger.manual:
+            raise ValueError("force is for manual triggers only")
         jobs = [j for j in ORDER if j in self.handlers and (only is None or j == only)]
         try:
             self.repo.ping()
@@ -98,7 +113,7 @@ class Scheduler:
             spec = SPECS[job]
             try:
                 if spec.uses_llm:
-                    decision = self._llm_job(spec, trigger, now, config, state)
+                    decision = self._llm_job(spec, trigger, now, config, state, force)
                 else:
                     decision = self._interval_job(spec, trigger, now, config, state)
                     state = self.repo.get_runner_state()
@@ -130,14 +145,17 @@ class Scheduler:
         self.repo.update_runner_state({"last_ingest_at": now.astimezone(UTC).isoformat()})
         return Decision(spec.name, "run", "ok", Status.succeeded)
 
-    def _llm_job(self, spec: JobSpec, trigger, now, config, state) -> Decision:
+    def _llm_job(self, spec: JobSpec, trigger, now, config, state, force=False) -> Decision:
         manual = trigger == Trigger.manual
         occ = latest_occurrence(spec, now)
         if not manual and not in_window(spec, occ, now):
             return Decision(spec.name, "skip", "outside slot window")
+        if spec.name in PLANNING and self._unconfigured(config):
+            return Decision(spec.name, "skip", NOT_CONFIGURED)
 
         runs = self.repo.list_runs(spec.name, occ.slot, occ.date)
-        if any(r.status == Status.succeeded for r in runs):
+        done_before = any(r.status == Status.succeeded for r in runs)
+        if done_before and not force:
             return Decision(spec.name, "skip", "already done")
         for i, r in enumerate(runs):
             if r.status in IN_FLIGHT:
@@ -166,9 +184,14 @@ class Scheduler:
         providers = self._providers_for(config, spec.name)
         if spec.provider_required and not any(p.is_available() for p in providers):
             return Decision(spec.name, "skip", "no provider reachable")
-        return self._run(spec, occ, trigger, now, config, providers, attempt=len(runs) + 1)
+        if done_before:
+            # A forced re-run replaces the earlier attempts' unanswered proposals.
+            self.repo.supersede_pending_proposals(run_ids=[str(r.id) for r in runs])
+        return self._run(
+            spec, occ, trigger, now, config, providers, attempt=len(runs) + 1, forced=done_before
+        )
 
-    def _run(self, spec, occ, trigger, now, config, providers, attempt) -> Decision:
+    def _run(self, spec, occ, trigger, now, config, providers, attempt, forced=False) -> Decision:
         run = self.repo.insert_run(
             LLMRun(
                 job=spec.name,
@@ -177,6 +200,7 @@ class Scheduler:
                 trigger=trigger,
                 attempt=attempt,
                 status=Status.running,
+                forced=forced,
                 started_at=now,
             )
         )
@@ -191,19 +215,22 @@ class Scheduler:
         except Exception as exc:  # noqa: BLE001 - class name only: messages may carry data
             return self._finish(spec, run, Status.failed, type(exc).__name__)
         done = self.clock().astimezone(now.tzinfo)
-        self.repo.update_run(
-            str(run.id),
-            {
-                "status": Status.succeeded,
-                "provider_used": result.provider,
-                "tokens": result.tokens,
-                "finished_at": done,
-            },
-        )
+        fields = {
+            "status": Status.succeeded,
+            "provider_used": result.provider,
+            "tokens": result.tokens,
+            "finished_at": done,
+        }
+        reason = "ok"
+        if result.ops_count is not None:
+            fields |= {"ops_count": result.ops_count, "summary": result.summary}
+            reason = f"ok, {result.ops_count} ops"
+            log.info("%s %s: %d ops proposed", spec.name.value, occ.date, result.ops_count)
+        self.repo.update_run(str(run.id), fields)
         if spec.slot:
             key = "last_am_success" if spec.slot == "AM" else "last_pm_success"
             self.repo.update_runner_state({key: done.astimezone(UTC).isoformat()})
-        return Decision(spec.name, "run", "ok", Status.succeeded)
+        return Decision(spec.name, "run", reason, Status.succeeded)
 
     def _finish(self, spec, run: LLMRun, status: Status, error: str) -> Decision:
         self.repo.update_run(
@@ -229,6 +256,11 @@ class Scheduler:
         per_job = (config.llm.per_job or {}).get(job)
         order = per_job.root if per_job else config.llm.providers
         return [self.providers[name] for name in order if name in self.providers]
+
+    @staticmethod
+    def _unconfigured(config: Config) -> bool:
+        cap = config.capacity
+        return not config.goals and cap.weekday_hours == 0 and cap.weekend_hours == 0
 
     @staticmethod
     def _inputs_stale(config: Config, state, now: datetime) -> bool:
