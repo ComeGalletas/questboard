@@ -416,6 +416,24 @@ button:disabled {
   font-size: 13px;
 }
 
+.quest-progress {
+  display: grid;
+  grid-template-columns: minmax(60px, 120px) auto;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.quest-progress .bar-track {
+  display: block;
+  height: 10px;
+}
+
+.quest-progress .bar-fill {
+  display: block;
+}
+
 .quest-badge {
   font-size: 8px;
   color: var(--muted);

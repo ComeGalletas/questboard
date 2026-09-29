@@ -39,9 +39,18 @@ export function QuestRow({
     if (ok) setPanel(null);
   }
 
+  const progress = row.progress;
   const badge = row.snoozed
     ? `Snoozed until ${new Date(q.snoozed_until!).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-    : STATUS_LABEL[q.status];
+    : !row.closed && progress?.ready
+      ? "Ready to turn in"
+      : STATUS_LABEL[q.status];
+
+  // A parent's time spent is what its steps logged; start the form there.
+  function openFinish(kind: "complete" | "partial") {
+    setMinutes(String(progress && progress.doneMin > 0 ? progress.doneMin : q.estimate_min));
+    setPanel(kind);
+  }
 
   return (
     <li
@@ -65,7 +74,29 @@ export function QuestRow({
             {q.priority === 1 && " · P1"}
             {row.carriedFrom && ` · from ${row.carriedFrom}`}
             {q.deadline && ` · due ${new Date(q.deadline).toLocaleDateString()}`}
+            {row.parent && ` · step of ${row.parent.title}`}
           </span>
+          {progress && (
+            <span className="quest-progress muted">
+              <span
+                className="bar-track"
+                role="meter"
+                aria-label="Progress from steps"
+                aria-valuemin={0}
+                aria-valuemax={progress.targetMin}
+                aria-valuenow={Math.min(progress.doneMin, progress.targetMin)}
+              >
+                <span
+                  className="bar-fill"
+                  style={{
+                    width: `${Math.min(100, (progress.doneMin / Math.max(1, progress.targetMin)) * 100)}%`,
+                    background: "var(--accent)",
+                  }}
+                />
+              </span>
+              {progress.done}/{progress.total} steps · {progress.doneMin}/{progress.targetMin} min
+            </span>
+          )}
         </span>
         {badge && <span className="quest-badge pixel">{badge}</span>}
         {row.closed && q.xp_awarded != null && (
@@ -80,10 +111,10 @@ export function QuestRow({
               Start
             </button>
           )}
-          <button type="button" disabled={busy} onClick={() => setPanel("complete")}>
+          <button type="button" disabled={busy} onClick={() => openFinish("complete")}>
             Done
           </button>
-          <button type="button" disabled={busy} onClick={() => setPanel("partial")}>
+          <button type="button" disabled={busy} onClick={() => openFinish("partial")}>
             Partial
           </button>
           <button

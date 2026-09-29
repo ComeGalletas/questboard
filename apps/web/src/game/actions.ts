@@ -4,6 +4,7 @@
 import type { PersonaLine, Quest } from "@questboard/schema";
 import { awardedXp, type Finish } from "./xp.ts";
 import { endOfLocalDay, isoDate } from "./dates.ts";
+import { periodEnd, turnInXp } from "./rollup.ts";
 
 export type Trigger = PersonaLine["trigger"];
 
@@ -42,23 +43,35 @@ export const ACTIVE: ReadonlySet<Quest["status"]> = new Set([
 
 const EARLY_MS = 24 * 3_600_000;
 
-/** How a completion counts against the deadline (or, without one, the scheduled day). */
+/** When a quest is due: its deadline, else the end of its day (daily) or period (weekly,
+ * monthly). */
+export function dueAt(
+  q: Pick<Quest, "deadline" | "scheduled_for"> & Partial<Pick<Quest, "cadence">>,
+): Date | null {
+  if (q.deadline) return new Date(q.deadline);
+  const last = periodEnd({ cadence: q.cadence ?? "daily", scheduled_for: q.scheduled_for });
+  return last ? endOfLocalDay(last) : null;
+}
+
+/** How a completion counts against the deadline (or, without one, the scheduled day/period). */
 export function finishTiming(
-  q: Pick<Quest, "deadline" | "scheduled_for">,
+  q: Pick<Quest, "deadline" | "scheduled_for"> & Partial<Pick<Quest, "cadence">>,
   now: Date,
 ): Exclude<Finish, "partial"> {
-  const due = q.deadline
-    ? new Date(q.deadline)
-    : q.scheduled_for
-      ? endOfLocalDay(q.scheduled_for)
-      : null;
+  const due = dueAt(q);
   if (!due) return "on_time";
   if (now.getTime() > due.getTime()) return "late";
   if (q.deadline) return due.getTime() - now.getTime() >= EARLY_MS ? "early" : "on_time";
   return q.scheduled_for && isoDate(now) < q.scheduled_for ? "early" : "on_time";
 }
 
-export function applyAction(quest: Quest, action: QuestAction, now: Date): ActionResult {
+/** `earnedBySteps`: XP its sub-quests already awarded, so turning in a parent doesn't pay twice. */
+export function applyAction(
+  quest: Quest,
+  action: QuestAction,
+  now: Date,
+  earnedBySteps = 0,
+): ActionResult {
   if (!ACTIVE.has(quest.status)) {
     return { ok: false, reason: `quest is ${quest.status}` };
   }
@@ -85,7 +98,7 @@ export function applyAction(quest: Quest, action: QuestAction, now: Date): Actio
           completed_at: at,
           snoozed_until: null,
           actual_min: Math.round(action.actualMin),
-          xp_awarded: awardedXp(quest.xp, finish),
+          xp_awarded: turnInXp(awardedXp(quest.xp, finish), quest.xp, earnedBySteps),
         },
       };
     }

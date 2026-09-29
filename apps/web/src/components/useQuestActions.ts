@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import type { Quest } from "@questboard/schema";
-import { applyAction, type QuestAction } from "@/game/actions";
+import { applyAction, dueAt, type QuestAction } from "@/game/actions";
 import { actualVsEstimate, formatDuration, selectLine, type Placeholders } from "@/game/lines";
 import type { Mood } from "@/game/progress";
 import { streak } from "@/game/progress";
@@ -10,9 +10,10 @@ import { packFor } from "@/game/personas";
 import { useLog } from "@/data/log";
 import { spriteStateFor, useReaction } from "@/data/reaction";
 import { endOfLocalDay, isoDate } from "@/game/dates";
+import { rollup } from "@/game/rollup";
 
 export function timeLeft(q: Quest, now: Date): string {
-  const due = q.deadline ? new Date(q.deadline) : endOfLocalDay(q.scheduled_for ?? isoDate(now));
+  const due = dueAt(q) ?? endOfLocalDay(isoDate(now));
   return formatDuration((due.getTime() - now.getTime()) / 60_000);
 }
 
@@ -25,7 +26,7 @@ export function useQuestActions(mood: Mood, next: Quest | null) {
   const act = useCallback(
     async (quest: Quest, action: QuestAction) => {
       const now = new Date();
-      const result = applyAction(quest, action, now);
+      const result = applyAction(quest, action, now, rollup(quest, quests)?.earnedXp ?? 0);
       if (!result.ok) {
         setError(result.reason);
         return false;

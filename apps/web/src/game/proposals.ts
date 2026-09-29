@@ -3,7 +3,7 @@
 
 import type { Config, Quest, QuestProposal } from "@questboard/schema";
 import type { NewQuest } from "../data/store.ts";
-import { boardRange, type Board } from "../lib/board.ts";
+import { BOARD_CADENCE, boardRange, type Board } from "../lib/board.ts";
 import { baseXp } from "./xp.ts";
 
 const ACTIVE = new Set<Quest["status"]>(["open", "in_progress", "snoozed", "deferred", "overdue"]);
@@ -78,10 +78,24 @@ export function planAcceptance(
   return { kind: "update", questId: target.id, patch };
 }
 
+const WEEKDAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function weekday(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return WEEKDAY[new Date(y, m - 1, d).getDay()];
+}
+
 /** One-line summary for the review strip. */
 export function describe(p: QuestProposal, quests: Quest[]): string {
   const op = p.payload;
-  if (op.op === "add") return `Add “${op.quest.title}” (${op.quest.estimate_min} min)`;
+  if (op.op === "add") {
+    const q = op.quest;
+    if (!q.parent_id) return `Add “${q.title}” (${q.estimate_min} min)`;
+    // A step of a longer quest: say which day it lands on and what it counts toward.
+    const when = q.scheduled_for ? `, ${weekday(q.scheduled_for)} ${q.scheduled_for.slice(5)}` : "";
+    const parent = quests.find((x) => x.id === q.parent_id)?.title;
+    return `Add “${q.title}” (${q.estimate_min} min${when})${parent ? ` · step of “${parent}”` : ""}`;
+  }
   const title = quests.find((q) => q.id === op.quest_id)?.title ?? "a quest";
   if (op.op === "drop") return `Drop “${title}”`;
   const parts = Object.entries(op.changes)
@@ -100,4 +114,19 @@ export function cadenceOf(p: QuestProposal, quests: Quest[]): Quest["cadence"] |
   const op = p.payload;
   if (op.op === "add") return op.quest.cadence;
   return quests.find((q) => q.id === op.quest_id)?.cadence ?? null;
+}
+
+/** Which boards list a proposal: its own cadence's board, except that a step of a longer quest
+ * shows on its parent's board (it is part of that plan) and on its own board only once it is
+ * due in that board's current range (a step for Thursday isn't a Today suggestion on Monday). */
+export function showsOn(p: QuestProposal, quests: Quest[], board: Board, now: Date): boolean {
+  const cadence = cadenceOf(p, quests);
+  if (cadence === null) return true;
+  const op = p.payload;
+  if (op.op !== "add" || !op.quest.parent_id) return cadence === BOARD_CADENCE[board];
+  const parent = quests.find((q) => q.id === op.quest.parent_id);
+  if (parent && parent.cadence === BOARD_CADENCE[board]) return true;
+  if (cadence !== BOARD_CADENCE[board]) return false;
+  const day = op.quest.scheduled_for;
+  return !day || day <= boardRange(board, now).to;
 }
