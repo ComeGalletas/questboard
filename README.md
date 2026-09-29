@@ -59,7 +59,13 @@ pnpm tauri build --debug --no-bundle   # quick local exe in src-tauri/target/deb
 - Closing the window hides it; the app stays in the tray (open, runner status / pause / restart
   / log, start at login, quit).
 - Start at login is turned on the first time a release build runs (launched `--minimized`,
-  straight to the tray); the tray toggle owns it after that. Dev builds never touch it.
+  straight to the tray); the tray toggle owns it after that. While it's on, each release launch
+  points the login entry at the executable that is running (so the installed app takes over
+  from a build run straight out of `target/release`). Dev builds never touch it.
+- Install with `src-tauri/target/release/bundle/nsis/Questboard_<version>_x64-setup.exe`; the
+  `questboard-desktop.exe` next to `bundle/` is the same app, uninstalled. The Supabase URL and
+  key are read from `apps/web/.env` or `.env.local` at build time: if the app shows the setup
+  notice, the web build didn't see them (the build log says `Environments: .env`).
 - `questboard://today|week|month|quest/<id>` links open the matching board in the running app
   (or start it). Each launch registers the scheme to the executable being run, so after trying a
   dev build, run the installed app once to point links back at it.
