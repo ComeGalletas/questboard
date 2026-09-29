@@ -51,7 +51,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 ## Phase 2 — Runner, providers, daily cache (week 3)
 - [x] Runner skeleton: trigger loop, guards, lock file, heartbeat, `llm_runs` idempotency + backoff + catch-up. (Tested against an in-memory DB; Supabase connection next.)
 - [x] Providers: `ollama.py`, `claude_api.py`; output validation, one retry, fallthrough. Supabase connection for the runner (signs in as the user; refresh token in the OS keychain).
-- [x] Engine: prompt assembly, `daily_am` (QuestDiffs + capacity fit + dialogue bundles), `daily_pm` (accounting + carry-over rules). Proposals wait in `quest_proposals`.
+- [x] Engine: prompt assembly, `daily_am` (QuestDiffs + capacity fit + dialogue bundles), `daily_pm` (accounting + carry-over rules). Proposals wait in `quest_proposals`. "Suggest quests now" (Today/Week/Month button, or `python -m runner trigger JOB --force`) re-runs daily_am/weekly/monthly on demand as a forced manual attempt (up to 10 per occurrence; scheduled runs keep 3); a manual daily_am before 05:30 plans today.
 - [x] App: review strip for pending proposals (accept applies the op in code and caches its lines; reject records feedback).
 - [x] `persona_lines` selection in the app. (Done in Phase 1.)
 - [ ] Tauri shell: dashboard window, tray, start-at-login, sidecar, OS notifications, deep links.
@@ -61,10 +61,10 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 
 ## Phase 3 — Calendar, setup assistant, weekly/monthly (week 4)
 - [ ] Google OAuth (read-only) + `gcal.py`.
-- [x] Setup assistant (P1): chat on /setup -> pending_live_requests -> runner answers between ticks (5 s poll) with a reply + config patch (goals, capacity, quiet hours, timezone, persona order); the user reviews before/after and applies. Seeding first weekly/monthly quests: until config has goals, daily_am/weekly/monthly skip as "not configured" without an `llm_runs` row, so after setup `python -m runner trigger weekly` (or `monthly`, `daily_am`) plans the current period. A slot that already succeeded stays "already done"; `trigger JOB --force` adds a new attempt (stored with `forced = true`, max 3 attempts per occurrence; ADR 0002). A run that proposes nothing shows "The planner proposed nothing this week" plus its summary on the board.
+- [x] Setup assistant (P1): chat on /setup -> pending_live_requests -> runner answers between ticks (5 s poll) with a reply + config patch (goals, capacity, quiet hours, timezone, persona order); the user reviews before/after and applies. Seeding first weekly/monthly quests: until config has goals, daily_am/weekly/monthly skip as "not configured" without an `llm_runs` row, so after setup `python -m runner trigger weekly` (or `monthly`, `daily_am`) plans the current period. A slot that already succeeded stays "already done"; `trigger JOB --force` or the board's "Suggest quests" button adds a new attempt (stored with `forced = true`, max 10 attempts per occurrence; ADR 0002). A run that proposes nothing shows "The planner proposed nothing this week" plus its summary on the board.
 - [x] `weekly` / `monthly` jobs: carry-over in code, period plans as proposals with sub-quest breakdown (weekly -> daily, monthly -> weekly), budget = 40 % / 25 % of the period's free time.
 - [ ] Retro questions and milestone line pools (need new line triggers + a UI; later).
-- [x] `pending_live_requests` + "waiting for your PC's runner" state (shown when the runner is offline).
+- [x] `pending_live_requests` + "waiting for your PC's runner" state (shown when the runner is offline). `replan` requests ({job}) are answered with a forced planning run through the scheduler (llm_runs + proposals only); the result carries the scheduler's reason and op count.
 - [ ] Companion overlay window (frameless, transparent, always-on-top, click-through outside sprite).
 
 ## Phase 4 — Email pipeline (weeks 5–6)
