@@ -67,3 +67,20 @@ supabase/tests/live.sh          # real Supabase stack: auth, RLS, runner jobs en
 3. `pnpm exec supabase link --project-ref <ref>` then `pnpm exec supabase db push`.
 4. Deploy `apps/web` (e.g. Vercel) with `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 5. On the PC: `python -m runner login` with the same URL and anon key.
+6. Finish the setup assistant (/setup) before expecting plans: until config has goals, the
+   planning jobs (`daily_am`, `weekly`, `monthly`) skip as "not configured" and leave their slot
+   open. Then `uv run python -m runner trigger weekly` (and `monthly`) seeds the current period.
+
+## Re-running a job
+
+Each `(job, slot, date)` succeeds at most once (`llm_runs_one_success_idx`), and a manual
+`trigger` respects that. To plan a slot again (e.g. a period planned before setup), delete its
+runs in the Supabase SQL editor, then trigger it. The occurrence date is the slot's own day:
+the Sunday for `weekly`, the 1st for `monthly`, today for `daily_am` (`slot = 'AM'`).
+
+```sql
+delete from public.llm_runs where job = 'weekly' and date = '2026-09-27';
+```
+
+Proposals from the deleted run keep their rows (`run_id` becomes null); reject any still pending
+on the board so they don't sit next to the new plan.
