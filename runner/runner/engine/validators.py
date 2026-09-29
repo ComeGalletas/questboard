@@ -34,6 +34,8 @@ PLACEHOLDERS = {"time_left", "streak", "days_carried", "actual_vs_estimate", "ne
 # Invariant 4: money enters only through deterministic extractors.
 MONEY_CATEGORIES = {"utilities", "subscription"}
 CAPACITY_SLACK = 1.15
+# A daily step of daily_am may belong to an open quest of a longer cadence.
+PARENT_CADENCES = {"weekly", "monthly"}
 
 PII_PATTERNS = {
     "an email address": re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+"),
@@ -98,6 +100,12 @@ def check_plan(plan: DailyPlan, ctx: PlanContext) -> list[str]:
                 problems.append(f"{path}: daily adds must be scheduled for today")
             if q.cadence.value == "daily":
                 planned += q.estimate_min
+            if q.parent_id is not None:
+                parent = ctx.open_quests.get(str(q.parent_id))
+                if q.cadence.value != "daily":
+                    problems.append(f"{path}: only daily adds may have a parent here")
+                elif parent is None or parent["cadence"] not in PARENT_CADENCES:
+                    problems.append(f"{path}: parent_id must be an open weekly or monthly quest")
             problems += _line_problems(f"{path}.quest.title", q.title)
             continue
         qid = str(op.quest_id)
