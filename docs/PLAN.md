@@ -58,7 +58,7 @@ Checkboxes verified against the code on 2026-09-29; unchecked items with a "Part
 - [x] Provider layer: `base.py` interface; `claude_cli.py` first (subprocess, timeout, single-flight), then `ollama.py` (schema format), then `claude_api.py`. Output validation + one retry + fallthrough.
 - [x] Engine: prompt assembly (config, goals, open quests, feedback, outcomes), `daily_am` producing QuestDiffs + capacity fit + dialogue bundles; `daily_pm` doing forgotten/partial/overdue accounting and carry-over rules. (Forgotten, decided 2026-09-29: a day recorded in `quests.forgotten_on`, not a status; the quest still carries. Partial is set by the user's action, so daily_pm leaves it alone.)
 - [x] `persona_lines` selection in the app: trigger + condition + no-repeat + placeholder fill.
-- [ ] Tauri shell: dashboard window, tray, start-at-login, runner as sidecar, OS notifications, deep links. (Partial: window, tray, start at login and deep links done; runner hosting and OS notifications next.)
+- [ ] Tauri shell: dashboard window, tray, start-at-login, runner as sidecar, OS notifications, deep links. (Partial: window, tray, start at login, deep links and runner hosting done; OS notifications next.)
 - [x] Notifications v1: `day_ready`, `day_recap`, `quest_due`, `quest_overdue`, `streak_risk` with dedup and quiet hours; Web Push to the PWA.
 
 **Done when:** the PC generates today's quests and lines at 05:30 (or on boot), and both devices show them.

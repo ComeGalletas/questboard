@@ -56,14 +56,24 @@ pnpm build                      # installer (NSIS) in src-tauri/target/release/b
 pnpm tauri build --debug --no-bundle   # quick local exe in src-tauri/target/debug/
 ```
 
-- Closing the window hides it; the app stays in the tray (open, start at login, quit).
+- Closing the window hides it; the app stays in the tray (open, runner status / pause / restart
+  / log, start at login, quit).
 - Start at login is turned on the first time a release build runs (launched `--minimized`,
   straight to the tray); the tray toggle owns it after that. Dev builds never touch it.
 - `questboard://today|week|month|quest/<id>` links open the matching board in the running app
   (or start it). Each launch registers the scheme to the executable being run, so after trying a
   dev build, run the installed app once to point links back at it.
-- Web Push is off inside the shell; PC notifications come from the shell (next PR), and the
-  runner still runs from a terminal until the shell hosts it.
+- Web Push is off inside the shell; PC notifications come from the shell (next PR).
+
+**The runner runs inside the shell.** On start the shell runs `uv run python -m runner run` in
+this repo's `runner/` folder (the checkout it was built from), restarts it after a crash
+(5 s, 15 s, 1 min, then every 5 min) and stops it, with everything it started, on pause or quit.
+Its output goes to `%LOCALAPPDATA%\app.questboard.desktop\logs\runner.log` ("Open runner log"
+in the tray). Sign the runner in once first (`uv run python -m runner login`); until then the
+tray says "sign in first", and "Restart runner" tries again. A runner already started from a
+terminal holds the lock, so the tray shows "running outside the app" and the shell takes over
+within a minute of it stopping. To use another checkout or `uv`, create
+`%APPDATA%\app.questboard.desktop\settings.json` with `{"runner_dir": "...", "uv": "..."}`.
 
 ## Persona packs
 
@@ -80,7 +90,7 @@ cached on the runner machine, and added to planning prompts. It shapes the voice
 pnpm schema:check && pnpm typecheck
 (cd apps/web && pnpm lint && pnpm test)
 (cd runner && uv run ruff check . && uv run pytest)
-(cd apps/desktop/src-tauri && cargo fmt --check && cargo clippy --all-targets -- -D warnings)
+(cd apps/desktop/src-tauri && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test)
 supabase/tests/run.sh           # migrations on plain Postgres: RLS, constraints, schema drift
 supabase/tests/live.sh          # real Supabase stack: auth, RLS, runner jobs end to end
 ```
