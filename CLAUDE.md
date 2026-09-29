@@ -64,7 +64,7 @@ Local only (runner): `vault.db` (SQLCipher; key in OS keychain): `pseudonyms(tok
 
 Jobs: `ingest` (every 30 min, no LLM), `daily_am` (05:30, slot AM 05:00–11:59), `daily_pm` (21:00, slot PM 17:00–23:59), `weekly` (Sun 18:00), `monthly` (1st 08:00), `persona_digest` (weekly; digests `context/` of each pack).
 
-Guards before any LLM job: DB reachable; provider reachable; slot window; planners (`daily_am`, `weekly`, `monthly`) skip as "not configured" while config has no goals, without an `llm_runs` row (`daily_pm` is code-only and always runs); idempotent per `(job, slot, date)` (manual `trigger --force` may add attempts to a succeeded occurrence, marked `forced`, see ADR 0003); retry backoff 5/15/60 min, max 3; catch-up on boot/reconnect runs only the most recent missed slot; freshness cap 2 h unless manual; Ollama skipped on battery < 30% or high load; single instance.
+Guards before any LLM job: DB reachable; provider reachable; slot window; planners (`daily_am`, `weekly`, `monthly`) skip as "not configured" while config has no goals, without an `llm_runs` row (`daily_pm` is code-only and always runs); idempotent per `(job, slot, date)` (manual `trigger --force` / "Suggest quests" may add attempts to a succeeded occurrence, marked `forced`, up to 10, see ADR 0003); retry backoff 5/15/60 min, max 3; catch-up on boot/reconnect runs only the most recent missed slot; freshness cap 2 h unless manual; Ollama skipped on battery < 30% or high load; single instance.
 
 Provider order is a list in config (default `[claude-cli, ollama, claude-api]`), tried in sequence per job; per-job override allowed. Validate every output against the schema; retry once; then fall through.
 

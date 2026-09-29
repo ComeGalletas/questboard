@@ -103,6 +103,15 @@ def latest_occurrence(spec: JobSpec, now: datetime) -> Occurrence:
     return Occurrence(spec.name, spec.slot, candidate.date(), candidate)
 
 
+def manual_occurrence(spec: JobSpec, now: datetime) -> Occurrence:
+    """What a manual trigger runs: the latest occurrence, except that daily_am asked for before
+    05:30 plans today rather than yesterday (the user wants today's suggestions)."""
+    occ = latest_occurrence(spec, now)
+    if spec.name == JobName.daily_am and occ.date < now.date():
+        return Occurrence(spec.name, spec.slot, now.date(), occ.scheduled_at + timedelta(days=1))
+    return occ
+
+
 def in_window(spec: JobSpec, occ: Occurrence, now: datetime) -> bool:
     """Daily slots only run inside their window on their own date; other jobs have no window."""
     if spec.window is None:

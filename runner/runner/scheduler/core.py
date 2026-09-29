@@ -5,8 +5,8 @@ Guards (CLAUDE.md "Scheduler rules"), checked in this order for LLM jobs:
   -> max 3 attempts -> retry backoff 5/15/60 min -> input freshness (2 h) -> a provider reachable.
 Manual triggers skip the window, backoff and freshness guards, never setup, idempotency or the cap,
 except that a forced manual trigger (`trigger JOB --force`) adds an attempt to an occurrence
-that already succeeded (recorded with forced=true; still capped at MAX_ATTEMPTS, which the DB
-enforces too).
+that already succeeded (recorded with forced=true; capped at MAX_FORCED_ATTEMPTS instead of
+MAX_ATTEMPTS, which the DB enforces too). A manual daily_am before 05:30 plans today.
 "Not configured" (no goals yet) writes no llm_runs row, so the slot stays open for after setup.
 Catch-up after boot / reconnect only ever looks at each job's most recent occurrence.
 """
@@ -34,11 +34,13 @@ from runner.scheduler.schedule import (
     Occurrence,
     in_window,
     latest_occurrence,
+    manual_occurrence,
 )
 
 log = logging.getLogger("questboard.runner")
 
 MAX_ATTEMPTS = 3
+MAX_FORCED_ATTEMPTS = 10  # "suggest quests now" re-runs; the DB check allows 10 when forced
 BACKOFF = (timedelta(minutes=5), timedelta(minutes=15), timedelta(minutes=60))
 FRESHNESS = timedelta(hours=2)
 STALE_RUN = timedelta(minutes=30)
@@ -77,6 +79,7 @@ class Decision:
     action: Literal["run", "skip"]
     reason: str
     status: Status | None = None  # outcome when it ran
+    ops_count: int | None = None  # planning jobs that succeeded
 
 
 @dataclass
@@ -145,7 +148,7 @@ class Scheduler:
 
     def _llm_job(self, spec: JobSpec, trigger, now, config, state, force=False) -> Decision:
         manual = trigger == Trigger.manual
-        occ = latest_occurrence(spec, now)
+        occ = manual_occurrence(spec, now) if manual else latest_occurrence(spec, now)
         if not manual and not in_window(spec, occ, now):
             return Decision(spec.name, "skip", "outside slot window")
         if spec.needs_setup and not config.goals:
@@ -163,8 +166,9 @@ class Scheduler:
                 stale = {"status": Status.failed, "error": STALE_ERROR, "finished_at": now}
                 self.repo.update_run(str(r.id), stale)
                 runs[i] = r.model_copy(update=stale)
-        if len(runs) >= MAX_ATTEMPTS:
-            return Decision(spec.name, "skip", f"gave up after {MAX_ATTEMPTS} attempts")
+        cap = MAX_FORCED_ATTEMPTS if done_before else MAX_ATTEMPTS
+        if len(runs) >= cap:
+            return Decision(spec.name, "skip", f"gave up after {cap} attempts")
         last = runs[-1] if runs else None
         # A stale run already waited out STALE_RUN; retry it without further backoff.
         if (
@@ -228,7 +232,7 @@ class Scheduler:
         if spec.slot:
             key = "last_am_success" if spec.slot == "AM" else "last_pm_success"
             self.repo.update_runner_state({key: done.astimezone(UTC).isoformat()})
-        return Decision(spec.name, "run", reason, Status.succeeded)
+        return Decision(spec.name, "run", reason, Status.succeeded, result.ops_count)
 
     def _finish(self, spec, run: LLMRun, status: Status, error: str) -> Decision:
         self.repo.update_run(
@@ -246,9 +250,14 @@ class Scheduler:
         try:
             config = self.repo.get_config()
             providers = [self.providers[n] for n in config.llm.providers if n in self.providers]
-            return process_live(self.repo, config, providers, self.clock())
+            return process_live(self.repo, config, providers, self.clock(), replan=self.replan)
         except RepoUnavailable:
             return 0
+
+    def replan(self, job: JobName) -> Decision:
+        """Suggest quests now: a forced manual run of one planning job (proposals only)."""
+        decisions = self.evaluate(Trigger.manual, only=job, force=True)
+        return decisions[0] if decisions else Decision(job, "skip", "no handler for this job")
 
     def _providers_for(self, config: Config, job: JobName) -> list[Provider]:
         per_job = (config.llm.per_job or {}).get(job)

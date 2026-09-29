@@ -75,14 +75,14 @@ supabase/tests/live.sh          # real Supabase stack: auth, RLS, runner jobs en
 
 Scheduled runs and a plain manual `trigger` succeed at most once per `(job, slot, date)`
 (`llm_runs_one_success_idx`). To plan a slot again (e.g. an empty plan, or goals changed), force
-a new attempt; pending proposals from the earlier attempts are superseded first (ADR 0003):
+a new attempt (or tap "Suggest quests" on the board, which asks the runner to do the same);
+pending proposals from the earlier attempts are superseded first (ADR 0003):
 
 ```sh
 uv run python -m runner trigger weekly --force
 ```
 
-An occurrence gets at most 3 attempts in all, so after one success `--force` works twice. Past
-that, delete its runs in the Supabase SQL editor and trigger again. The occurrence date is the
+Forced attempts stop at 10 per occurrence (scheduled runs at 3). Past that, delete its runs in the Supabase SQL editor and trigger again. The occurrence date is the
 slot's own day: the Sunday for `weekly`, the 1st for `monthly`, today for `daily_am`
 (`slot = 'AM'`).
 

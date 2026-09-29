@@ -8,6 +8,8 @@ import type {
   PersonaLine,
   Quest,
   QuestProposal,
+  ReplanRequest,
+  ReplanResult,
   RunnerState,
   SetupRequest,
   SetupTurn,
@@ -47,8 +49,10 @@ export interface Store {
   /** Cache dialogue that came with an accepted add, now that the quest has an id. */
   insertLines(questId: string, persona: string, lines: FallbackLine[]): Promise<void>;
   /** P1 request for the runner; resolves with its id. */
-  createLiveRequest(kind: "setup_assistant", payload: SetupRequest): Promise<string>;
-  getLiveRequest(id: string): Promise<LiveRequest | null>;
+  createLiveRequest<K extends LiveKind>(kind: K, payload: LiveKinds[K]["payload"]): Promise<string>;
+  getLiveRequest<K extends LiveKind = "setup_assistant">(
+    id: string,
+  ): Promise<LiveRequest<LiveKinds[K]["result"]> | null>;
   saveConfig(config: Config): Promise<void>;
   savePushSubscription(sub: {
     endpoint: string;
@@ -65,8 +69,15 @@ export interface Store {
   subscribe(onChange: () => void): () => void;
 }
 
-export type LiveRequest = {
+/** Live request kinds the app sends, with their payload and result shapes. */
+export type LiveKinds = {
+  setup_assistant: { payload: SetupRequest; result: SetupTurn };
+  replan: { payload: ReplanRequest; result: ReplanResult };
+};
+export type LiveKind = keyof LiveKinds;
+
+export type LiveRequest<R = SetupTurn> = {
   status: "pending" | "running" | "done" | "failed" | "cancelled";
-  result: SetupTurn | null;
+  result: R | null;
   error: string | null;
 };

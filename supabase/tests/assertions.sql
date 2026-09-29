@@ -68,13 +68,19 @@ select pg_temp.expect_error(
   $$insert into public.llm_runs (job, slot, date, trigger, attempt, status)
     values ('weekly', null, '2026-09-27', 'manual', 2, 'succeeded')$$,
   'second weekly success');
--- A forced manual re-run may succeed again (still within the 3-attempt cap).
+-- A forced manual re-run may succeed again, up to attempt 10; other runs stop at 3.
 insert into public.llm_runs (job, slot, date, trigger, attempt, status, forced, ops_count, summary)
 values ('weekly', null, '2026-09-27', 'manual', 2, 'succeeded', true, 0, 'Goals already covered.');
+insert into public.llm_runs (job, slot, date, trigger, attempt, status, forced)
+values ('weekly', null, '2026-09-27', 'manual', 10, 'succeeded', true);
 select pg_temp.expect_error(
   $$insert into public.llm_runs (job, slot, date, trigger, attempt, status, forced)
-    values ('weekly', null, '2026-09-27', 'manual', 4, 'succeeded', true)$$,
-  'forced run past the attempt cap');
+    values ('weekly', null, '2026-09-27', 'manual', 11, 'succeeded', true)$$,
+  'forced run past the forced cap');
+select pg_temp.expect_error(
+  $$insert into public.llm_runs (job, slot, date, trigger, attempt, status)
+    values ('monthly', null, '2026-09-01', 'tick', 4, 'failed')$$,
+  'scheduled run past the attempt cap');
 select pg_temp.expect_error(
   $$insert into public.llm_runs (job, slot, date, trigger, attempt, status)
     values ('daily_am', null, '2026-09-26', 'tick', 1, 'queued')$$,

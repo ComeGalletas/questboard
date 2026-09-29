@@ -240,10 +240,12 @@ def test_force_adds_attempts_to_a_succeeded_occurrence_up_to_the_cap() -> None:
     # Only the earlier weekly attempt's proposals give way; daily_am's stay pending.
     assert [p["status"] for p in repo.proposals] == ["superseded", "pending"]
     assert sched.evaluate(Trigger.tick)[0].reason == "already done"  # scheduled runs stay put
-    clock.advance(minutes=1)
-    assert sched.evaluate(Trigger.manual, force=True)[0].status == Status.succeeded
-    assert sched.evaluate(Trigger.manual, force=True)[0].reason == "gave up after 3 attempts"
-    assert h.calls == 3
+    for _ in range(8):  # forced attempts go up to MAX_FORCED_ATTEMPTS, not MAX_ATTEMPTS
+        clock.advance(minutes=1)
+        assert sched.evaluate(Trigger.manual, force=True)[0].status == Status.succeeded
+    assert sched.evaluate(Trigger.manual, force=True)[0].reason == "gave up after 10 attempts"
+    assert h.calls == 10
+    assert [r.attempt for r in repo.runs if r.job == JobName.weekly] == list(range(1, 11))
 
 
 def test_force_on_an_occurrence_without_a_success_is_a_normal_manual_run() -> None:
@@ -263,6 +265,61 @@ def test_planning_runs_record_op_count_and_summary() -> None:
     assert (d.status, d.reason) == (Status.succeeded, "ok, 0 ops")
     [run] = repo.runs
     assert (run.ops_count, run.summary) == (0, "Both goals already have open quests.")
+
+
+def test_manual_daily_am_before_the_slot_plans_today() -> None:
+    sched, repo, _ = make(local(2026, 9, 29, 3, 0), daily_am=Handler())
+    assert sched.evaluate(Trigger.tick)[0].reason == "outside slot window"
+    assert sched.evaluate(Trigger.manual)[0].status == Status.succeeded
+    assert [r.date.isoformat() for r in repo.runs] == ["2026-09-29"]  # not yesterday's slot
+
+
+def replan_request(job: str, rid: str = "r1", at: datetime | None = None) -> dict[str, Any]:
+    created = (at or local(2026, 9, 29, 9, 0)) - timedelta(seconds=5)
+    return {
+        "id": rid,
+        "kind": "replan",
+        "status": "pending",
+        "created_at": created,
+        "payload": {"job": job},
+    }
+
+
+def test_replan_requests_run_forced_planning_jobs() -> None:
+    def weekly(ctx: JobContext) -> JobResult:
+        return JobResult(ProviderName.claude_cli, ops_count=len(ctx.repo.runs) - 1)
+
+    sched, repo, clock = make(local(2026, 9, 29, 9, 0))
+    sched.handlers = {JobName.weekly: weekly}
+    assert sched.evaluate(Trigger.tick)[0].status == Status.succeeded  # the week is planned
+    repo.requests = [replan_request("weekly")]
+
+    assert sched.process_live() == 1
+    [req] = repo.requests
+    assert req["status"] == "done"
+    assert req["result"] == {"status": "succeeded", "reason": "ok, 1 ops", "ops_count": 1}
+    assert [(r.attempt, r.trigger, r.forced) for r in repo.runs][-1] == (2, Trigger.manual, True)
+
+
+def test_replan_failures_carry_the_scheduler_reason_and_wait_for_a_provider() -> None:
+    h = Handler(fail=ProviderError("exited with code 1"))
+    sched, repo, _ = make(local(2026, 9, 29, 9, 0), daily_am=h)
+    for p in sched.providers.values():
+        p.available = False  # type: ignore[attr-defined]
+    repo.requests = [replan_request("daily_am")]
+    assert sched.process_live() == 0
+    assert repo.requests[0]["status"] == "pending"  # P1 waits; the app shows "pending"
+
+    for p in sched.providers.values():
+        p.available = True  # type: ignore[attr-defined]
+    sched.process_live()
+    req = repo.requests[0]
+    assert (req["status"], req["error"]) == ("failed", "exited with code 1")
+    assert req["result"]["status"] == "failed"
+
+    repo.requests = [replan_request("persona_digest", rid="r2")]  # not a planning job
+    sched.process_live()
+    assert (repo.requests[0]["status"], repo.requests[0]["error"]) == ("failed", "ValidationError")
 
 
 def test_no_provider_reachable() -> None:

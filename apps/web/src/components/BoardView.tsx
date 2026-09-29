@@ -10,13 +10,14 @@ import { ProposalStrip } from "./ProposalStrip";
 import { QuestForm } from "./QuestForm";
 import { QuestRow } from "./QuestRow";
 import { StatsStrip } from "./StatsStrip";
+import { SuggestButton } from "./SuggestButton";
 import { useQuestActions } from "./useQuestActions";
 import { VoiceBar } from "./VoiceBar";
 
 const TITLES: Record<Board, string> = { today: "Today", week: "This week", month: "This month" };
 
 export function BoardView({ board }: { board: Board }) {
-  const { quests, config, loaded, error } = useLog();
+  const { store, quests, config, loaded, error } = useLog();
   const now = useNow(60_000);
   const summary = useMemo(
     () => summarize(quests, config, board, now),
@@ -44,11 +45,14 @@ export function BoardView({ board }: { board: Board }) {
                 </span>
               )}
             </h2>
-            {!adding && (
-              <button type="button" className="btn" onClick={() => setAdding(true)}>
-                + Quest
-              </button>
-            )}
+            <div className="board-actions">
+              {store.kind === "supabase" && <SuggestButton board={board} />}
+              {!adding && (
+                <button type="button" className="btn" onClick={() => setAdding(true)}>
+                  + Quest
+                </button>
+              )}
+            </div>
           </div>
           {adding && <QuestForm board={board} onDone={() => setAdding(false)} />}
           {error && <p className="error">Could not load quests: {error}</p>}

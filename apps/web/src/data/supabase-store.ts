@@ -6,9 +6,8 @@ import type {
   Quest,
   QuestProposal,
   RunnerState,
-  SetupRequest,
 } from "@questboard/schema";
-import type { LiveRequest } from "./store.ts";
+import type { LiveKind, LiveKinds, LiveRequest } from "./store.ts";
 import type { QuestPatch } from "../game/actions.ts";
 import type { QuestChangesPatch } from "../game/proposals.ts";
 import { PLANNING_JOBS, type PlanRun } from "../lib/planner.ts";
@@ -108,7 +107,10 @@ export class SupabaseStore implements Store {
     if (error) throw new Error(error.message);
   }
 
-  async createLiveRequest(kind: "setup_assistant", payload: SetupRequest): Promise<string> {
+  async createLiveRequest<K extends LiveKind>(
+    kind: K,
+    payload: LiveKinds[K]["payload"],
+  ): Promise<string> {
     const { data, error } = await this.db
       .from("pending_live_requests")
       .insert({ kind, payload, origin: "mobile" })
@@ -118,14 +120,16 @@ export class SupabaseStore implements Store {
     return (data as { id: string }).id;
   }
 
-  async getLiveRequest(id: string): Promise<LiveRequest | null> {
+  async getLiveRequest<K extends LiveKind = "setup_assistant">(
+    id: string,
+  ): Promise<LiveRequest<LiveKinds[K]["result"]> | null> {
     const { data, error } = await this.db
       .from("pending_live_requests")
       .select("status,result,error")
       .eq("id", id)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return (data as LiveRequest | null) ?? null;
+    return (data as LiveRequest<LiveKinds[K]["result"]> | null) ?? null;
   }
 
   async saveConfig(config: Config): Promise<void> {

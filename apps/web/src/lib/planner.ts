@@ -9,7 +9,7 @@ export type PlanRun = Pick<LLMRun, "job" | "date" | "ops_count" | "summary" | "f
 
 export const PLANNING_JOBS = ["daily_am", "weekly", "monthly"] as const;
 
-const BOARD_JOB = { today: "daily_am", week: "weekly", month: "monthly" } as const;
+export const BOARD_JOB = { today: "daily_am", week: "weekly", month: "monthly" } as const;
 const PERIOD_WORD: Record<Board, string> = {
   today: "for today",
   week: "this week",
