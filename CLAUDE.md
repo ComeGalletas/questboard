@@ -83,7 +83,7 @@ personas/<slug>/
 
 Dialogue triggers every pack must produce per quest: `assigned, reminder(am|mid|pm), started, completed(early|on_time|late), partial, snoozed, deferred, skipped, forgotten, overdue(1d|3d|7d), carried_over, abandoned`, 2–3 variants each, with runtime placeholders `{time_left} {streak} {days_carried} {actual_vs_estimate} {next_quest}`. Plus daily board-level lines: all_done, half_by_noon, nothing_by_15, over_capacity. Mood (pleased/neutral/concerned) is computed in code from completion rate and selects the variant bucket.
 
-Carry-over rules live in code: max 3 carries for daily, 2 for weekly; hard-deadline obligations always carry; 3+ carries → AM refresh may propose a split (as a diff).
+Carry-over rules live in code: max 3 carries for daily, 2 for weekly; hard-deadline obligations always carry; 3+ carries → AM refresh may propose a split (as a diff). Forgotten is an event, not a status: daily_pm appends the day to `quests.forgotten_on` for a daily quest never started that day, and the quest still carries; the app fires `forgotten` and counts the day as a miss for mood from that list.
 
 ## Email pipeline (runner only)
 

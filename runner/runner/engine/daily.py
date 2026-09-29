@@ -4,7 +4,8 @@ daily_am (P0, LLM): reads the quest log, asks the provider chain for a DailyPlan
 result: proposed ops go to quest_proposals (the user decides), dialogue for existing quests goes
 straight to persona_lines, dialogue for proposed adds rides with its proposal.
 
-daily_pm (P0, code only): end-of-day accounting with the carry-over rules in carry.py.
+daily_pm (P0, code only): end-of-day accounting (forgotten days, carry-over) with the rules in
+carry.py.
 """
 
 from __future__ import annotations
@@ -70,7 +71,12 @@ def _outcomes(quests: list[Quest], today: date) -> dict[str, Any]:
     since = today - timedelta(days=OUTCOME_DAYS)
     recent = [q for q in quests if q.scheduled_for and since <= q.scheduled_for < today]
     counts = Counter(q.status.value for q in recent)
-    return {"days": OUTCOME_DAYS, "by_status": dict(sorted(counts.items()))}
+    forgotten = sum(1 for q in quests for d in q.forgotten_on or [] if since <= d < today)
+    return {
+        "days": OUTCOME_DAYS,
+        "by_status": dict(sorted(counts.items())),
+        "forgotten_days": forgotten,
+    }
 
 
 def build_context(

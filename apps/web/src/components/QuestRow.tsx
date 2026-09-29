@@ -14,7 +14,6 @@ const STATUS_LABEL: Partial<Record<string, string>> = {
   partial: "Partial",
   skipped: "Skipped",
   in_progress: "In progress",
-  forgotten: "Forgotten",
   abandoned: "Abandoned",
 };
 
@@ -64,6 +63,7 @@ export function QuestRow({
             {q.estimate_min} min · {q.xp} XP
             {q.priority === 1 && " · P1"}
             {row.carriedFrom && ` · from ${row.carriedFrom}`}
+            {!!q.forgotten_on?.length && ` · forgotten ${q.forgotten_on.length}×`}
             {q.deadline && ` · due ${new Date(q.deadline).toLocaleDateString()}`}
           </span>
         </span>
