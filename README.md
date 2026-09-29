@@ -92,3 +92,28 @@ delete from public.llm_runs where job = 'weekly' and date = '2026-09-27';
 
 Proposals from deleted runs keep their rows (`run_id` becomes null); reject any still pending
 on the board so they don't sit next to the new plan.
+
+## Testing notifications on a phone
+
+Real notifications only fire on schedule (and wait out quiet hours), so there is an on-demand
+test. Setup once: `uv run python -m runner vapid`, put `QUESTBOARD_VAPID_PRIVATE_KEY` in the
+runner's environment and `NEXT_PUBLIC_VAPID_PUBLIC_KEY` in the web build, then on the phone
+install the PWA (Safari → Share → Add to Home Screen), open it from the home screen and tap
+"Enable notifications on this device".
+
+- **From the app:** pick a kind next to "Send test notification" and tap it. The PC runner
+  (which holds the private key) answers within a few seconds while `runner run` is going; until
+  then the app shows "Waiting for your PC's runner". The result lists each device.
+- **From the PC:**
+
+  ```sh
+  uv run python -m runner notify-test            # day_ready
+  uv run python -m runner notify-test quest_due  # any notification kind
+  ```
+
+The push goes to every subscribed device right away, ignoring quiet hours, dedup and the 12 h
+max age. Its title starts with `[Test]`, the payload carries `test: true`, and it deep-links
+to the screen that kind would open (a quest kind opens your most urgent open quest), so tapping
+it tests the link too. Tests are never written to `notifications`. Each device reports `sent`,
+`expired endpoint removed` (the push service dropped it; enable notifications again on it) or
+`failed` with the push service's status; endpoints and keys are never printed.

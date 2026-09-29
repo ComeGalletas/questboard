@@ -297,20 +297,26 @@ class SupabaseRepo:
             )
 
     def list_push_subscriptions(self) -> list[dict[str, Any]]:
-        return self._request("GET", "push_subscriptions", {"select": "id,endpoint,p256dh,auth"})
+        return self._request(
+            "GET", "push_subscriptions", {"select": "id,endpoint,p256dh,auth,user_agent"}
+        )
 
     def delete_push_subscription(self, sub_id: str) -> None:
         self._request(
             "DELETE", "push_subscriptions", {"id": f"eq.{sub_id}"}, None, "return=minimal"
         )
 
-    def list_pending_requests(self, limit: int) -> list[dict[str, Any]]:
+    def list_pending_requests(
+        self, limit: int, kinds: tuple[str, ...] | None = None
+    ) -> list[dict[str, Any]]:
         params = {
             "select": "id,kind,payload,created_at",
             "status": "eq.pending",
             "order": "created_at",
             "limit": str(limit),
         }
+        if kinds is not None:
+            params["kind"] = f"in.({','.join(kinds)})"
         return self._request("GET", "pending_live_requests", params)
 
     def update_request(self, request_id: str, fields: dict[str, Any]) -> None:

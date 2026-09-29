@@ -224,8 +224,37 @@ button:disabled {
 
 .footer {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   margin-top: 24px;
+}
+
+/* "Send test notification": kind picker + button, status on its own line. */
+.notify-test {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.notify-test select {
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--ground);
+  border: 2px solid var(--border);
+  padding: 2px 4px;
+}
+
+.notify-test-status {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 13px;
+}
+
+.notify-test-status ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
 }
 
 /* Layout: persona + stats on the left on wide screens, stacked on phones. */

@@ -75,6 +75,20 @@ class JobName(StrEnum):
     persona_digest = "persona_digest"
 
 
+class NotificationKind(StrEnum):
+    day_ready = "day_ready"
+    day_recap = "day_recap"
+    week_ready = "week_ready"
+    month_ready = "month_ready"
+    quest_due = "quest_due"
+    quest_overdue = "quest_overdue"
+    capacity_alert = "capacity_alert"
+    streak_risk = "streak_risk"
+    persona_speech = "persona_speech"
+    runner_stale = "runner_stale"
+    live_pending = "live_pending"
+
+
 class LocalTime(RootModel[str]):
     root: str = Field(
         ...,

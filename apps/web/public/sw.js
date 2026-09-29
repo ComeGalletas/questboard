@@ -1,5 +1,6 @@
 // Questboard service worker: shows Web Push notifications sent by the runner and opens the
-// matching screen on tap. Payload: {kind, title, body, target, persona}.
+// matching screen on tap. Payload: {kind, title, body, target, persona, test?}; `test` marks an
+// on-demand test send (runner notify-test), tagged apart so it never replaces a real one.
 
 function targetToPath(target) {
   const m = /^questboard:\/\/([a-z]+)(?:\/([\w-]+))?$/.exec(target || "");
@@ -24,7 +25,7 @@ self.addEventListener("push", (event) => {
       body: data.body || "",
       icon: persona ? "/personas/" + persona + "/portrait.png" : "/icons/icon-192.png",
       badge: "/icons/icon-192.png",
-      tag: (data.kind || "note") + ":" + (data.target || ""),
+      tag: (data.test ? "test:" : "") + (data.kind || "note") + ":" + (data.target || ""),
       data: { path: targetToPath(data.target) },
     }),
   );

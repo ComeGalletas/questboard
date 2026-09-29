@@ -50,6 +50,7 @@ EXPECTED: dict[tuple[str, str], list[str]] = {
     ("goals", "horizon"): goal["horizon"]["enum"],
     ("quest_proposals", "op"): proposal["op"]["enum"],
     ("quest_proposals", "status"): proposal["status"]["enum"],
+    ("notifications", "kind"): common["NotificationKind"]["enum"],
 }
 
 CONSTRAINTS_SQL = """
