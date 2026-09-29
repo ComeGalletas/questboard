@@ -12,7 +12,7 @@ The first real tick against the hosted DB ran the catch-up `weekly` and `monthly
 succeeded with an empty QuestDiff, so the user saw nothing, and because any succeeded run makes
 an occurrence "already done", `python -m runner trigger weekly` could not retry until the next
 Sunday (monthly: the next 1st). The DB enforced the same rule with a unique index on successful
-runs.
+runs. The only way to reopen a slot was deleting its `llm_runs` rows by hand in SQL.
 
 ## Decision
 

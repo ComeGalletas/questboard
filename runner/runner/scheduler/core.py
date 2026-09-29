@@ -1,13 +1,13 @@
 """The scheduler: decides which P0 jobs run on each trigger and records every LLM attempt.
 
 Guards (CLAUDE.md "Scheduler rules"), checked in this order for LLM jobs:
-  DB reachable -> slot window -> idempotent per (job, slot, date) -> max 3 attempts ->
-  retry backoff 5/15/60 min -> input freshness (2 h) -> a provider reachable.
-Manual triggers skip the window, backoff and freshness guards, never idempotency or the cap,
+  DB reachable -> slot window -> configured (planners only) -> idempotent per (job, slot, date)
+  -> max 3 attempts -> retry backoff 5/15/60 min -> input freshness (2 h) -> a provider reachable.
+Manual triggers skip the window, backoff and freshness guards, never setup, idempotency or the cap,
 except that a forced manual trigger (`trigger JOB --force`) adds an attempt to an occurrence
 that already succeeded (recorded with forced=true; still capped at MAX_ATTEMPTS, which the DB
-enforces too). Planning jobs are skipped as "not configured", with no llm_runs row, while the
-config has no goals and no capacity.
+enforces too).
+"Not configured" (no goals yet) writes no llm_runs row, so the slot stays open for after setup.
 Catch-up after boot / reconnect only ever looks at each job's most recent occurrence.
 """
 
@@ -46,8 +46,6 @@ STALE_ERROR = "stale run"
 DB_DOWN = "db unreachable"
 FINISHED_BAD = {Status.failed, Status.invalid_output}
 IN_FLIGHT = {Status.queued, Status.running}
-PLANNING = {JobName.daily_am, JobName.weekly, JobName.monthly}
-NOT_CONFIGURED = "not configured (no goals and no capacity)"
 
 
 @dataclass(frozen=True)
@@ -150,8 +148,8 @@ class Scheduler:
         occ = latest_occurrence(spec, now)
         if not manual and not in_window(spec, occ, now):
             return Decision(spec.name, "skip", "outside slot window")
-        if spec.name in PLANNING and self._unconfigured(config):
-            return Decision(spec.name, "skip", NOT_CONFIGURED)
+        if spec.needs_setup and not config.goals:
+            return Decision(spec.name, "skip", "not configured (no goals; finish setup first)")
 
         runs = self.repo.list_runs(spec.name, occ.slot, occ.date)
         done_before = any(r.status == Status.succeeded for r in runs)
@@ -256,11 +254,6 @@ class Scheduler:
         per_job = (config.llm.per_job or {}).get(job)
         order = per_job.root if per_job else config.llm.providers
         return [self.providers[name] for name in order if name in self.providers]
-
-    @staticmethod
-    def _unconfigured(config: Config) -> bool:
-        cap = config.capacity
-        return not config.goals and cap.weekday_hours == 0 and cap.weekend_hours == 0
 
     @staticmethod
     def _inputs_stale(config: Config, state, now: datetime) -> bool:

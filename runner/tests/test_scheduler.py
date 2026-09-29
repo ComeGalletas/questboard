@@ -27,7 +27,7 @@ BOGOTA = ZoneInfo("America/Bogota")
 CONFIG = Config.model_validate(
     {
         "timezone": "America/Bogota",
-        "goals": [],
+        "goals": [{"id": "g1", "title": "Run a 10k", "horizon": "quarter"}],
         "capacity": {"weekday_hours": 3, "weekend_hours": 5, "focus_factor": 0.7},
         "quiet_hours": {"start": "22:00", "end": "07:00"},
         "xp_weights": {},
@@ -260,23 +260,6 @@ def test_planning_runs_record_op_count_and_summary() -> None:
     assert (run.ops_count, run.summary) == (0, "Both goals already have open quests.")
 
 
-def test_planning_jobs_wait_for_goals_or_capacity() -> None:
-    am, weekly, ingest = Handler(), Handler(), Handler()
-    sched, repo, _ = make(local(2026, 9, 28, 8, 0), ingest=ingest, daily_am=am, weekly=weekly)
-    data = CONFIG.model_dump(mode="json")
-    data["capacity"] = {"weekday_hours": 0, "weekend_hours": 0, "focus_factor": 0.7}
-    repo.config = Config.model_validate(data)
-    decisions = {d.job: d for d in sched.evaluate(Trigger.manual)}
-    assert decisions[JobName.daily_am].reason == "not configured (no goals and no capacity)"
-    assert decisions[JobName.weekly].reason == "not configured (no goals and no capacity)"
-    assert decisions[JobName.ingest].status == Status.succeeded
-    assert repo.runs == [] and am.calls == weekly.calls == 0
-
-    data["goals"] = [{"id": "g1", "title": "Gym 4x/week", "horizon": "week"}]
-    repo.config = Config.model_validate(data)
-    assert sched.evaluate(Trigger.manual, only=JobName.weekly)[0].status == Status.succeeded
-
-
 def test_no_provider_reachable() -> None:
     h = Handler()
     sched, _, _ = make(local(2026, 9, 25, 6, 0), daily_am=h)
@@ -316,6 +299,40 @@ def test_stale_inputs_block_llm_jobs_when_integrations_are_on() -> None:
     clock.advance(minutes=10)
     assert sched.evaluate(Trigger.tick)[0].reason == "not due"
     assert ingest.calls == 1
+
+
+def test_planners_wait_for_setup_without_recording_a_run() -> None:
+    # 2026-09-29 incident: the first tick on a fresh install planned the week against the
+    # seeded config (no goals) and closed the slot, so a manual run after setup said
+    # "already done". Planners now skip with no llm_runs row; daily_pm (code only) still runs.
+    from runner.__main__ import DEFAULT_CONFIG  # same row as supabase default_config()
+
+    am, pm, weekly, monthly = Handler(), Handler(), Handler(), Handler()
+    sched, repo, clock = make(
+        local(2026, 9, 28, 8, 0), daily_am=am, daily_pm=pm, weekly=weekly, monthly=monthly
+    )
+    repo.config = Config.model_validate(DEFAULT_CONFIG)
+    decisions = {d.job: d for d in sched.evaluate(Trigger.start)}
+    for job in (JobName.daily_am, JobName.weekly, JobName.monthly):
+        assert decisions[job].reason == "not configured (no goals; finish setup first)"
+    assert sched.evaluate(Trigger.manual, only=JobName.weekly)[0].reason.startswith(
+        "not configured"
+    )
+    assert repo.runs == [] and am.calls == weekly.calls == monthly.calls == 0
+
+    clock.advance(hours=13, minutes=30)  # 21:30, PM slot: accounting needs no setup
+    [d] = sched.evaluate(Trigger.tick, only=JobName.daily_pm)
+    assert d.status == Status.succeeded and pm.calls == 1
+
+    # The user finishes setup; the manual run seeds the week that started on Sunday's slot.
+    repo.config = CONFIG
+    [d] = sched.evaluate(Trigger.manual, only=JobName.weekly)
+    assert d.status == Status.succeeded
+    [run] = [r for r in repo.runs if r.job == JobName.weekly]
+    assert (run.date.isoformat(), run.attempt) == ("2026-09-27", 1)
+    # Idempotency still holds for manual triggers once the slot has succeeded.
+    assert sched.evaluate(Trigger.manual, only=JobName.weekly)[0].reason == "already done"
+    assert weekly.calls == 1
 
 
 def test_db_outage_skips_everything_then_network_up_recovers() -> None:

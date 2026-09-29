@@ -18,7 +18,8 @@ from runner.supabase_repo import AuthError, MemoryTokenStore, SupabaseRepo
 
 USER = "11111111-1111-4111-8111-111111111111"
 CONFIG = json.loads(
-    """{"timezone": "America/Bogota", "goals": [],
+    """{"timezone": "America/Bogota",
+    "goals": [{"id": "g1", "title": "Run a 10k", "horizon": "quarter"}],
     "capacity": {"weekday_hours": 3, "weekend_hours": 5, "focus_factor": 0.7},
     "quiet_hours": {"start": "22:00", "end": "07:00"}, "xp_weights": {},
     "llm": {"providers": ["claude-cli"]}, "persona_order": ["coach"],
