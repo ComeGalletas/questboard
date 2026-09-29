@@ -4,10 +4,10 @@ import { useState } from "react";
 import type { QuestProposal } from "@questboard/schema";
 import { useLog } from "@/data/log";
 import { useReaction } from "@/data/reaction";
-import { BOARD_CADENCE, type Board } from "@/lib/board";
+import type { Board } from "@/lib/board";
 import { useNow } from "@/lib/hooks";
 import { emptyPlanNotice } from "@/lib/planner";
-import { cadenceOf, describe, planAcceptance, proposalPersona } from "@/game/proposals";
+import { describe, planAcceptance, proposalPersona, showsOn } from "@/game/proposals";
 import { packFor } from "@/game/personas";
 import { Portrait } from "@/ui/Sprite";
 
@@ -20,10 +20,7 @@ export function ProposalStrip({ board }: { board: Board }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const mine = proposals.filter((p) => {
-    const cadence = cadenceOf(p, quests);
-    return cadence === null || cadence === BOARD_CADENCE[board];
-  });
+  const mine = proposals.filter((p) => showsOn(p, quests, board, now));
   if (mine.length === 0) {
     const notice = emptyPlanNotice(board, planRuns, now);
     if (!notice) return null;

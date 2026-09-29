@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { QuestProposal } from "@questboard/schema";
 import { DEMO_CONFIG } from "../data/demo-store.ts";
-import { describe, planAcceptance } from "./proposals.ts";
+import { describe, planAcceptance, showsOn } from "./proposals.ts";
 import { at, quest } from "./fixtures.ts";
 
 const now = at("2026-09-25", 7);
@@ -113,4 +113,36 @@ test("summaries", () => {
     describe(proposal({ op: "drop", quest_id: q.id, reason: "x" }), [q]),
     "Drop “Review notes”",
   );
+});
+
+test("steps say their day and parent, and show on the parent's board", () => {
+  const gym = quest({ title: "Gym", cadence: "weekly", scheduled_for: "2026-09-21" });
+  const stepFor = (day: string) =>
+    proposal({
+      op: "add",
+      reason: "breakdown",
+      quest: {
+        title: "Gym session",
+        persona: "coach",
+        cadence: "daily",
+        category: "health",
+        estimate_min: 60,
+        priority: 2,
+        parent_id: gym.id,
+        scheduled_for: day,
+      },
+    });
+  const thursday = stepFor("2026-09-24");
+  const today = stepFor("2026-09-25");
+  const later = stepFor("2026-09-27");
+  assert.equal(describe(thursday, [gym]), "Add “Gym session” (60 min, Thu 09-24) · step of “Gym”");
+  assert.equal(describe(thursday, []), "Add “Gym session” (60 min, Thu 09-24)");
+  // Week board: every step of the week's plan. Today: only steps due by today.
+  for (const p of [today, later]) assert.ok(showsOn(p, [gym], "week", now));
+  assert.ok(showsOn(today, [gym], "today", now));
+  assert.ok(!showsOn(later, [gym], "today", now));
+  assert.ok(!showsOn(later, [gym], "month", now));
+  // Plain proposals keep going to their own cadence's board.
+  const plain = proposal({ op: "drop", quest_id: gym.id, reason: "x" });
+  assert.ok(showsOn(plain, [gym], "week", now) && !showsOn(plain, [gym], "today", now));
 });

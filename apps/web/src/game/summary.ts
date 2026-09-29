@@ -19,12 +19,22 @@ import {
   type Mood,
   type Stat,
 } from "./progress.ts";
+import { rollup, type Rollup } from "./rollup.ts";
 import { levelProgress } from "./xp.ts";
 
 const FINISHED = new Set<Quest["status"]>(["done", "partial"]);
 const CLOSED = new Set<Quest["status"]>(["done", "partial", "skipped", "abandoned"]);
 
-export type Row = { quest: Quest; carriedFrom: string | null; snoozed: boolean; closed: boolean };
+export type Row = {
+  quest: Quest;
+  carriedFrom: string | null;
+  snoozed: boolean;
+  closed: boolean;
+  /** Weekly/monthly quest worked through sub-quests: how far they got (null without any). */
+  progress: Rollup | null;
+  /** Sub-quest: the quest it is a step of, when that is in the log. */
+  parent: Quest | null;
+};
 
 export type Summary = {
   rows: Row[];
@@ -58,7 +68,14 @@ export function boardRows(quests: Quest[], board: Board, now: Date): Row[] {
     const carried = q.scheduled_for < from;
     if (carried && (closed || board !== "today")) continue;
     const snoozed = q.status === "snoozed" && !!q.snoozed_until && new Date(q.snoozed_until) > now;
-    rows.push({ quest: q, carriedFrom: carried ? q.scheduled_for : null, snoozed, closed });
+    rows.push({
+      quest: q,
+      carriedFrom: carried ? q.scheduled_for : null,
+      snoozed,
+      closed,
+      progress: q.cadence === "daily" ? null : rollup(q, quests),
+      parent: q.parent_id ? (quests.find((p) => p.id === q.parent_id) ?? null) : null,
+    });
   }
   return rows.sort(
     (a, b) =>
