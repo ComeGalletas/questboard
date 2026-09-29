@@ -1,4 +1,4 @@
-# ADR 0002: Forced manual re-runs of an LLM job occurrence
+# ADR 0003: Forced manual re-runs of an LLM job occurrence
 
 - Status: proposed
 - Date: 2026-09-29

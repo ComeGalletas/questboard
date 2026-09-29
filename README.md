@@ -76,7 +76,7 @@ supabase/tests/live.sh          # real Supabase stack: auth, RLS, runner jobs en
 Scheduled runs and a plain manual `trigger` succeed at most once per `(job, slot, date)`
 (`llm_runs_one_success_idx`). To plan a slot again (e.g. an empty plan, or goals changed), force
 a new attempt (or tap "Suggest quests" on the board, which asks the runner to do the same);
-pending proposals from the earlier attempts are superseded first (ADR 0002):
+pending proposals from the earlier attempts are superseded first (ADR 0003):
 
 ```sh
 uv run python -m runner trigger weekly --force

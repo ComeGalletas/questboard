@@ -188,7 +188,7 @@ class Scheduler:
             return Decision(spec.name, "skip", "no provider reachable")
         if done_before:
             # A forced re-run replaces the earlier attempts' unanswered proposals.
-            self.repo.supersede_pending_proposals(run_ids=[str(r.id) for r in runs])
+            self.repo.supersede_pending_proposals(spec.name, [str(r.id) for r in runs])
         return self._run(
             spec, occ, trigger, now, config, providers, attempt=len(runs) + 1, forced=done_before
         )

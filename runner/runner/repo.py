@@ -37,8 +37,9 @@ class Repo(Protocol):
 
     def update_quest(self, quest_id: str, fields: dict[str, Any]) -> None: ...
     def list_feedback(self, since: date) -> list[dict[str, Any]]: ...
-    def supersede_pending_proposals(self, run_ids: list[str] | None = None) -> int:
-        """Pending proposals become superseded: all of them, or only those of `run_ids`."""
+    def supersede_pending_proposals(self, job: JobName, run_ids: list[str] | None = None) -> int:
+        """Mark pending proposals written by runs of `job` superseded; other jobs' stay.
+        `run_ids` narrows it to those runs (a forced re-run replaces only its occurrence)."""
         ...
 
     def insert_proposals(self, rows: list[dict[str, Any]]) -> None: ...
@@ -151,12 +152,13 @@ class MemoryRepo:
         self._check()
         return [f for f in self.feedback if f["created_at"][:10] >= since.isoformat()]
 
-    def supersede_pending_proposals(self, run_ids: list[str] | None = None) -> int:
+    def supersede_pending_proposals(self, job: JobName, run_ids: list[str] | None = None) -> int:
         self._check()
+        runs = {str(r.id) for r in self.runs if r.job == job}
+        if run_ids is not None:
+            runs &= set(run_ids)
         pending = [
-            p
-            for p in self.proposals
-            if p["status"] == "pending" and (run_ids is None or p.get("run_id") in run_ids)
+            p for p in self.proposals if p["status"] == "pending" and p.get("run_id") in runs
         ]
         for p in pending:
             p["status"] = "superseded"
