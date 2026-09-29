@@ -11,7 +11,7 @@ Single-user, self-hosted "RPG quest giver" for real life. Personas (Coach, Teach
    - P2 = app reactions (XP, streaks, mood, line selection, notifications). Pure code, instant, offline.
 3. **The LLM proposes; it never acts.** No sending mail, no editing calendars. OAuth scopes are read-only. Quests from the model are diffs (add/update/drop) against the existing log, accepted or rejected by the user.
 4. **Money and dates enter only through deterministic extractors.** The model may phrase and schedule a bill quest; it may not create one from raw text.
-5. **Raw email never leaves the PC.** Gmail ingestion runs in the runner; bodies pass the sanitizer before any storage or prompt. The cloud DB holds pseudonymized data only. The token↔value vault is local, encrypted, never synced.
+5. **Raw email never leaves the PC.** Mail ingestion (Outlook first, Gmail later; ADR 0002) runs in the runner; bodies pass the sanitizer before any storage or prompt. The cloud DB holds pseudonymized data only. The token↔value vault is local, encrypted, never synced.
 6. **One schema for all providers and all personas.** Claude API, Claude CLI and Ollama produce the same structured output; every persona (built-in or custom pack) fills the same trigger table. Custom prompts cannot change schema, escalation caps or quiet hours.
 7. **Sprite is mandatory, 3D is optional.** Notifications, list rows and low-power mode always use the 2D sprite. A missing 3D model or frame degrades silently to the sprite/idle.
 8. **Voice never writes without confirmation.** Parse → show confirmation card → tap or spoken "confirm" → write.
@@ -19,7 +19,7 @@ Single-user, self-hosted "RPG quest giver" for real life. Personas (Coach, Teach
 ## Architecture
 
 ```
-[Gmail / Google Calendar]          [iPhone PWA]          [PC: Tauri app]
+[Outlook mail / calendar]          [iPhone PWA]          [PC: Tauri app]
         │ read-only OAuth                │                     │  overlay + dashboard + runner
         ▼                                └────────┬────────────┘
    Runner (PC, Python) ──► Supabase Postgres ◄────┘  (realtime / polling)
@@ -43,7 +43,7 @@ apps/web/          React/Next.js app (dashboard, companion view, PWA manifest, p
 apps/desktop/      Tauri shell (windows, tray, notifications, hotkeys, keychain, sidecar)
 runner/            Python: scheduler, providers, ingest, sanitizer, extractors, engine
   runner/providers/    claude_api.py, claude_cli.py, ollama.py, base.py
-  runner/ingest/       gcal.py, gmail.py, base.py
+  runner/ingest/       outlook_cal.py, outlook_mail.py, base.py (gcal.py, gmail.py later)
   runner/sanitize/     presidio pipeline, recognizers (CO formats), vault.py, profiles/
   runner/extractors/   ics.py, utilities.py, government.py, health.py, delivery.py, subscription.py, jobs.py, learning.py, personal.py, travel.py
   runner/engine/       prompt assembly, schemas, validators, quest templates, persona bundles
@@ -87,7 +87,7 @@ Carry-over rules live in code: max 3 carries for daily, 2 for weekly; hard-deadl
 
 ## Email pipeline (runner only)
 
-`Gmail → adapter → sender classification → sanitizer (category profile) → extractor → quest template → DB`.
+`Outlook (Graph) → adapter → sender classification → sanitizer (category profile) → extractor → quest template → DB`.
 
 - Allow list on by default; deny list; category drop rules (credentials/OTP, marketing, bank statements/card alerts).
 - Sanitizer: Presidio + spaCy `es_core_news_md`/`en_core_web_md`, custom recognizers (cédula, NIT, CO phone, Luhn cards, IBAN, OTP-like codes). Pseudonymize with stable salted-hash tokens (`PERSON_7`, `ORG_3`, `AMOUNT_2`). Strip quoted replies/signatures first; cap body at ~800 chars.
