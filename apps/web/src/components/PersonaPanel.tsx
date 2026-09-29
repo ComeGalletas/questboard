@@ -2,9 +2,8 @@
 
 import { useMemo } from "react";
 import type { Summary } from "@/game/summary";
-import { isQuietHours } from "@/game/summary";
+import { idleCue, isQuietHours } from "@/game/summary";
 import { selectLine, type Placeholders } from "@/game/lines";
-import type { Trigger } from "@/game/actions";
 import { packFor } from "@/game/personas";
 import { useLog } from "@/data/log";
 import { spriteStateFor, useReaction } from "@/data/reaction";
@@ -20,13 +19,6 @@ function seeded(seed: string): () => number {
   return () => ((h >>> 0) % 1000) / 1000;
 }
 
-function idleTrigger(summary: Summary, hour: number): Trigger {
-  if (summary.trigger) return summary.trigger;
-  if (hour < 12) return "reminder_am";
-  if (hour < 17) return "reminder_mid";
-  return "reminder_pm";
-}
-
 export function PersonaPanel({ summary }: { summary: Summary }) {
   const { lines, config } = useLog();
   const { reaction } = useReaction();
@@ -35,31 +27,37 @@ export function PersonaPanel({ summary }: { summary: Summary }) {
   const quiet = isQuietHours(config.quiet_hours, now);
 
   const idle = useMemo(() => {
-    const trigger = idleTrigger(summary, hour);
+    const { trigger, quest } = idleCue(summary, hour);
+    // A forgotten quest's own persona speaks, from that quest's cached lines.
+    const speaker = quest?.persona ?? summary.speaker;
+    const focus = quest ?? summary.next;
     const values: Placeholders = {
-      time_left: summary.next ? timeLeft(summary.next, new Date()) : undefined,
+      time_left: focus ? timeLeft(focus, new Date()) : undefined,
       streak: summary.streak.days > 0 ? String(summary.streak.days) : undefined,
-      next_quest: summary.next?.title,
+      days_carried: quest && quest.carries > 0 ? String(quest.carries) : undefined,
+      next_quest: focus?.title,
     };
     const picked = selectLine({
       trigger,
       mood: summary.mood,
-      cached: lines.filter((l) => !l.quest_id && l.persona === summary.speaker),
-      fallback: packFor(summary.speaker)?.lines ?? [],
+      cached: lines.filter(
+        (l) => l.persona === speaker && (quest ? l.quest_id === quest.id : !l.quest_id),
+      ),
+      fallback: packFor(speaker)?.lines ?? [],
       values,
-      random: seeded(`${summary.speaker}:${trigger}:${hour}`),
+      random: seeded(`${speaker}:${trigger}:${hour}`),
     });
-    return picked ? { trigger, text: picked.text } : null;
+    return picked ? { trigger, speaker, text: picked.text } : null;
   }, [summary, hour, lines]);
 
-  const slug = reaction?.persona ?? summary.speaker;
+  const slug = reaction?.persona ?? idle?.speaker ?? summary.speaker;
   const pack = packFor(slug);
   const state =
     quiet && !reaction
       ? "sleep"
       : reaction
         ? reaction.state
-        : idle && summary.trigger
+        : idle && !idle.trigger.startsWith("reminder_")
           ? spriteStateFor(idle.trigger)
           : "idle";
   const text = reaction?.text ?? (quiet ? "Zzz… (quiet hours)" : idle?.text);

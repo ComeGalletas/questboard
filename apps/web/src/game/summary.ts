@@ -3,11 +3,13 @@
 import type { Config, Quest } from "@questboard/schema";
 import type { Board } from "../lib/board.ts";
 import { BOARD_CADENCE, boardRange } from "../lib/board.ts";
+import type { Trigger } from "./actions.ts";
 import { isoDate } from "./dates.ts";
 import {
   boardTrigger,
   capacity,
   completionRate,
+  forgottenQuest,
   mood,
   stats,
   streak,
@@ -21,7 +23,7 @@ import { rollup, type Rollup } from "./rollup.ts";
 import { levelProgress } from "./xp.ts";
 
 const FINISHED = new Set<Quest["status"]>(["done", "partial"]);
-const CLOSED = new Set<Quest["status"]>(["done", "partial", "skipped", "forgotten", "abandoned"]);
+const CLOSED = new Set<Quest["status"]>(["done", "partial", "skipped", "abandoned"]);
 
 export type Row = {
   quest: Quest;
@@ -43,6 +45,8 @@ export type Summary = {
   stats: Record<Stat, number>;
   mood: Mood;
   trigger: BoardTrigger | null;
+  /** Today board only: a quest daily_pm recorded as forgotten that is still untouched. */
+  forgotten: Quest | null;
   next: Quest | null;
   speaker: string;
 };
@@ -115,9 +119,22 @@ export function summarize(quests: Quest[], config: Config, board: Board, now: Da
     stats: stats(quests),
     mood: mood(rate.rate, rate.settled),
     trigger: boardTrigger(todays, cap, now),
+    forgotten: board === "today" ? forgottenQuest(quests, now) : null,
     next: active.find((r) => r.quest.status !== "in_progress")?.quest ?? active[0]?.quest ?? null,
     speaker,
   };
+}
+
+/**
+ * What the persona panel says when no action reaction is showing: all_done wins, then a fresh
+ * `forgotten` (spoken by that quest's persona), then the other board lines, then reminders.
+ */
+export function idleCue(summary: Summary, hour: number): { trigger: Trigger; quest: Quest | null } {
+  if (summary.trigger === "all_done") return { trigger: "all_done", quest: null };
+  if (summary.forgotten) return { trigger: "forgotten", quest: summary.forgotten };
+  if (summary.trigger) return { trigger: summary.trigger, quest: null };
+  const trigger = hour < 12 ? "reminder_am" : hour < 17 ? "reminder_mid" : "reminder_pm";
+  return { trigger, quest: null };
 }
 
 export function finishedCount(rows: Row[]): number {

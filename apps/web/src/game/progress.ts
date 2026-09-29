@@ -7,7 +7,7 @@ export type Mood = "pleased" | "neutral" | "concerned";
 export type Stat = "discipline" | "health" | "career";
 
 const FINISHED = new Set<Quest["status"]>(["done", "partial"]);
-const CLOSED_UNDONE = new Set<Quest["status"]>(["skipped", "forgotten", "abandoned"]);
+const CLOSED_UNDONE = new Set<Quest["status"]>(["skipped", "abandoned"]);
 
 export const STAT_FOR_CATEGORY: Record<Quest["category"], Stat> = {
   general: "discipline",
@@ -57,8 +57,10 @@ export function streak(quests: Quest[], now: Date): { days: number; atRisk: bool
 }
 
 /**
- * Completion rate over the last `windowDays` days of scheduled daily quests that are settled
- * (finished, or closed undone). Partial counts half.
+ * Completion rate over the last `windowDays` days of daily quest-days that are settled: finished,
+ * closed undone, or forgotten (a day in `forgotten_on`, recorded by daily_pm while the quest
+ * carries on). Partial counts half; forgotten days count as misses. A quest abandoned on a day it
+ * was also forgotten counts once.
  */
 export function completionRate(
   quests: Quest[],
@@ -69,13 +71,33 @@ export function completionRate(
   let settled = 0;
   let score = 0;
   for (const q of quests) {
-    if (q.cadence !== "daily" || !q.scheduled_for || q.scheduled_for < from) continue;
+    if (q.cadence !== "daily") continue;
+    const forgot = q.forgotten_on ?? [];
+    settled += forgot.filter((d) => d >= from).length;
+    if (!q.scheduled_for || q.scheduled_for < from || forgot.includes(q.scheduled_for)) continue;
     if (q.status === "done") score += 1;
     else if (q.status === "partial") score += 0.5;
     else if (!CLOSED_UNDONE.has(q.status)) continue;
     settled++;
   }
   return { rate: settled === 0 ? null : score / settled, settled };
+}
+
+/**
+ * The quest the persona calls out as forgotten: daily_pm recorded yesterday in its `forgotten_on`
+ * (the lines speak of "yesterday") and it hasn't been touched since (still open or overdue).
+ * Highest priority first.
+ */
+export function forgottenQuest(quests: Quest[], now: Date): Quest | null {
+  const yesterday = addDays(isoDate(now), -1);
+  const fresh = quests.filter(
+    (q) =>
+      q.cadence === "daily" &&
+      (q.status === "open" || q.status === "overdue") &&
+      (q.forgotten_on ?? []).includes(yesterday),
+  );
+  fresh.sort((a, b) => a.priority - b.priority || a.created_at.localeCompare(b.created_at));
+  return fresh[0] ?? null;
 }
 
 /** Mood picks the dialogue variant bucket. Too little data reads as neutral. */
