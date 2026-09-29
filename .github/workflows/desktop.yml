@@ -1,0 +1,30 @@
+name: Desktop
+
+# The Tauri shell only builds on Windows here (the PC it ships to), so it runs only when the
+# shell changes instead of on every PR.
+on:
+  push:
+    branches: [main]
+    paths: ["apps/desktop/**", ".github/workflows/desktop.yml"]
+  pull_request:
+    paths: ["apps/desktop/**", ".github/workflows/desktop.yml"]
+
+jobs:
+  shell:
+    name: Desktop shell (Windows)
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: apps/desktop/src-tauri
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+      # generate_context! embeds the web build; an empty folder is enough to check the glue.
+      - run: New-Item -ItemType Directory -Force ../../web/out
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings

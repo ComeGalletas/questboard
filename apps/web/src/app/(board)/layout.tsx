@@ -12,6 +12,8 @@ import { LogProvider } from "@/data/log";
 import { ReactionProvider } from "@/data/reaction";
 import type { Store } from "@/data/store";
 import { SupabaseStore } from "@/data/supabase-store";
+import { targetToPath } from "@/lib/deeplink";
+import { onDeepLink } from "@/lib/desktop";
 import { useSession } from "@/lib/hooks";
 import { supabase } from "@/lib/supabase";
 
@@ -37,6 +39,9 @@ export default function BoardLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (demo === false && session === null) router.replace("/login");
   }, [demo, session, router]);
+
+  // Desktop shell: questboard:// links (notifications, other apps) open the matching board.
+  useEffect(() => onDeepLink((target) => router.push(targetToPath(target))), [router]);
 
   if (!store) return null;
 

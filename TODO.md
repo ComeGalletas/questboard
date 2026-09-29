@@ -28,7 +28,7 @@ Tooling not named in the docs (confirmed 2026-09-24):
 - [x] Create `docs/adr/` with an ADR template (required for any invariant change).
 
 ## Phase 0 — Foundations (week 1)
-- [ ] Monorepo scaffold (pnpm workspace, `packages/schema`, `runner` done; `apps/*`, `personas`, `supabase` land with their PRs): `apps/web`, `apps/desktop`, `runner`, `packages/schema`, `personas`, `supabase`, `docs`.
+- [x] Monorepo scaffold (pnpm workspace; `apps/desktop` landed with the Tauri shell): `apps/web`, `apps/desktop`, `runner`, `packages/schema`, `personas`, `supabase`, `docs`.
 - [x] `packages/schema`: JSON Schemas for Quest, QuestDiff, PersonaLine, ExtractedRecord, Config, LLMRun; codegen to TS + Pydantic; CI check that generated code is fresh.
 - [x] Supabase migrations for the 15 core tables; single-user guard + owner-only RLS; realtime on `quests`, `persona_lines`, `runner_state`; tested on local Postgres in CI (`supabase/tests/run.sh`).
 - [x] Local Supabase stack (`supabase/tests/live.sh`): migrations, single-user auth, RLS and runner jobs verified end to end; web app verified against it in a browser (sign-in, add, accept proposal, complete, realtime pill).
@@ -65,7 +65,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [x] daily_pm "forgotten" accounting (decided 2026-09-29): a daily quest never started by daily_pm (no start / in-progress that day; snoozed or deferred-to-later quests don't count) gets the day appended to `quests.forgotten_on` and still carries under the normal rules (max 3, hard deadlines always, overdue past deadline, abandoned past the cap). Forgotten is an event, not a status: `forgotten` left the status enum (migration `20260929000200`). The app says the quest's `forgotten` line the next day until the quest is touched, counts each forgotten day as a miss for mood (a quest forgotten and abandoned the same day counts once), and leaves XP and streaks alone; daily_am sees `recent_outcomes.forgotten_days`.
 - [x] App: review strip for pending proposals (accept applies the op in code and caches its lines; reject records feedback).
 - [x] `persona_lines` selection in the app. (Done in Phase 1.)
-- [ ] Tauri shell: dashboard window, tray, start-at-login, sidecar, OS notifications, deep links.
+- [ ] Tauri shell: dashboard window, tray, start-at-login, sidecar, OS notifications, deep links. Done (PR A, `apps/desktop`): dashboard window on the bundled static build, hide-to-tray on close, tray (open / start at login / quit), start at login on first release run (`--minimized`), single instance, `questboard://` deep links (cold start and while running) routed by `lib/deeplink.ts`, Web Push off inside the shell, Windows CI job. Next: PR B runs the runner from the shell (`uv run python -m runner run`, restart with backoff, stop on quit, tray status; external runner detected by its lock), PR C PC notifications.
 - [x] Notifications v1 (runner): day_ready, day_recap, quest_due, quest_overdue, streak_risk; DB dedup, delivery after quiet hours, 12 h max age; Web Push (VAPID) with dead-endpoint cleanup.
 - [x] PWA: service worker + "Enable notifications on this device" (`push_subscriptions`). Pending: real device test (see "Pending device tests"); headless Chromium can't subscribe.
 - [ ] PC delivery of notifications (Tauri reads `notifications` over realtime) + sprite state.
