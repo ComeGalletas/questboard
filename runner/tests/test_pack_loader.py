@@ -98,20 +98,24 @@ def test_short_sprite_sheet_loads_with_idle_fallback(pack: Path) -> None:
         (lambda p: (p / "lines.fallback.json").write_text("{"), "not valid JSON"),
         (
             lambda p: (p / "persona.yaml").write_text(
-                (p / "persona.yaml").read_text().replace("slug: coach", "slug: boss")
+                (p / "persona.yaml")
+                .read_text(encoding="utf-8")
+                .replace("slug: coach", "slug: boss")
             ),
             "slug must match the folder name",
         ),
         # A custom pack cannot raise escalation caps or add rules: the manifest is closed.
         (
             lambda p: (p / "persona.yaml").write_text(
-                (p / "persona.yaml").read_text() + "escalation_cap: 9\n"
+                (p / "persona.yaml").read_text(encoding="utf-8") + "escalation_cap: 9\n"
             ),
             "escalation_cap: Extra inputs are not permitted",
         ),
         (
             lambda p: (p / "persona.yaml").write_text(
-                (p / "persona.yaml").read_text().replace("intensity: 2", "intensity: 5")
+                (p / "persona.yaml")
+                .read_text(encoding="utf-8")
+                .replace("intensity: 2", "intensity: 5")
             ),
             "intensity: Input should be less than or equal to 3",
         ),
@@ -127,9 +131,9 @@ def test_broken_packs_are_rejected(pack: Path, breakage, error: str) -> None:
 
 def _edit_lines(pack: Path, edit) -> None:
     path = pack / "lines.fallback.json"
-    data = json.loads(path.read_text())
+    data = json.loads(path.read_text(encoding="utf-8"))
     edit(data["lines"])
-    path.write_text(json.dumps(data))
+    path.write_text(json.dumps(data), encoding="utf-8")
 
 
 def test_fallback_lines_rules(pack: Path) -> None:
@@ -144,6 +148,15 @@ def test_fallback_lines_rules(pack: Path) -> None:
 
     _edit_lines(pack, drop_abandoned)
     assert any("abandoned needs a line" in e for e in inspect_pack(pack).errors)
+
+
+def test_pack_text_is_read_as_utf8(pack: Path) -> None:
+    # Windows defaults to cp1252; accents and dashes in a pack must reach prompts unchanged.
+    voice = "Ánimo, campeón: ¡a entrenar! — sin excusas."
+    (pack / "system.md").write_text(voice, encoding="utf-8")
+    report = inspect_pack(pack)
+    assert report.pack is not None
+    assert report.pack.voice == voice
 
 
 def test_optional_assets_only_warn(pack: Path) -> None:
@@ -197,7 +210,7 @@ def job_ctx(provider) -> JobContext:
 
 def with_context(pack: Path, text: str = "Former sprinter; says 'reps'.") -> Path:
     (pack / "context").mkdir(exist_ok=True)
-    (pack / "context" / "lore.md").write_text(text)
+    (pack / "context" / "lore.md").write_text(text, encoding="utf-8")
     return pack
 
 

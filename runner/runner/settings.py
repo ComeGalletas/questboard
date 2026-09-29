@@ -29,7 +29,7 @@ class Settings:
         key = os.environ.get("QUESTBOARD_SUPABASE_ANON_KEY")
         path = data_dir() / "runner.json"
         if not (url and key) and path.exists():
-            saved = json.loads(path.read_text())
+            saved = json.loads(path.read_text(encoding="utf-8"))
             url = url or saved.get("supabase_url")
             key = key or saved.get("supabase_anon_key")
         if not (url and key):
@@ -45,5 +45,6 @@ class Settings:
         path.write_text(
             json.dumps(
                 {"supabase_url": self.supabase_url, "supabase_anon_key": self.supabase_anon_key}
-            )
+            ),
+            encoding="utf-8",
         )

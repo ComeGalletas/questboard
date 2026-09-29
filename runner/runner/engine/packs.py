@@ -123,7 +123,7 @@ def _manifest(pack_dir: Path, report: PackReport) -> PersonaPack | None:
         report.errors.append("persona.yaml: missing")
         return None
     try:
-        manifest = PersonaPack.model_validate(yaml.safe_load(path.read_text()))
+        manifest = PersonaPack.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")))
     except yaml.YAMLError:
         report.errors.append("persona.yaml: not valid YAML")
         return None
@@ -137,7 +137,7 @@ def _manifest(pack_dir: Path, report: PackReport) -> PersonaPack | None:
 
 def _voice(pack_dir: Path, report: PackReport) -> str:
     path = pack_dir / "system.md"
-    text = path.read_text().strip() if path.is_file() else ""
+    text = path.read_text(encoding="utf-8").strip() if path.is_file() else ""
     if not text:
         report.errors.append("system.md: missing or empty")
     elif len(text) > VOICE_CAP:
@@ -151,7 +151,7 @@ def _fallback_lines(pack_dir: Path, report: PackReport) -> None:
         report.errors.append("lines.fallback.json: missing")
         return
     try:
-        lines = FallbackLines.model_validate(json.loads(path.read_text())).lines
+        lines = FallbackLines.model_validate(json.loads(path.read_text(encoding="utf-8"))).lines
     except json.JSONDecodeError:
         report.errors.append("lines.fallback.json: not valid JSON")
         return
@@ -296,7 +296,7 @@ def read_cached_digest(digests: Path, slug: str) -> tuple[str, PersonaDigest] | 
     """(context hash it was made from, digest), or None when there is no usable cache."""
     path = digests / f"{slug}.json"
     try:
-        data = json.loads(path.read_text())
+        data = json.loads(path.read_text(encoding="utf-8"))
         return data["context_hash"], PersonaDigest.model_validate(data["digest"])
     except (OSError, ValueError, KeyError, TypeError):
         return None
@@ -306,7 +306,7 @@ def write_cached_digest(digests: Path, slug: str, context_hash: str, digest: Per
     digests.mkdir(parents=True, exist_ok=True)
     data = {"context_hash": context_hash, "digest": digest.model_dump(mode="json")}
     tmp = digests / f".{slug}.json.tmp"
-    tmp.write_text(json.dumps(data, indent=1, sort_keys=True))
+    tmp.write_text(json.dumps(data, indent=1, sort_keys=True), encoding="utf-8")
     tmp.replace(digests / f"{slug}.json")
 
 

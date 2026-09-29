@@ -24,7 +24,7 @@ REQUEST = GenerationRequest(
 
 
 def load(path: str) -> dict[str, Any]:
-    return json.loads((FIX / path).read_text())
+    return json.loads((FIX / path).read_text(encoding="utf-8"))
 
 
 # -- claude-api ---------------------------------------------------------------------------
