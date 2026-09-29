@@ -62,7 +62,7 @@ Each phase ends with something usable. Estimates assume part-time work.
 **Done when:** the PC generates today's quests and lines at 05:30 (or on boot), and both devices show them.
 
 ### Phase 3 — Calendar, setup assistant, weekly/monthly (week 4)
-- [ ] Google OAuth (read-only) + `gcal.py` adapter; events → scheduled quests; free time → capacity.
+- [ ] Microsoft 365 / Outlook calendar (read-only, Microsoft Graph) + `outlook_cal.py` adapter; events → scheduled quests; free time → capacity. (ADR 0002: Outlook before Google.)
 - [ ] Setup assistant: multi-turn chat (P1) with `save_config` structured output; review screen; re-runnable; patches config as diffs; seeds first weekly/monthly quests.
 - [ ] `weekly` and `monthly` jobs with sub-quest breakdown, retro questions, board-level and milestone line pools.
 - [ ] `pending_live_requests` + mobile "waiting for PC" state.
@@ -71,7 +71,7 @@ Each phase ends with something usable. Estimates assume part-time work.
 **Done when:** a fresh install can be configured by talking to the assistant and runs a full week unattended.
 
 ### Phase 4 — Email pipeline (weeks 5–6)
-- [ ] Gmail adapter (read-only, runner only), allow/deny lists, `senders` classification with one-time LLM classify + cache.
+- [ ] Outlook mail adapter (read-only, Microsoft Graph, runner only), allow/deny lists, `senders` classification with one-time LLM classify + cache. (ADR 0002: Gmail later.)
 - [ ] Sanitizer: Presidio pipeline, spaCy es/en, custom recognizers (cédula, NIT, CO phones, Luhn, IBAN, OTP-like), stable salted tokens, quoted-reply/signature stripping, 800-char cap, `sanitization_log`.
 - [ ] Vault: SQLCipher, key in OS keychain via Tauri; re-hydration in PC UI only; mobile opt-in flag.
 - [ ] Category profiles + extractors, in this order: `ics.py`, `utilities.py`, `government.py`, `delivery.py`, `subscription.py`, `health.py`, `jobs.py`, `learning.py`, `travel.py`, `personal.py`.
@@ -98,14 +98,14 @@ Each phase ends with something usable. Estimates assume part-time work.
 
 ### Phase 7 — Polish and hardening (ongoing)
 - [ ] Final sprite sheets (Aseprite), portraits, animation timing.
-- [ ] Outlook/Microsoft 365 adapter behind the ingest interface.
+- [ ] Google adapters (Gmail + Calendar) behind the ingest interface (ADR 0002).
 - [ ] Capacitor wrapper for iOS widgets (lock-screen "current quest").
 - [ ] Cloud fallback: if provider = ollama and no heartbeat in 24 h, optional Claude API run from Supabase cron.
 - [ ] Backup/export of config, packs and vault (encrypted).
 
 ## Open questions (decide when reached)
 
-1. Gmail restricted-scope verification vs. keeping the app in "testing" mode with your own account only.
+1. ~~Gmail restricted-scope verification~~ → deferred with Google (ADR 0002). Personal Microsoft account vs. work/school tenant (admin consent).
 2. Whether the mobile app should ever re-hydrate pseudonyms (default: no).
 3. Whisper model size on the PC in use (tiny vs small) — measure latency first.
 4. Whether `persona_speech` notifications go to mobile by default (default: PC only).
