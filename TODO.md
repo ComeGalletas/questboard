@@ -35,7 +35,7 @@ Tooling not named in the docs (confirmed 2026-09-24):
 - [ ] Create the hosted Supabase project, turn sign-ups off (keep the email provider on), `supabase db push` (needs your account; steps in README).
 - [x] Web app shell: auth, Today/Week/Month routes, status pill reading `runner_state`. (Static export for Vercel + Tauri; email/password sign-in so iOS stays in the PWA.)
 - [x] PWA manifest + iOS install; Web Push registration. (iOS install + real push: test on the phone once hosted.)
-- [x] CI: lint, type-check, schema codegen check, runner tests. (`.github/workflows/ci.yml`: schema freshness + tsc, web lint/test/build, runner ruff/pytest, sanitizer gate, migrations, live Supabase.)
+- [x] CI: lint, type-check, schema codegen check, runner tests. (`.github/workflows/ci.yml`: schema freshness + tsc, web lint/test/build, runner ruff/pytest, sanitizer gate, migrations, live Supabase.) All six jobs are required checks on `main` (ruleset "main", 2026-09-29).
 - [x] `runner/providers/base.py` + `claude_cli.py` with a fixture-driven test validating a QuestDiff response (first task #4 in PLAN.md).
 
 Done when: log in on PC and phone and see an empty board with a "Runner offline" pill.
@@ -60,7 +60,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [ ] PC delivery of notifications (Tauri reads `notifications` over realtime) + sprite state.
 
 ## Phase 3 — Calendar, setup assistant, weekly/monthly (week 4)
-- [ ] Google OAuth (read-only) + `gcal.py`.
+- [ ] Microsoft 365 / Outlook calendar (read-only, Microsoft Graph) + `outlook_cal.py` (ADR 0002: Outlook first, Google later).
 - [x] Setup assistant (P1): chat on /setup -> pending_live_requests -> runner answers between ticks (5 s poll) with a reply + config patch (goals, capacity, quiet hours, timezone, persona order); the user reviews before/after and applies. Seeding first weekly/monthly quests: run the weekly/monthly job manually after setup.
 - [x] `weekly` / `monthly` jobs: carry-over in code, period plans as proposals with sub-quest breakdown (weekly -> daily, monthly -> weekly), budget = 40 % / 25 % of the period's free time.
 - [ ] Retro questions and milestone line pools (need new line triggers + a UI; later).
@@ -68,20 +68,20 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [ ] Companion overlay window (frameless, transparent, always-on-top, click-through outside sprite).
 
 ## Phase 4 — Email pipeline (weeks 5–6)
-- [ ] Gmail adapter (read-only), allow/deny lists, `senders` classification.
+- [ ] Outlook mail adapter (read-only, Microsoft Graph, runner only), allow/deny lists, `senders` classification (ADR 0002; Gmail later).
 - [x] Sanitizer: Presidio + spaCy es/en NER, custom recognizers (cédula, NIT with check digit, CO phones, Luhn cards, IBAN mod-97, amounts, CO/US addresses, account/reference numbers, OTP codes and passwords), residual pass for leftover numbers/codes, stable salted tokens, reply/signature stripping, 1200-char window + 800-char cap, `log_rows` for `sanitization_log` (written by the Gmail pipeline). Tokens come from a `Vault` protocol; `MemoryVault` for now.
 - [x] Vault: `vault.db` (SQLCipher) + AES-GCM sealed values, master key in the OS keychain (runner via `keyring`; Tauri reads the same entry later), stable tokens across restarts, `rehydrate()` for the PC UI; `python -m runner vault`. Key loss = mapping loss until the encrypted backup (Phase 7).
-- [ ] Make "Sanitizer release gate" a required check (issue #14; needs repo admin, works from the phone).
+- [x] Make "Sanitizer release gate" a required check (issue #14): ruleset "main" (active, default branch) requires it plus the other five CI checks, and blocks deletion and force-push. Verified 2026-09-29.
 - [ ] Category profiles + extractors in order: ics, utilities, government, delivery, subscription, health, jobs, learning, travel, personal.
 - [ ] Quest templates per category; auto-complete by `reference_token`.
 - [ ] LLM-proposed bucket; PII output validator.
-- [x] Adversarial email fixture suite as CI release gate: `runner/tests/sanitize/fixtures/` (23 es/en cases), own CI job "Sanitizer release gate". Mark it required in branch protection.
+- [x] Adversarial email fixture suite as CI release gate: `runner/tests/sanitize/fixtures/` (23 es/en cases), own CI job "Sanitizer release gate", required on `main`.
 
 ## Phase 5 — Voice (week 7)
 - [ ] PC capture with whisper.cpp; mobile Web Speech with clip fallback (P1).
 - [x] Grammar parser (es/en): create/complete/snooze/defer/what's next, dates and times; one grammar in TS and Python locked to shared fixtures (ADR 0001: not chrono-node / dateparser).
 - [x] Confirmation card before any write (Today board: hold-to-speak via Web Speech where available, or type; Confirm or spoken/typed "confirm").
-- [ ] LLM fallback for unparsed utterances. Open question: it must carry the utterance to the runner, and transcripts are never persisted. Options: send only a sanitized, short-lived request row deleted after the answer, or run the fallback only on the PC where the transcript is already local.
+- [ ] LLM fallback for unparsed utterances. Decided 2026-09-29: the app sends the utterance through the sanitizer as a short-lived `pending_live_requests` row, the runner answers with a P1 diff, and the row is deleted after the answer (transcripts are never persisted). The same sanitized row also carries the clip fallback later.
 
 ## Phase 6 — Custom personas, assets, 3D (week 8)
 - [x] Pack loader with validation (manifest, fallback lines, sprite frames, size limits); missing frames -> idle; `python -m runner packs`.
@@ -92,22 +92,22 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 
 ## Phase 7 — Polish and hardening (ongoing)
 - [ ] Final sprite sheets, portraits, animation timing.
-- [ ] Outlook / Microsoft 365 adapter.
+- [ ] Google adapters (Gmail + Calendar) behind the ingest interface (moved here by ADR 0002).
 - [ ] Capacitor wrapper for iOS widgets.
 - [ ] Cloud fallback via Supabase cron when runner heartbeat is stale.
 - [ ] Encrypted backup/export of config, packs and vault.
 
 ## Open questions (decide when reached)
-- daily_am cost: one real run with 2 quests used ~49k input / ~38k output tokens (dialogue for 18 triggers x 2 variants per quest). Consider fewer variants or triggers per run if cost matters.
+- ~~daily_am cost~~ → fine for now (2026-09-29): one real run with 2 quests used ~49k input / ~38k output tokens (dialogue for 18 triggers x 2 variants per quest). Revisit if cost matters.
 - Monthly carry-over cap is 2 (CLAUDE.md only names daily 3 / weekly 2). Change `MAX_CARRIES` if you want otherwise.
 - Period budgets (weekly 40 %, monthly 25 % of free time) are guesses; tune `BUDGET_SHARE`.
 - ~~Freshness cap meaning~~ → confirmed: LLM jobs wait for ingest data < 2 h old (only with an integration on); manual runs skip it.
 - ~~Where proposed QuestDiffs wait~~ → decided: `quest_proposals` table (one row per op, pending/accepted/rejected).
 - ~~`push_subscriptions`~~ → added with notifications v1.
 - Custom packs live in `personas/` next to the built-ins; the web bundles them at build time. A per-machine packs folder (outside the repo) would also need the assets uploaded to Supabase storage for the phone. Decide when the first custom pack exists.
-- `progress` table: game stats are computed from the quest log in the app; decide whether the runner/weekly jobs need the cached daily rows before writing them.
-- `goals` table vs `config.goals`: pick one source of truth before the setup assistant.
-1. Gmail restricted-scope verification vs. "testing" mode with own account.
+- ~~`progress` table~~ → decided 2026-09-29: write cached daily rows (stats still computed in code from the quest log; the rows are a cache, not the source).
+- ~~`goals` table vs `config.goals`~~ → fine for now (2026-09-29): `config.goals` stays the working source (setup assistant and prompts use it); the `goals` table is unused.
+1. ~~Gmail restricted-scope verification~~ → deferred with Google (ADR 0002). New: personal Microsoft account or a work/school tenant (a tenant may need admin consent for `Mail.Read` / `Calendars.Read`).
 2. Mobile re-hydration of pseudonyms (default: no).
 3. Whisper model size (tiny vs small); measure latency first.
 4. `persona_speech` notifications on mobile by default (default: PC only).
