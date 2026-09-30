@@ -463,6 +463,19 @@ def test_cli_exit_codes_for_the_desktop_shell(tmp_path, monkeypatch, capsys) -> 
     assert (EXIT_ALREADY_RUNNING, EXIT_NOT_SIGNED_IN) == (3, 4)  # runner.rs matches on these
 
 
+def test_cli_logging_keeps_http_requests_out_of_the_log() -> None:
+    import logging
+
+    from runner.__main__ import QUIET_LOGGERS, configure_logging
+
+    configure_logging()
+    for name in QUIET_LOGGERS:
+        # Warnings and errors only: not every request, but failures still show.
+        assert logging.getLogger(name).level == logging.WARNING, name
+    # The runner's own loggers keep inheriting the root level (INFO when run for real).
+    assert logging.getLogger("runner.scheduler.loop").level == logging.NOTSET
+
+
 def test_cli_trigger_force_is_passed_through(tmp_path, monkeypatch, capsys) -> None:
     from runner.__main__ import main
 

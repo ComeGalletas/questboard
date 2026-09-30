@@ -48,6 +48,17 @@ from runner.supabase_repo import KeyringTokenStore, SupabaseRepo
 EXIT_ALREADY_RUNNING = 3  # another runner holds the lock: leave it be
 EXIT_NOT_SIGNED_IN = 4  # no Supabase settings: `python -m runner login` first
 
+# Libraries that log every request at INFO: the live-request poll alone would add three lines
+# every 5 s and bury the job decisions. Their warnings and errors still come through.
+QUIET_LOGGERS = ("httpx", "httpcore")
+
+
+def configure_logging() -> None:
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    for name in QUIET_LOGGERS:
+        logging.getLogger(name).setLevel(logging.WARNING)
+
+
 DEFAULT_CONFIG = {
     "timezone": "America/Bogota",
     "goals": [],
@@ -182,7 +193,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    configure_logging()
     if args.cmd == "login":
         return login()
     if args.cmd == "packs":
