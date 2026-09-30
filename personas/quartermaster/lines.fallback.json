@@ -263,6 +263,46 @@
       "variant": 2,
       "condition": "any",
       "text": "More orders than hands today. Cut one."
+    },
+    {
+      "trigger": "milestone",
+      "variant": 1,
+      "condition": "any",
+      "text": "Milestone logged. Books look good."
+    },
+    {
+      "trigger": "milestone",
+      "variant": 2,
+      "condition": "any",
+      "text": "{milestone}. Entered in the ledger."
+    },
+    {
+      "trigger": "milestone",
+      "milestone": "streak",
+      "variant": 1,
+      "condition": "any",
+      "text": "{streak} consecutive days. Supply line holding."
+    },
+    {
+      "trigger": "milestone",
+      "milestone": "level_up",
+      "variant": 1,
+      "condition": "any",
+      "text": "{milestone}. Promotion noted."
+    },
+    {
+      "trigger": "milestone",
+      "milestone": "period_done",
+      "variant": 1,
+      "condition": "any",
+      "text": "{milestone}. Manifest cleared."
+    },
+    {
+      "trigger": "milestone",
+      "milestone": "perfect_week",
+      "variant": 1,
+      "condition": "any",
+      "text": "Perfect week. Nothing past due. Carry on."
     }
   ]
 }

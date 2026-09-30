@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "milestone_pool.schema.json",
+  "title": "MilestonePool",
+  "description": "Model output of the weekly milestone pool: fresh lines per persona and milestone, so celebrations don't repeat. Cached as persona_lines (trigger milestone, no quest); the packs' fallback lines stay the offline floor.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lines"
+  ],
+  "properties": {
+    "lines": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "persona",
+          "milestone",
+          "variant",
+          "text"
+        ],
+        "properties": {
+          "persona": {
+            "$ref": "common.schema.json#/$defs/PersonaSlug"
+          },
+          "milestone": {
+            "$ref": "common.schema.json#/$defs/MilestoneId"
+          },
+          "variant": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "May use {milestone} (e.g. \"7-day streak\") and {streak}."
+          }
+        }
+      }
+    }
+  }
+}

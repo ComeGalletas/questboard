@@ -66,7 +66,7 @@ Checkboxes verified against the code on 2026-09-29; unchecked items with a "Part
 ### Phase 3 — Calendar, setup assistant, weekly/monthly (week 4)
 - [ ] Microsoft 365 / Outlook calendar (read-only, Microsoft Graph) + `outlook_cal.py` adapter; events → scheduled quests; free time → capacity. (ADR 0002: Outlook before Google.)
 - [x] Setup assistant: multi-turn chat (P1) with `save_config` structured output; review screen; re-runnable; patches config as diffs; seeds first weekly/monthly quests. (First weekly/monthly quests come from the Suggest button on Week/Month or the next scheduled run.)
-- [ ] `weekly` and `monthly` jobs with sub-quest breakdown, retro questions, board-level and milestone line pools. (Partial: jobs and sub-quest breakdown done; retro questions and milestone line pools not yet.)
+- [ ] `weekly` and `monthly` jobs with sub-quest breakdown, retro questions, board-level and milestone line pools. (Partial: jobs, sub-quest breakdown, board-level lines and milestone line pools done; retro questions next.)
 - [x] `pending_live_requests` + mobile "waiting for PC" state.
 - [x] Companion overlay window: frameless, transparent, always-on-top, click-through outside sprite, speech bubble, quick menu, hide on fullscreen, quiet hours.
 

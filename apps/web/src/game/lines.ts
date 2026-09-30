@@ -1,16 +1,20 @@
 // Persona line selection: trigger + mood condition + no-repeat + placeholder fill. Pure (P2).
 // Cached lines (authored by the runner) win; pack fallback lines cover gaps and offline.
 
-import type { FallbackLine, PersonaLine } from "@questboard/schema";
+import type { PersonaLine } from "@questboard/schema";
 import type { Mood } from "./progress.ts";
 
 export type Placeholders = Partial<
-  Record<"time_left" | "streak" | "days_carried" | "actual_vs_estimate" | "next_quest", string>
+  Record<
+    "time_left" | "streak" | "days_carried" | "actual_vs_estimate" | "next_quest" | "milestone",
+    string
+  >
 >;
 
 export type Candidate = Pick<PersonaLine, "trigger" | "condition" | "text" | "variant"> & {
   id?: string;
   used_at?: string | null;
+  milestone?: PersonaLine["milestone"];
 };
 
 export type Picked = { text: string; id?: string; source: "cache" | "fallback" };
@@ -51,7 +55,7 @@ export function selectLine(opts: {
   trigger: Candidate["trigger"];
   mood: Mood;
   cached: Candidate[];
-  fallback: FallbackLine[];
+  fallback: Candidate[]; // pack lines (FallbackLine) fit this shape
   values?: Placeholders;
   random?: () => number;
 }): Picked | null {
@@ -74,4 +78,32 @@ export function actualVsEstimate(actual: number, estimate: number): string {
   const diff = actual - estimate;
   if (Math.abs(diff) <= Math.max(2, estimate * 0.1)) return "right on estimate";
   return diff > 0 ? `${formatDuration(diff)} over` : `${formatDuration(-diff)} under`;
+}
+
+/**
+ * A milestone line: this milestone's own lines first (cached, then the pack's), else the generic
+ * milestone lines, which name it through {milestone}.
+ */
+export function selectMilestoneLine(opts: {
+  milestone: NonNullable<PersonaLine["milestone"]>;
+  mood: Mood;
+  cached: Candidate[];
+  fallback: Candidate[]; // pack lines (FallbackLine) fit this shape
+  values: Placeholders;
+  random?: () => number;
+}): Picked | null {
+  const own = (l: Candidate) => l.trigger === "milestone" && l.milestone === opts.milestone;
+  const generic = (l: Candidate) => l.trigger === "milestone" && !l.milestone;
+  for (const keep of [own, generic]) {
+    const picked = selectLine({
+      trigger: "milestone",
+      mood: opts.mood,
+      cached: opts.cached.filter(keep),
+      fallback: opts.fallback.filter(keep),
+      values: opts.values,
+      random: opts.random,
+    });
+    if (picked) return picked;
+  }
+  return null;
 }

@@ -48,7 +48,11 @@ class Repo(Protocol):
         ...
 
     def replace_board_lines(self, rows: list[dict[str, Any]]) -> None:
-        """Drop unused board-level lines (quest_id null), then insert `rows`."""
+        """Drop unused board-level lines (quest_id null, not milestone), then insert `rows`."""
+        ...
+
+    def replace_milestone_lines(self, rows: list[dict[str, Any]]) -> None:
+        """Drop the cached milestone pool (trigger milestone, no quest), then insert `rows`."""
         ...
 
     def insert_notifications(self, rows: list[dict[str, Any]]) -> None:
@@ -191,7 +195,20 @@ class MemoryRepo:
         self.lines = [
             line
             for line in self.lines
-            if not (line.get("quest_id") is None and line.get("used_at") is None)
+            if not (
+                line.get("quest_id") is None
+                and line.get("used_at") is None
+                and line.get("trigger") != "milestone"
+            )
+        ]
+        self.lines.extend(rows)
+
+    def replace_milestone_lines(self, rows: list[dict[str, Any]]) -> None:
+        self._check()
+        self.lines = [
+            line
+            for line in self.lines
+            if not (line.get("quest_id") is None and line.get("trigger") == "milestone")
         ]
         self.lines.extend(rows)
 

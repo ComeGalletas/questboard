@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "milestone_reached.schema.json",
+  "title": "MilestoneReached",
+  "description": "A row of `milestones_reached`: a milestone the app detected (P2, in code) and celebrated once, across devices. `key` makes it unique (e.g. streak:7:2026-09-24, level:3, period_done:<quest id>, perfect_week:2026-09-21).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "key",
+    "milestone",
+    "label",
+    "reached_at"
+  ],
+  "properties": {
+    "key": {
+      "type": "string",
+      "pattern": "^[a-z0-9_:.-]+$",
+      "maxLength": 120
+    },
+    "milestone": {
+      "$ref": "common.schema.json#/$defs/MilestoneId"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "description": "What fills {milestone}, e.g. \"7-day streak\"."
+    },
+    "reached_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

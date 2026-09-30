@@ -7,6 +7,8 @@ export interface QuestboardSchemas {
   extracted_record?: ExtractedRecord;
   fallback_lines?: FallbackLines;
   llm_run?: LLMRun;
+  milestone_pool?: MilestonePool;
+  milestone_reached?: MilestoneReached;
   notification?: Notification;
   notify_test_request?: NotifyTestRequest;
   notify_test_result?: NotifyTestResult;
@@ -293,14 +295,19 @@ export interface FallbackLine {
     | "all_done"
     | "half_by_noon"
     | "nothing_by_15"
-    | "over_capacity";
+    | "over_capacity"
+    | "milestone";
+  /**
+   * Only with trigger milestone: the milestone this line is for; omit for a generic milestone line (uses {milestone}).
+   */
+  milestone?: "streak" | "level_up" | "period_done" | "perfect_week";
   variant: number;
   /**
    * Mood bucket; mood itself is computed in code from completion rate.
    */
   condition: "any" | "pleased" | "neutral" | "concerned";
   /**
-   * May contain runtime placeholders {time_left} {streak} {days_carried} {actual_vs_estimate} {next_quest}.
+   * May contain runtime placeholders {time_left} {streak} {days_carried} {actual_vs_estimate} {next_quest} {milestone}.
    */
   text: string;
 }
@@ -426,6 +433,53 @@ export interface LLMRun {
 export interface TokenUsage {
   input: number;
   output: number;
+}
+/**
+ * Model output of the weekly milestone pool: fresh lines per persona and milestone, so celebrations don't repeat. Cached as persona_lines (trigger milestone, no quest); the packs' fallback lines stay the offline floor.
+ */
+export interface MilestonePool {
+  /**
+   * @maxItems 64
+   */
+  lines: {
+    /**
+     * Persona pack slug (coach, teacher, mom, quartermaster, or a custom pack).
+     *
+     * This interface was referenced by `Common`'s JSON-Schema
+     * via the `definition` "PersonaSlug".
+     */
+    persona: string;
+    /**
+     * Milestones the personas celebrate (the registry). Adding one: add the id here, a detector in apps/web/src/game/milestones.ts (the compiler insists), and optionally pack lines; packs without a specific line use their generic milestone lines with {milestone}. No DB migration: lines and reached rows store the id as text.
+     *
+     * This interface was referenced by `Common`'s JSON-Schema
+     * via the `definition` "MilestoneId".
+     */
+    milestone: "streak" | "level_up" | "period_done" | "perfect_week";
+    variant: number;
+    /**
+     * May use {milestone} (e.g. "7-day streak") and {streak}.
+     */
+    text: string;
+  }[];
+}
+/**
+ * A row of `milestones_reached`: a milestone the app detected (P2, in code) and celebrated once, across devices. `key` makes it unique (e.g. streak:7:2026-09-24, level:3, period_done:<quest id>, perfect_week:2026-09-21).
+ */
+export interface MilestoneReached {
+  key: string;
+  /**
+   * Milestones the personas celebrate (the registry). Adding one: add the id here, a detector in apps/web/src/game/milestones.ts (the compiler insists), and optionally pack lines; packs without a specific line use their generic milestone lines with {milestone}. No DB migration: lines and reached rows store the id as text.
+   *
+   * This interface was referenced by `Common`'s JSON-Schema
+   * via the `definition` "MilestoneId".
+   */
+  milestone: "streak" | "level_up" | "period_done" | "perfect_week";
+  /**
+   * What fills {milestone}, e.g. "7-day streak".
+   */
+  label: string;
+  reached_at: string;
 }
 /**
  * A row of `notifications`. The runner plans and dedups them and stamps sent_at once quiet hours allow delivery; the phone gets Web Push, the PC desktop shell shows rows with the pc channel and stamps pc_shown_at.
@@ -582,14 +636,19 @@ export interface PersonaLine {
     | "all_done"
     | "half_by_noon"
     | "nothing_by_15"
-    | "over_capacity";
+    | "over_capacity"
+    | "milestone";
+  /**
+   * Only with trigger milestone: the milestone this line is for; null = a generic milestone line.
+   */
+  milestone?: ("streak" | "level_up" | "period_done" | "perfect_week") | null;
   variant: number;
   /**
    * Mood bucket; mood itself is computed in code from completion rate.
    */
   condition: "any" | "pleased" | "neutral" | "concerned";
   /**
-   * May contain runtime placeholders {time_left} {streak} {days_carried} {actual_vs_estimate} {next_quest}.
+   * May contain runtime placeholders {time_left} {streak} {days_carried} {actual_vs_estimate} {next_quest} {milestone}.
    */
   text: string;
   used_at?: string | null;

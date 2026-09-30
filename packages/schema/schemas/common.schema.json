@@ -21,7 +21,11 @@
     },
     "Cadence": {
       "type": "string",
-      "enum": ["daily", "weekly", "monthly"]
+      "enum": [
+        "daily",
+        "weekly",
+        "monthly"
+      ]
     },
     "Category": {
       "type": "string",
@@ -42,11 +46,22 @@
     },
     "ProviderName": {
       "type": "string",
-      "enum": ["claude-cli", "ollama", "claude-api"]
+      "enum": [
+        "claude-cli",
+        "ollama",
+        "claude-api"
+      ]
     },
     "JobName": {
       "type": "string",
-      "enum": ["ingest", "daily_am", "daily_pm", "weekly", "monthly", "persona_digest"]
+      "enum": [
+        "ingest",
+        "daily_am",
+        "daily_pm",
+        "weekly",
+        "monthly",
+        "persona_digest"
+      ]
     },
     "NotificationKind": {
       "type": "string",
@@ -68,16 +83,33 @@
     "QuietHours": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["start", "end"],
+      "required": [
+        "start",
+        "end"
+      ],
       "properties": {
-        "start": { "$ref": "#/$defs/LocalTime" },
-        "end": { "$ref": "#/$defs/LocalTime" }
+        "start": {
+          "$ref": "#/$defs/LocalTime"
+        },
+        "end": {
+          "$ref": "#/$defs/LocalTime"
+        }
       }
     },
     "LocalTime": {
       "type": "string",
       "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$",
       "description": "Wall-clock time HH:MM in the configured timezone."
+    },
+    "MilestoneId": {
+      "type": "string",
+      "enum": [
+        "streak",
+        "level_up",
+        "period_done",
+        "perfect_week"
+      ],
+      "description": "Milestones the personas celebrate (the registry). Adding one: add the id here, a detector in apps/web/src/game/milestones.ts (the compiler insists), and optionally pack lines; packs without a specific line use their generic milestone lines with {milestone}. No DB migration: lines and reached rows store the id as text."
     }
   }
 }

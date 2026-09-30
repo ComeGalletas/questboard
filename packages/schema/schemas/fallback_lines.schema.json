@@ -52,8 +52,13 @@
             "all_done",
             "half_by_noon",
             "nothing_by_15",
-            "over_capacity"
+            "over_capacity",
+            "milestone"
           ]
+        },
+        "milestone": {
+          "$ref": "common.schema.json#/$defs/MilestoneId",
+          "description": "Only with trigger milestone: the milestone this line is for; omit for a generic milestone line (uses {milestone})."
         },
         "variant": {
           "type": "integer",
@@ -74,7 +79,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 280,
-          "description": "May contain runtime placeholders {time_left} {streak} {days_carried} {actual_vs_estimate} {next_quest}."
+          "description": "May contain runtime placeholders {time_left} {streak} {days_carried} {actual_vs_estimate} {next_quest} {milestone}."
         }
       }
     }

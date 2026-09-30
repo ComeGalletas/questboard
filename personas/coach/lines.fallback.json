@@ -263,6 +263,46 @@
       "variant": 2,
       "condition": "any",
       "text": "Board's overloaded. Even pros rest."
+    },
+    {
+      "trigger": "milestone",
+      "variant": 1,
+      "condition": "any",
+      "text": "Milestone unlocked. That's what reps buy you."
+    },
+    {
+      "trigger": "milestone",
+      "variant": 2,
+      "condition": "any",
+      "text": "Big moment: {milestone}. Take the win, then back to work."
+    },
+    {
+      "trigger": "milestone",
+      "milestone": "streak",
+      "variant": 1,
+      "condition": "any",
+      "text": "{streak} days straight. The streak is yours now. Protect it."
+    },
+    {
+      "trigger": "milestone",
+      "milestone": "level_up",
+      "variant": 1,
+      "condition": "any",
+      "text": "{milestone}! New level, same hunger."
+    },
+    {
+      "trigger": "milestone",
+      "milestone": "period_done",
+      "variant": 1,
+      "condition": "any",
+      "text": "{milestone}. Whistle blown, you finished the set."
+    },
+    {
+      "trigger": "milestone",
+      "milestone": "perfect_week",
+      "variant": 1,
+      "condition": "any",
+      "text": "A perfect week. Every rep, every day. Take a bow."
     }
   ]
 }

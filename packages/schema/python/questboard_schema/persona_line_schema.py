@@ -33,6 +33,7 @@ class Trigger(StrEnum):
     half_by_noon = "half_by_noon"
     nothing_by_15 = "nothing_by_15"
     over_capacity = "over_capacity"
+    milestone = "milestone"
 
 
 class Condition(StrEnum):
@@ -50,6 +51,10 @@ class PersonaLine(BaseModel):
     quest_id: UUID | None = None
     persona: common_schema.PersonaSlug
     trigger: Trigger
+    milestone: common_schema.MilestoneId | None = Field(
+        None,
+        description="Only with trigger milestone: the milestone this line is for; null = a generic milestone line.",
+    )
     variant: int = Field(..., ge=1, le=3)
     condition: Condition = Field(
         ...,
@@ -57,7 +62,7 @@ class PersonaLine(BaseModel):
     )
     text: str = Field(
         ...,
-        description="May contain runtime placeholders {time_left} {streak} {days_carried} {actual_vs_estimate} {next_quest}.",
+        description="May contain runtime placeholders {time_left} {streak} {days_carried} {actual_vs_estimate} {next_quest} {milestone}.",
         max_length=280,
         min_length=1,
     )

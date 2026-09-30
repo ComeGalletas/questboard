@@ -164,6 +164,10 @@ def _fallback_lines(pack_dir: Path, report: PackReport) -> None:
             report.errors.append(f"lines.fallback.json: lines.{i} unknown placeholder(s)")
         if pii_problem(line.text):
             report.errors.append(f"lines.fallback.json: lines.{i} {pii_problem(line.text)}")
+        if line.milestone is not None and line.trigger != Trigger.milestone:
+            report.errors.append(
+                f"lines.fallback.json: lines.{i} milestone is only for milestone lines"
+            )
     for trigger in Trigger:
         mine = [line for line in lines if line.trigger == trigger]
         # With no runtime values the app still needs something to say for every trigger.

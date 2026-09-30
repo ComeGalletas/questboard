@@ -22,6 +22,7 @@ from questboard_schema.quest_schema import Quest
 from runner.engine.calibration import WINDOW_DAYS, calibration
 from runner.engine.carry import period_carry_patch
 from runner.engine.daily import HISTORY_DAYS, _outcomes, _quest_view, capacity_minutes
+from runner.engine.milestone_pool import milestone_pool
 from runner.engine.packs import Pack, load_packs
 from runner.engine.prompts import period_system_prompt, period_user_prompt
 from runner.engine.rollup import rollup, sub_quests
@@ -269,6 +270,8 @@ def period_job(cadence: str, ctx: JobContext, packs: list[Pack] | None = None) -
     )
     diff = result.output
     _write(ctx, diff)
+    if cadence == "weekly":
+        milestone_pool(ctx, packs)  # never fails the plan; the packs' lines are the floor
     return JobResult(result.provider, result.usage, ops_count=len(diff.ops), summary=diff.summary)
 
 

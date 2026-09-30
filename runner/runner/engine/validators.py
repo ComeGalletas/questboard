@@ -30,7 +30,14 @@ QUEST_TRIGGERS = [
     "abandoned",
 ]
 BOARD_TRIGGERS = ("all_done", "half_by_noon", "nothing_by_15", "over_capacity")
-PLACEHOLDERS = {"time_left", "streak", "days_carried", "actual_vs_estimate", "next_quest"}
+PLACEHOLDERS = {
+    "time_left",
+    "streak",
+    "days_carried",
+    "actual_vs_estimate",
+    "next_quest",
+    "milestone",
+}
 # Invariant 4: money enters only through deterministic extractors.
 MONEY_CATEGORIES = {"utilities", "subscription"}
 CAPACITY_SLACK = 1.15
