@@ -69,7 +69,10 @@ pnpm tauri build --debug --no-bundle   # quick local exe in src-tauri/target/deb
 - `questboard://today|week|month|quest/<id>` links open the matching board in the running app
   (or start it). Each launch registers the scheme to the executable being run, so after trying a
   dev build, run the installed app once to point links back at it.
-- Web Push is off inside the shell; PC notifications come from the shell (next PR).
+- PC notifications: once the runner releases one (after quiet hours), the shell shows it as a
+  Windows toast (clicking it opens the matching board) and the persona reacts; each shows once
+  (`pc_shown_at`). Installed builds show as Questboard; dev builds show under PowerShell, as
+  unregistered Windows apps must. Web Push is off inside the shell; it's for the phone.
 
 **The runner runs inside the shell.** On start the shell runs `uv run python -m runner run` in
 this repo's `runner/` folder (the checkout it was built from), restarts it after a crash

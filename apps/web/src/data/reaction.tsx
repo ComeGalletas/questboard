@@ -7,7 +7,8 @@ import type { Trigger } from "../game/actions";
 
 export type SpriteState = "idle" | "talk" | "happy" | "concerned" | "sleep";
 
-export type Reaction = { persona: string; trigger: Trigger; text: string; state: SpriteState };
+/** `trigger` is set for quest reactions; PC notifications react without one. */
+export type Reaction = { persona: string; trigger?: Trigger; text: string; state: SpriteState };
 
 type Ctx = { reaction: Reaction | null; react: (r: Reaction) => void };
 

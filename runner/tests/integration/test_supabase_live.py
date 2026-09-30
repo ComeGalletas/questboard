@@ -215,3 +215,24 @@ def test_notifications_dedup_and_push_subscriptions(repo: SupabaseRepo) -> None:
     assert sub.json()[0]["endpoint"] in sent
     after = rest(repo, "GET", "notifications", params={"target": f"eq.{target}"}).json()
     assert after[0]["sent_at"] is not None
+
+    # The desktop shell: the row matches the shared schema, its query finds it until stamped.
+    from questboard_schema.notification_schema import Notification
+
+    Notification.model_validate(after[0])
+    pc_query = {
+        "target": f"eq.{target}",
+        "channels": "cs.{pc}",
+        "sent_at": "not.is.null",
+        "pc_shown_at": "is.null",
+    }
+    assert len(rest(repo, "GET", "notifications", params=pc_query).json()) == 1
+    stamped = rest(
+        repo,
+        "PATCH",
+        "notifications",
+        params={"id": f"eq.{after[0]['id']}"},
+        json={"pc_shown_at": datetime.now(BOGOTA).isoformat()},
+    )
+    assert stamped.status_code in (200, 204), stamped.text
+    assert rest(repo, "GET", "notifications", params=pc_query).json() == []

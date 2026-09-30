@@ -41,6 +41,11 @@ select pg_temp.expect_eq(
   (select count(*) from pg_publication_tables where pubname = 'supabase_realtime'
      and tablename in ('quests', 'persona_lines', 'runner_state')), 3,
   'realtime tables');
+-- The desktop shell shows PC notifications as the runner releases them.
+select pg_temp.expect_eq(
+  (select count(*) from pg_publication_tables where pubname = 'supabase_realtime'
+     and tablename = 'notifications'), 1,
+  'notifications on realtime');
 
 -- As the owner: defaults fill user_id; rows are visible.
 set role authenticated;
@@ -108,6 +113,13 @@ select pg_temp.expect_error(
   $$insert into public.notifications (kind, target, dedup_date, channels)
     values ('quest_due', 'questboard://quest/1', '2026-09-25', '{push}')$$,
   'duplicate notification');
+
+-- The desktop shell stamps pc_shown_at so each notification shows on the PC once.
+update public.notifications set sent_at = now(), pc_shown_at = now()
+where target = 'questboard://quest/1';
+select pg_temp.expect_eq(
+  (select count(*) from public.notifications where pc_shown_at is not null), 1,
+  'owner stamps pc_shown_at');
 
 -- Test notifications are a live request kind (the runner holds the VAPID key).
 insert into public.pending_live_requests (kind, payload) values ('notify_test', '{"kind": "day_ready"}');

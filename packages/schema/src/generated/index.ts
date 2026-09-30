@@ -7,6 +7,7 @@ export interface QuestboardSchemas {
   extracted_record?: ExtractedRecord;
   fallback_lines?: FallbackLines;
   llm_run?: LLMRun;
+  notification?: Notification;
   notify_test_request?: NotifyTestRequest;
   notify_test_result?: NotifyTestResult;
   persona_digest?: PersonaDigest;
@@ -424,6 +425,48 @@ export interface LLMRun {
 export interface TokenUsage {
   input: number;
   output: number;
+}
+/**
+ * A row of `notifications`. The runner plans and dedups them and stamps sent_at once quiet hours allow delivery; the phone gets Web Push, the PC desktop shell shows rows with the pc channel and stamps pc_shown_at.
+ */
+export interface Notification {
+  id: string;
+  /**
+   * Notification kinds (CLAUDE.md "Notifications"); same list as the notifications.kind check in the DB.
+   *
+   * This interface was referenced by `Common`'s JSON-Schema
+   * via the `definition` "NotificationKind".
+   */
+  kind:
+    | "day_ready"
+    | "day_recap"
+    | "week_ready"
+    | "month_ready"
+    | "quest_due"
+    | "quest_overdue"
+    | "capacity_alert"
+    | "streak_risk"
+    | "persona_speech"
+    | "runner_stale"
+    | "live_pending";
+  /**
+   * Deep link the notification opens.
+   */
+  target: string;
+  persona?: string | null;
+  dedup_date: string;
+  channels: ("pc" | "push")[];
+  title?: string | null;
+  body?: string | null;
+  /**
+   * Released for delivery (after quiet hours). Null while held.
+   */
+  sent_at?: string | null;
+  /**
+   * When the desktop shell showed it; each notification shows on the PC once.
+   */
+  pc_shown_at?: string | null;
+  created_at: string;
 }
 /**
  * Payload of a `notify_test` pending_live_requests row: send a test Web Push of this kind to every subscribed device now (no quiet hours, dedup or max age; nothing is written to notifications).

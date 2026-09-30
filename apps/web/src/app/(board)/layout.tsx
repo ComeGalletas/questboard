@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { NotifyTest } from "@/components/NotifyTest";
+import { PcNotifier } from "@/components/PcNotifier";
 import { PushToggle } from "@/components/PushToggle";
 import { StatusPill } from "@/components/StatusPill";
 import { DemoStore } from "@/data/demo-store";
@@ -57,6 +58,7 @@ export default function BoardLayout({ children }: { children: React.ReactNode })
   return (
     <LogProvider store={store}>
       <ReactionProvider>
+        <PcNotifier />
         <div className="shell">
           <header className="topbar">
             <h1>Questboard</h1>
