@@ -56,8 +56,12 @@ pnpm build                      # installer (NSIS) in src-tauri/target/release/b
 pnpm tauri build --debug --no-bundle   # quick local exe in src-tauri/target/debug/
 ```
 
-- Closing the window hides it; the app stays in the tray (open, runner status / pause / restart
-  / log, start at login, quit).
+- Closing the window hides it; the app stays in the tray (open, show companion, runner status /
+  pause / restart / log, start at login, quit).
+- The companion is a small always-on-top persona in the bottom-right corner: it says PC
+  notifications in a bubble, sleeps in quiet hours and hides while a fullscreen app runs. Click
+  it for a menu (open Questboard, what's next, hide); drag it to move it (the spot is
+  remembered). Clicks pass through everywhere except the sprite, bubble and menu.
 - Start at login is turned on the first time a release build runs (launched `--minimized`,
   straight to the tray); the tray toggle owns it after that. While it's on, each release launch
   points the login entry at the executable that is running (so the installed app takes over

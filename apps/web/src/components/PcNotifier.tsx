@@ -6,7 +6,7 @@
 import { useEffect } from "react";
 import { useLog } from "@/data/log";
 import { useReaction } from "@/data/reaction";
-import { isDesktop, showNotification } from "@/lib/desktop";
+import { companionSay, isDesktop, showNotification } from "@/lib/desktop";
 import { MAX_AGE_MS, pcDue, spriteForKind, toastFor } from "@/lib/pc-notifications";
 
 export function PcNotifier() {
@@ -46,12 +46,15 @@ export function PcNotifier() {
             if (stopped) return;
             const toast = toastFor(n);
             await showNotification(toast).catch(() => {});
-            if (n.persona)
-              react({
+            if (n.persona) {
+              const cue = {
                 persona: n.persona,
                 text: toast.body || toast.title,
                 state: spriteForKind(n.kind),
-              });
+              };
+              react(cue);
+              await companionSay(cue).catch(() => {}); // the overlay says it too
+            }
           }
         } while (again && !stopped);
       } catch {

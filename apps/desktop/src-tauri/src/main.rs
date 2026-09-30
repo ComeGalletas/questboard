@@ -3,6 +3,7 @@
 //! - `dashboard` window: hides on close, so the app keeps living in the tray.
 //! - Tray: open the dashboard, runner status + pause / restart / log, start at login, quit.
 //! - Runner: hosted by `runner::Supervisor` (`uv run python -m runner run` from this repo).
+//! - Companion overlay: `companion::` (sprite window, click-through, hides for fullscreen apps).
 //! - PC notifications: the web app (which owns the Supabase session) listens for released rows
 //!   and calls `show_notification`; clicking the toast opens its questboard:// target.
 //! - Start at login: on by default (CLAUDE.md "Starts at login"), launched with `--minimized`
@@ -13,6 +14,7 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod companion;
 mod runner;
 
 use std::fs;
@@ -130,6 +132,17 @@ struct RunnerItems {
 
 fn build_tray(app: &AppHandle) -> tauri::Result<RunnerItems> {
     let open = MenuItem::with_id(app, "open", "Open Questboard", true, None::<&str>)?;
+    let companion_on = app.state::<companion::Companion>().wanted();
+    let companion = CheckMenuItem::with_id(
+        app,
+        "companion",
+        "Show companion",
+        true,
+        companion_on,
+        None::<&str>,
+    )?;
+    app.state::<companion::Companion>()
+        .set_menu_item(companion.clone());
     let status = MenuItem::with_id(
         app,
         "runner-status",
@@ -154,6 +167,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<RunnerItems> {
         app,
         &[
             &open,
+            &companion,
             &PredefinedMenuItem::separator(app)?,
             &status,
             &pause,
@@ -171,6 +185,10 @@ fn build_tray(app: &AppHandle) -> tauri::Result<RunnerItems> {
         .show_menu_on_left_click(false)
         .on_menu_event(move |app, event| match event.id().as_ref() {
             "open" => show_dashboard(app),
+            "companion" => {
+                let companion = app.state::<companion::Companion>();
+                companion.set_wanted(!companion.wanted());
+            }
             "runner-pause" => {
                 let sup = app.state::<runner::Supervisor>();
                 sup.set_paused(!sup.is_paused());
@@ -252,7 +270,15 @@ fn main() {
             Some(vec![MINIMIZED]),
         ))
         .manage(PendingLink::default())
-        .invoke_handler(tauri::generate_handler![take_deep_link, show_notification])
+        .invoke_handler(tauri::generate_handler![
+            take_deep_link,
+            show_notification,
+            companion::companion_hit_areas,
+            companion::companion_say,
+            companion::companion_drag,
+            companion::open_dashboard,
+            companion::hide_companion,
+        ])
         .setup(|app| {
             let handle = app.handle().clone();
 
@@ -268,21 +294,32 @@ fn main() {
             });
 
             init_autostart(&handle);
+            app.manage(companion::Companion::new(
+                handle.path().app_config_dir().ok(),
+            ));
             let items = build_tray(&handle)?;
             start_runner(&handle, items)?;
+            if let Some(window) = handle.get_webview_window(companion::LABEL) {
+                companion::place(&window, &handle.state::<companion::Companion>());
+            }
+            companion::watch(handle.clone());
 
             if !std::env::args().any(|arg| arg == MINIMIZED) {
                 show_dashboard(&handle);
             }
             Ok(())
         })
-        .on_window_event(|window, event| {
-            if let WindowEvent::CloseRequested { api, .. } = event
-                && window.label() == DASHBOARD
-            {
+        .on_window_event(|window, event| match event {
+            WindowEvent::CloseRequested { api, .. } if window.label() == DASHBOARD => {
                 api.prevent_close();
                 let _ = window.hide();
             }
+            WindowEvent::Moved(position) if window.label() == companion::LABEL => {
+                window
+                    .state::<companion::Companion>()
+                    .save_position(*position);
+            }
+            _ => {}
         })
         .build(tauri::generate_context!())
         .expect("error while building the Questboard desktop shell")

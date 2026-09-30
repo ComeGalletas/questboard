@@ -10,6 +10,7 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 # generate_context! embeds plugin config as JSON and expects this crate by name.
+serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri = { version = "2", features = ["tray-icon"] }
 tauri-plugin-autostart = "2"
@@ -19,3 +20,5 @@ tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
 [target.'cfg(windows)'.dependencies]
 # Native toasts with a click callback (the notification plugin has no desktop click actions).
 tauri-winrt-notification = "0.8"
+# Fullscreen check for the companion overlay (SHQueryUserNotificationState); tauri already uses it.
+windows = { version = "0.62", features = ["Win32_UI_Shell"] }
