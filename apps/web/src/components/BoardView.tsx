@@ -9,6 +9,7 @@ import { PersonaPanel } from "./PersonaPanel";
 import { ProposalStrip } from "./ProposalStrip";
 import { QuestForm } from "./QuestForm";
 import { QuestRow } from "./QuestRow";
+import { RetroCard } from "./RetroCard";
 import { StatsStrip } from "./StatsStrip";
 import { SuggestButton } from "./SuggestButton";
 import { useQuestActions } from "./useQuestActions";
@@ -33,6 +34,9 @@ export function BoardView({ board }: { board: Board }) {
       <StatsStrip summary={summary} showCapacity={board === "today"} />
       <section className="board-main">
         {board === "today" && <VoiceBar act={act} next={summary.next} />}
+        {board !== "today" && (
+          <RetroCard cadence={board === "week" ? "weekly" : "monthly"} speaker={summary.speaker} />
+        )}
         <ProposalStrip board={board} />
         <section className="panel board" aria-labelledby={`${board}-title`}>
           <div className="board-head">

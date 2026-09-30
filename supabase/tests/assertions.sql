@@ -129,6 +129,14 @@ select pg_temp.expect_error(
     values ('coach', 'assigned', 'streak', 1, 'x')$$,
   'milestone id on a non-milestone line');
 
+-- Retros: one per period and cadence.
+insert into public.retros (cadence, period_start, period_end, questions, source)
+values ('weekly', '2026-09-21', '2026-09-27', '[{"id": "q1", "text": "What went well?"}]', 'fallback');
+select pg_temp.expect_error(
+  $$insert into public.retros (cadence, period_start, period_end, questions, source)
+    values ('weekly', '2026-09-21', '2026-09-27', '[]', 'model')$$,
+  'second retro for the same week');
+
 -- The desktop shell stamps pc_shown_at so each notification shows on the PC once.
 update public.notifications set sent_at = now(), pc_shown_at = now()
 where target = 'questboard://quest/1';

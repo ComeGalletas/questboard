@@ -23,6 +23,7 @@ from runner.engine.calibration import WINDOW_DAYS, calibration
 from runner.engine.carry import carry_patch
 from runner.engine.packs import Pack, load_packs
 from runner.engine.prompts import system_prompt, user_prompt
+from runner.engine.retro import REFLECTION_DAYS, reflection
 from runner.engine.rollup import period_end, rollup, sub_quests
 from runner.engine.validators import PlanContext, check_plan
 from runner.providers.base import GenerationRequest, run_with_fallback
@@ -120,7 +121,11 @@ def _outcomes(quests: list[Quest], today: date) -> dict[str, Any]:
 
 
 def build_context(
-    config: Config, quests: list[Quest], feedback: list[dict[str, Any]], today: date
+    config: Config,
+    quests: list[Quest],
+    feedback: list[dict[str, Any]],
+    today: date,
+    reflection: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], PlanContext, list[str]]:
     open_quests = [q for q in quests if q.status.value in ACTIVE]
     todays = [q for q in open_quests if _on_today(q, today)]
@@ -141,6 +146,8 @@ def build_context(
             {"action": f["action"], "quest_id": f.get("quest_id")} for f in feedback[-20:]
         ],
     }
+    if reflection:
+        prompt_ctx["reflection"] = reflection  # the user's latest answered retro
     plan_ctx = PlanContext(
         today=today,
         open_quests={
@@ -220,7 +227,8 @@ def daily_am(ctx: JobContext, packs: list[Pack] | None = None) -> JobResult:
     packs = packs if packs is not None else load_packs()
     quests = ctx.repo.list_quests(since=today - timedelta(days=WINDOW_DAYS))
     feedback = ctx.repo.list_feedback(since=today - timedelta(days=HISTORY_DAYS))
-    prompt_ctx, plan_ctx, todays_ids = build_context(ctx.config, quests, feedback, today)
+    past = reflection(ctx.repo.latest_answered_retro(today - timedelta(days=REFLECTION_DAYS)))
+    prompt_ctx, plan_ctx, todays_ids = build_context(ctx.config, quests, feedback, today, past)
     plan_ctx = PlanContext(**{**plan_ctx.__dict__, "personas": {p.slug for p in packs}})
     request = GenerationRequest(
         job=ctx.occurrence.job,

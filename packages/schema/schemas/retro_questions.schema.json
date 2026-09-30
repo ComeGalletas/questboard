@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "retro_questions.schema.json",
+  "title": "RetroQuestions",
+  "description": "Model output for a retro: 2-3 short, open questions about how the period went, in the user's language.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "questions"
+  ],
+  "properties": {
+    "questions": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 3,
+      "items": {
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 160
+      }
+    }
+  }
+}

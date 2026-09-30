@@ -12,7 +12,7 @@ import json
 import os
 import sys
 import uuid
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -284,3 +284,34 @@ def test_milestone_pool_survives_the_daily_board_lines(repo: SupabaseRepo) -> No
     assert rows == [{"milestone": "streak", "text": "Live pool: {milestone}."}]
     repo.replace_milestone_lines([])
     assert rest(repo, "GET", "persona_lines", params=params).json() == []
+
+
+def test_retro_round_trip_through_rls(repo: SupabaseRepo) -> None:
+    """Ask once per period (a duplicate is ignored), answer in the app, read it back for plans."""
+    start = date(2020, 1, 6)  # a week no real data uses
+    row = {
+        "cadence": "weekly",
+        "period_start": start.isoformat(),
+        "period_end": (start + timedelta(days=6)).isoformat(),
+        "questions": [
+            {"id": "q1", "text": "What went well?"},
+            {"id": "q2", "text": "What didn't?"},
+        ],
+        "status": "open",
+        "source": "fallback",
+    }
+    repo.insert_retro(row)
+    repo.insert_retro(row)  # the unique key makes a second ask a no-op
+    found = repo.get_retro("weekly", start)
+    assert found is not None
+    answered = rest(
+        repo,
+        "PATCH",
+        "retros",
+        params={"id": f"eq.{found['id']}"},
+        json={"status": "answered", "answers": [{"id": "q1", "answer": "Mornings"}]},
+    )
+    assert answered.status_code in (200, 204), answered.text
+    latest = repo.latest_answered_retro(start)
+    assert latest is not None and latest["answers"] == [{"id": "q1", "answer": "Mornings"}]
+    rest(repo, "DELETE", "retros", params={"id": f"eq.{found['id']}"})
