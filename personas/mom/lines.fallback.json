@@ -263,6 +263,46 @@
       "variant": 2,
       "condition": "any",
       "text": "You're taking on too much. Move something."
+    },
+    {
+      "trigger": "milestone",
+      "variant": 1,
+      "condition": "any",
+      "text": "Oh sweetheart, look at you. So proud."
+    },
+    {
+      "trigger": "milestone",
+      "variant": 2,
+      "condition": "any",
+      "text": "{milestone}! Now eat something nice, love."
+    },
+    {
+      "trigger": "milestone",
+      "milestone": "streak",
+      "variant": 1,
+      "condition": "any",
+      "text": "{streak} days in a row, dear. Don't forget to rest too."
+    },
+    {
+      "trigger": "milestone",
+      "milestone": "level_up",
+      "variant": 1,
+      "condition": "any",
+      "text": "{milestone}, love! I'm telling everyone."
+    },
+    {
+      "trigger": "milestone",
+      "milestone": "period_done",
+      "variant": 1,
+      "condition": "any",
+      "text": "{milestone}, sweetheart. That took real effort."
+    },
+    {
+      "trigger": "milestone",
+      "milestone": "perfect_week",
+      "variant": 1,
+      "condition": "any",
+      "text": "A whole week, every single thing done. Treat yourself, dear."
     }
   ]
 }

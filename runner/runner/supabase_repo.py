@@ -262,7 +262,14 @@ class SupabaseRepo:
             self._request("POST", "persona_lines", None, rows, "return=minimal")
 
     def replace_board_lines(self, rows: list[dict[str, Any]]) -> None:
-        params = {"quest_id": "is.null", "used_at": "is.null"}
+        # The milestone pool is replaced weekly on its own (replace_milestone_lines).
+        params = {"quest_id": "is.null", "used_at": "is.null", "trigger": "neq.milestone"}
+        self._request("DELETE", "persona_lines", params, None, "return=minimal")
+        if rows:
+            self._request("POST", "persona_lines", None, rows, "return=minimal")
+
+    def replace_milestone_lines(self, rows: list[dict[str, Any]]) -> None:
+        params = {"quest_id": "is.null", "trigger": "eq.milestone"}
         self._request("DELETE", "persona_lines", params, None, "return=minimal")
         if rows:
             self._request("POST", "persona_lines", None, rows, "return=minimal")

@@ -4,6 +4,7 @@
 import type {
   Config,
   FallbackLine,
+  MilestoneReached,
   Notification,
   PersonaLine,
   Quest,
@@ -19,7 +20,12 @@ import type { NewQuest, Store } from "./store.ts";
 
 const KEY = "questboard.demo.v2";
 
-type DemoState = { quests: Quest[]; proposals: QuestProposal[]; lines: PersonaLine[] };
+type DemoState = {
+  quests: Quest[];
+  proposals: QuestProposal[];
+  lines: PersonaLine[];
+  reached?: MilestoneReached[]; // older saved demos don't have it
+};
 
 export const DEMO_CONFIG: Config = {
   timezone: "America/Bogota",
@@ -276,6 +282,17 @@ export class DemoStore implements Store {
   subscribe(onChange: () => void): () => void {
     this.listeners.add(onChange);
     return () => this.listeners.delete(onChange);
+  }
+
+  async listReachedMilestones(): Promise<MilestoneReached[]> {
+    return this.load().reached ?? [];
+  }
+
+  async recordMilestones(rows: MilestoneReached[]): Promise<void> {
+    const state = this.load();
+    const known = new Set((state.reached ?? []).map((r) => r.key));
+    state.reached = [...(state.reached ?? []), ...rows.filter((r) => !known.has(r.key))];
+    this.save(state);
   }
 
   // The demo has no runner, so nothing is ever released for the PC.

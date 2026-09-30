@@ -5,6 +5,7 @@
 import type {
   Config,
   FallbackLine,
+  MilestoneReached,
   Notification,
   NotifyTestRequest,
   NotifyTestResult,
@@ -75,6 +76,10 @@ export interface Store {
     action: "accepted" | "rejected";
     diff_op: QuestProposal["payload"];
   }): Promise<void>;
+  /** Milestones already celebrated (or recorded quietly). */
+  listReachedMilestones(): Promise<MilestoneReached[]>;
+  /** Record milestones; ones already recorded (same key) are left as they are. */
+  recordMilestones(rows: MilestoneReached[]): Promise<void>;
   /** Calls back on any change to quests / persona_lines / runner_state / quest_proposals. */
   subscribe(onChange: () => void): () => void;
   /** Released notifications for the PC channel not shown on the PC yet (desktop shell). */

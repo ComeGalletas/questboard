@@ -263,6 +263,46 @@
       "variant": 2,
       "condition": "any",
       "text": "Too much on the syllabus today. Let's trim it."
+    },
+    {
+      "trigger": "milestone",
+      "variant": 1,
+      "condition": "any",
+      "text": "A milestone. Your notes show the progress."
+    },
+    {
+      "trigger": "milestone",
+      "variant": 2,
+      "condition": "any",
+      "text": "Well earned: {milestone}. Worth a moment of reflection."
+    },
+    {
+      "trigger": "milestone",
+      "milestone": "streak",
+      "variant": 1,
+      "condition": "any",
+      "text": "{streak} days in a row. Steady practice is the whole syllabus."
+    },
+    {
+      "trigger": "milestone",
+      "milestone": "level_up",
+      "variant": 1,
+      "condition": "any",
+      "text": "{milestone}. The next unit will build on this."
+    },
+    {
+      "trigger": "milestone",
+      "milestone": "period_done",
+      "variant": 1,
+      "condition": "any",
+      "text": "{milestone}. Full marks for seeing it through."
+    },
+    {
+      "trigger": "milestone",
+      "milestone": "perfect_week",
+      "variant": 1,
+      "condition": "any",
+      "text": "Every assignment this week, complete. That is rare."
     }
   ]
 }

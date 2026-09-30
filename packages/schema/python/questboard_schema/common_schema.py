@@ -97,6 +97,13 @@ class LocalTime(RootModel[str]):
     )
 
 
+class MilestoneId(StrEnum):
+    streak = "streak"
+    level_up = "level_up"
+    period_done = "period_done"
+    perfect_week = "perfect_week"
+
+
 class QuietHours(BaseModel):
     model_config = ConfigDict(
         extra="forbid",

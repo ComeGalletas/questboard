@@ -263,3 +263,24 @@ def test_voice_requests_are_blanked_and_deleted(repo: SupabaseRepo) -> None:
     later = datetime.now(UTC) + timedelta(minutes=1)
     assert repo.delete_requests("voice_fallback", later) >= 1
     assert rest(repo, "GET", "pending_live_requests", params={"id": f"eq.{row_id}"}).json() == []
+
+
+def test_milestone_pool_survives_the_daily_board_lines(repo: SupabaseRepo) -> None:
+    """replace_board_lines (daily_am) must not touch the weekly milestone pool."""
+    pool = [
+        {
+            "persona": "coach",
+            "trigger": "milestone",
+            "milestone": "streak",
+            "variant": 1,
+            "condition": "any",
+            "text": "Live pool: {milestone}.",
+        }
+    ]
+    repo.replace_milestone_lines(pool)
+    repo.replace_board_lines([])
+    params = {"trigger": "eq.milestone", "quest_id": "is.null", "select": "milestone,text"}
+    rows = rest(repo, "GET", "persona_lines", params=params).json()
+    assert rows == [{"milestone": "streak", "text": "Live pool: {milestone}."}]
+    repo.replace_milestone_lines([])
+    assert rest(repo, "GET", "persona_lines", params=params).json() == []

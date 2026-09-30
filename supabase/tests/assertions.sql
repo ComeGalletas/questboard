@@ -114,6 +114,21 @@ select pg_temp.expect_error(
     values ('quest_due', 'questboard://quest/1', '2026-09-25', '{push}')$$,
   'duplicate notification');
 
+-- Milestones: celebrated once per key; only milestone lines carry a milestone id.
+insert into public.milestones_reached (key, milestone, label) values ('level:2', 'level_up', 'Level 2');
+select pg_temp.expect_error(
+  $$insert into public.milestones_reached (key, milestone, label)
+    values ('level:2', 'level_up', 'Level 2')$$,
+  'milestone celebrated twice');
+insert into public.persona_lines (persona, trigger, milestone, variant, text)
+values ('coach', 'milestone', 'streak', 1, 'Streak!');
+insert into public.persona_lines (persona, trigger, variant, text)
+values ('coach', 'milestone', 1, 'Big moment: {milestone}.');
+select pg_temp.expect_error(
+  $$insert into public.persona_lines (persona, trigger, milestone, variant, text)
+    values ('coach', 'assigned', 'streak', 1, 'x')$$,
+  'milestone id on a non-milestone line');
+
 -- The desktop shell stamps pc_shown_at so each notification shows on the PC once.
 update public.notifications set sent_at = now(), pc_shown_at = now()
 where target = 'questboard://quest/1';

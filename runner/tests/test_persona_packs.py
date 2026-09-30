@@ -13,10 +13,11 @@ from questboard_schema.fallback_lines_schema import FallbackLines
 from questboard_schema.persona_line_schema import Trigger
 from questboard_schema.persona_pack_schema import PersonaPack
 
+from runner.engine.validators import PLACEHOLDERS  # the one list the runner enforces
+
 PERSONAS = Path(__file__).resolve().parents[2] / "personas"
 PACKS = sorted(p for p in PERSONAS.iterdir() if p.is_dir())
 BUILT_IN = {"coach", "teacher", "mom", "quartermaster"}
-PLACEHOLDERS = {"time_left", "streak", "days_carried", "actual_vs_estimate", "next_quest"}
 
 
 def png_size(path: Path) -> tuple[int, int, int]:

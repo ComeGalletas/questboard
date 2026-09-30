@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { MilestoneWatcher } from "@/components/MilestoneWatcher";
 import { NotifyTest } from "@/components/NotifyTest";
 import { PcNotifier } from "@/components/PcNotifier";
 import { PushToggle } from "@/components/PushToggle";
@@ -50,6 +51,7 @@ export default function BoardLayout({ children }: { children: React.ReactNode })
     <LogProvider store={store}>
       <ReactionProvider>
         <PcNotifier />
+        <MilestoneWatcher />
         <div className="shell">
           <header className="topbar">
             <h1>Questboard</h1>

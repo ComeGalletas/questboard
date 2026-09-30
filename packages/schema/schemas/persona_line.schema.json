@@ -5,11 +5,28 @@
   "description": "One pre-authored dialogue line, as stored in `persona_lines`. Quest-level lines carry a quest_id; board-level lines do not.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["persona", "trigger", "variant", "condition", "text"],
+  "required": [
+    "persona",
+    "trigger",
+    "variant",
+    "condition",
+    "text"
+  ],
   "properties": {
-    "id": { "type": "string", "format": "uuid" },
-    "quest_id": { "type": ["string", "null"], "format": "uuid" },
-    "persona": { "$ref": "common.schema.json#/$defs/PersonaSlug" },
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "quest_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "persona": {
+      "$ref": "common.schema.json#/$defs/PersonaSlug"
+    },
     "trigger": {
       "type": "string",
       "enum": [
@@ -34,21 +51,48 @@
         "all_done",
         "half_by_noon",
         "nothing_by_15",
-        "over_capacity"
+        "over_capacity",
+        "milestone"
       ]
     },
-    "variant": { "type": "integer", "minimum": 1, "maximum": 3 },
+    "milestone": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/MilestoneId"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Only with trigger milestone: the milestone this line is for; null = a generic milestone line."
+    },
+    "variant": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
     "condition": {
       "type": "string",
-      "enum": ["any", "pleased", "neutral", "concerned"],
+      "enum": [
+        "any",
+        "pleased",
+        "neutral",
+        "concerned"
+      ],
       "description": "Mood bucket; mood itself is computed in code from completion rate."
     },
     "text": {
       "type": "string",
       "minLength": 1,
       "maxLength": 280,
-      "description": "May contain runtime placeholders {time_left} {streak} {days_carried} {actual_vs_estimate} {next_quest}."
+      "description": "May contain runtime placeholders {time_left} {streak} {days_carried} {actual_vs_estimate} {next_quest} {milestone}."
     },
-    "used_at": { "type": ["string", "null"], "format": "date-time" }
+    "used_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
   }
 }

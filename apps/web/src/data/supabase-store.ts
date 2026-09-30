@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   Config,
   FallbackLine,
+  MilestoneReached,
   Notification,
   PersonaLine,
   Quest,
@@ -174,6 +175,22 @@ export class SupabaseStore implements Store {
     diff_op: QuestProposal["payload"];
   }) {
     const { error } = await this.db.from("quest_feedback").insert(row);
+    if (error) throw new Error(error.message);
+  }
+
+  async listReachedMilestones(): Promise<MilestoneReached[]> {
+    const { data, error } = await this.db
+      .from("milestones_reached")
+      .select("key,milestone,label,reached_at");
+    if (error) throw new Error(error.message);
+    return (data ?? []) as MilestoneReached[];
+  }
+
+  async recordMilestones(rows: MilestoneReached[]): Promise<void> {
+    if (!rows.length) return;
+    const { error } = await this.db
+      .from("milestones_reached")
+      .upsert(rows, { onConflict: "user_id,key", ignoreDuplicates: true });
     if (error) throw new Error(error.message);
   }
 
