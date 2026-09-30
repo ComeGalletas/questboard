@@ -68,6 +68,12 @@ fn init_autostart(app: &AppHandle) {
     };
     let marker = dir.join(AUTOSTART_MARKER);
     if marker.exists() {
+        // Keep the login entry on the executable that is running now (e.g. the installed app
+        // after a build was run straight from target/release): enabling rewrites its path.
+        let launcher = app.autolaunch();
+        if launcher.is_enabled().unwrap_or(false) {
+            let _ = launcher.enable();
+        }
         return;
     }
     if app.autolaunch().enable().is_ok() && fs::create_dir_all(&dir).is_ok() {
