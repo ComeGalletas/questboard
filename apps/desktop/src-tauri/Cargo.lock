@@ -2720,6 +2720,7 @@ dependencies = [
 name = "questboard-desktop"
 version = "0.1.0"
 dependencies = [
+ "serde",
  "serde_json",
  "tauri",
  "tauri-build",
@@ -2727,6 +2728,7 @@ dependencies = [
  "tauri-plugin-deep-link",
  "tauri-plugin-single-instance",
  "tauri-winrt-notification",
+ "windows",
 ]
 
 [[package]]

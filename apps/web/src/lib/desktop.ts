@@ -21,6 +21,58 @@ export async function showNotification(toast: {
   await tauri()?.core.invoke("show_notification", toast);
 }
 
+/** What the companion says: the dashboard forwards its reactions (PC notifications). */
+export type CompanionCue = {
+  persona: string;
+  text: string;
+  state: "idle" | "talk" | "happy" | "concerned" | "sleep";
+};
+
+/** Dashboard -> companion window. */
+export async function companionSay(cue: CompanionCue): Promise<void> {
+  await tauri()?.core.invoke("companion_say", { cue });
+}
+
+/** Companion window: calls back with each cue the dashboard forwards. */
+export function onCompanionSay(say: (cue: CompanionCue) => void): () => void {
+  const t = tauri();
+  if (!t) return () => {};
+  let stop: (() => void) | null = null;
+  let stopped = false;
+  void t.event
+    .listen<CompanionCue>("companion-say", (e) => say(e.payload))
+    .then((s) => {
+      if (stopped) s();
+      else stop = s;
+    });
+  return () => {
+    stopped = true;
+    stop?.();
+  };
+}
+
+/** A box the pointer can use, in CSS pixels relative to the companion window. */
+export type HitArea = { x: number; y: number; width: number; height: number };
+
+/** The companion window is click-through except these areas (sprite, bubble, menu). */
+export async function setCompanionHitAreas(areas: HitArea[]): Promise<void> {
+  await tauri()?.core.invoke("companion_hit_areas", { areas });
+}
+
+/** Starts moving the companion window with the pointer (call on pointer drag). */
+export async function dragCompanion(): Promise<void> {
+  await tauri()?.core.invoke("companion_drag");
+}
+
+export async function openDashboard(): Promise<void> {
+  await tauri()?.core.invoke("open_dashboard");
+}
+
+/** Hides the companion (the tray's "Show companion" brings it back). */
+export async function hideCompanion(): Promise<void> {
+  await tauri()?.core.invoke("hide_companion");
+}
+
 /** True inside the desktop shell. */
 export function isDesktop(): boolean {
   return tauri() !== null;

@@ -22,6 +22,22 @@
         "minHeight": 560,
         "center": true,
         "visible": false
+      },
+      {
+        "label": "companion",
+        "title": "Questboard companion",
+        "url": "/companion",
+        "width": 300,
+        "height": 340,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": false,
+        "shadow": false,
+        "visible": false,
+        "focus": false,
+        "focusable": false
       }
     ],
     "security": {
@@ -41,12 +57,16 @@
         "font-src": "'self' data:",
         "connect-src": "'self' ipc: http://ipc.localhost ws://localhost:3000 https://*.supabase.co wss://*.supabase.co http://127.0.0.1:54321 ws://127.0.0.1:54321"
       },
-      "dangerousDisableAssetCspModification": ["style-src"]
+      "dangerousDisableAssetCspModification": [
+        "style-src"
+      ]
     }
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
+    "targets": [
+      "nsis"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -58,7 +78,9 @@
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": ["questboard"]
+        "schemes": [
+          "questboard"
+        ]
       }
     }
   }

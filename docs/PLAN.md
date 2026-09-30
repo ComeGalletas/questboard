@@ -68,7 +68,7 @@ Checkboxes verified against the code on 2026-09-29; unchecked items with a "Part
 - [x] Setup assistant: multi-turn chat (P1) with `save_config` structured output; review screen; re-runnable; patches config as diffs; seeds first weekly/monthly quests. (First weekly/monthly quests come from the Suggest button on Week/Month or the next scheduled run.)
 - [ ] `weekly` and `monthly` jobs with sub-quest breakdown, retro questions, board-level and milestone line pools. (Partial: jobs and sub-quest breakdown done; retro questions and milestone line pools not yet.)
 - [x] `pending_live_requests` + mobile "waiting for PC" state.
-- [ ] Companion overlay window: frameless, transparent, always-on-top, click-through outside sprite, speech bubble, quick menu, hide on fullscreen, quiet hours.
+- [x] Companion overlay window: frameless, transparent, always-on-top, click-through outside sprite, speech bubble, quick menu, hide on fullscreen, quiet hours.
 
 **Done when:** a fresh install can be configured by talking to the assistant and runs a full week unattended.
 

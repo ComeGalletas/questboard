@@ -2,20 +2,18 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { useEffect } from "react";
 import { NotifyTest } from "@/components/NotifyTest";
 import { PcNotifier } from "@/components/PcNotifier";
 import { PushToggle } from "@/components/PushToggle";
 import { StatusPill } from "@/components/StatusPill";
 import { DemoStore } from "@/data/demo-store";
-import { demoEnabled, setDemo, subscribeDemo } from "@/data/demo-flag";
+import { setDemo } from "@/data/demo-flag";
 import { LogProvider } from "@/data/log";
 import { ReactionProvider } from "@/data/reaction";
-import type { Store } from "@/data/store";
-import { SupabaseStore } from "@/data/supabase-store";
+import { useAppStore } from "@/data/use-app-store";
 import { targetToPath } from "@/lib/deeplink";
 import { onDeepLink } from "@/lib/desktop";
-import { useSession } from "@/lib/hooks";
 import { supabase } from "@/lib/supabase";
 
 const TABS = [
@@ -26,16 +24,9 @@ const TABS = [
 ];
 
 export default function BoardLayout({ children }: { children: React.ReactNode }) {
-  const session = useSession();
+  const { store, session, demo } = useAppStore();
   const router = useRouter();
   const pathname = usePathname();
-  const demo = useSyncExternalStore<boolean | null>(subscribeDemo, demoEnabled, () => null);
-
-  const store: Store | null = useMemo(() => {
-    if (demo) return new DemoStore();
-    if (session && supabase) return new SupabaseStore(supabase);
-    return null;
-  }, [demo, session]);
 
   useEffect(() => {
     if (demo === false && session === null) router.replace("/login");
