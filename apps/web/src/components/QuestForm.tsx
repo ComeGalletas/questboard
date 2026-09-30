@@ -8,19 +8,7 @@ import { endOfLocalDay } from "@/game/dates";
 import { PACKS, personaForCategory } from "@/game/personas";
 import { baseXp } from "@/game/xp";
 import { calibration, estimateHint } from "@/game/calibration";
-
-const CATEGORIES: Quest["category"][] = [
-  "general",
-  "health",
-  "learning",
-  "jobs",
-  "personal",
-  "utilities",
-  "government",
-  "subscription",
-  "delivery",
-  "travel",
-];
+import { CATEGORIES } from "@/game/edit";
 
 /** Manual quest creation. Bill-like categories are allowed here: the user typed it. */
 export function QuestForm({ board, onDone }: { board: Board; onDone: () => void }) {

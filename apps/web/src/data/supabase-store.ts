@@ -10,6 +10,7 @@ import type {
 } from "@questboard/schema";
 import type { LiveKind, LiveKinds, LiveRequest } from "./store.ts";
 import type { QuestPatch } from "../game/actions.ts";
+import type { EditPatch } from "../game/edit.ts";
 import type { QuestChangesPatch } from "../game/proposals.ts";
 import { NOTIFICATION_COLUMNS } from "../lib/pc-notifications.ts";
 import { PLANNING_JOBS, type PlanRun } from "../lib/planner.ts";
@@ -40,7 +41,7 @@ export class SupabaseStore implements Store {
     return data as Quest;
   }
 
-  async updateQuest(id: string, patch: QuestPatch | QuestChangesPatch): Promise<Quest> {
+  async updateQuest(id: string, patch: QuestPatch | QuestChangesPatch | EditPatch): Promise<Quest> {
     const { data, error } = await this.db
       .from("quests")
       .update(patch)
@@ -49,6 +50,14 @@ export class SupabaseStore implements Store {
       .single();
     if (error) throw new Error(error.message);
     return data as Quest;
+  }
+
+  async deleteQuests(ids: string[]): Promise<void> {
+    // One at a time, in order: steps before their parent.
+    for (const id of ids) {
+      const { error } = await this.db.from("quests").delete().eq("id", id);
+      if (error) throw new Error(error.message);
+    }
   }
 
   async getConfig(): Promise<Config | null> {

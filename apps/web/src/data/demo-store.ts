@@ -11,6 +11,7 @@ import type {
   RunnerState,
 } from "@questboard/schema";
 import type { QuestPatch } from "../game/actions.ts";
+import type { EditPatch } from "../game/edit.ts";
 import type { QuestChangesPatch } from "../game/proposals.ts";
 import { addDays, isoDate } from "../game/dates.ts";
 import { baseXp } from "../game/xp.ts";
@@ -182,13 +183,22 @@ export class DemoStore implements Store {
     return quest;
   }
 
-  async updateQuest(id: string, patch: QuestPatch | QuestChangesPatch): Promise<Quest> {
+  async updateQuest(id: string, patch: QuestPatch | QuestChangesPatch | EditPatch): Promise<Quest> {
     const state = this.load();
     const i = state.quests.findIndex((q) => q.id === id);
     if (i < 0) throw new Error("quest not found");
     state.quests[i] = { ...state.quests[i], ...patch, updated_at: new Date().toISOString() };
     this.save(state);
     return state.quests[i];
+  }
+
+  async deleteQuests(ids: string[]): Promise<void> {
+    const state = this.load();
+    const gone = new Set(ids);
+    state.quests = state.quests.filter((q) => !gone.has(q.id));
+    state.lines = state.lines.filter((l) => !l.quest_id || !gone.has(l.quest_id));
+    state.proposals = state.proposals.filter((p) => !p.quest_id || !gone.has(p.quest_id));
+    this.save(state);
   }
 
   async listPendingProposals(): Promise<QuestProposal[]> {
