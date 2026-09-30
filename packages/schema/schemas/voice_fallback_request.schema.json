@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "voice_fallback_request.schema.json",
+  "title": "VoiceFallbackRequest",
+  "description": "Payload of a `voice_fallback` pending_live_requests row: an utterance the voice grammar didn't understand. Short-lived: the runner sanitizes it before any prompt, blanks the payload when it answers, and the app deletes the row once it has read the result (a VoiceCommand for the confirmation card). Transcripts are never kept.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["utterance", "lang", "today"],
+  "properties": {
+    "utterance": { "type": "string", "minLength": 1, "maxLength": 300 },
+    "lang": { "type": "string", "enum": ["en", "es"] },
+    "today": {
+      "type": "string",
+      "format": "date",
+      "description": "The user's local date, so relative days (\"next Saturday\") resolve like the grammar's."
+    }
+  }
+}

@@ -328,6 +328,20 @@ class SupabaseRepo:
             "return=minimal",
         )
 
+    def delete_requests(self, kind: str, created_before: datetime) -> int:
+        rows = self._request(
+            "DELETE",
+            "pending_live_requests",
+            {
+                "kind": f"eq.{kind}",
+                "created_at": f"lt.{created_before.isoformat()}",
+                "select": "id",
+            },
+            None,
+            "return=representation",
+        )
+        return len(rows or [])
+
 
 def _run_to_row(fields: dict[str, Any]) -> dict[str, Any]:
     row = dict(fields)

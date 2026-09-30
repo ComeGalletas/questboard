@@ -134,6 +134,11 @@ export class SupabaseStore implements Store {
     return (data as LiveRequest<LiveKinds[K]["result"]> | null) ?? null;
   }
 
+  async deleteLiveRequest(id: string): Promise<void> {
+    const { error } = await this.db.from("pending_live_requests").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+  }
+
   async saveConfig(config: Config): Promise<void> {
     const { error } = await this.db
       .from("config")
