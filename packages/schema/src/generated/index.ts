@@ -20,6 +20,8 @@ export interface QuestboardSchemas {
   quest_proposal?: QuestProposal;
   replan_request?: ReplanRequest;
   replan_result?: ReplanResult;
+  retro?: Retro;
+  retro_questions?: RetroQuestions;
   runner_state?: RunnerState;
   setup_request?: SetupRequest;
   setup_turn?: SetupTurn;
@@ -811,6 +813,57 @@ export interface ReplanResult {
   status: "succeeded" | "skipped" | "failed" | "invalid_output";
   reason: string;
   ops_count?: number | null;
+}
+/**
+ * A row of `retros`: questions about a week or month that ended, asked on the Week/Month board. The weekly/monthly job writes them (model-written, tailored to how the period went; fixed questions when no model answers). The user's answers are fed to later planning prompts as their own reflection.
+ */
+export interface Retro {
+  id: string;
+  cadence: "weekly" | "monthly";
+  /**
+   * First day of the period reviewed.
+   */
+  period_start: string;
+  period_end: string;
+  /**
+   * @minItems 2
+   * @maxItems 3
+   */
+  questions: RetroQuestion[];
+  /**
+   * @maxItems 3
+   */
+  answers?: RetroAnswer[] | null;
+  status: "open" | "answered" | "skipped";
+  source: "model" | "fallback";
+  answered_at?: string | null;
+  created_at: string;
+}
+/**
+ * This interface was referenced by `Retro`'s JSON-Schema
+ * via the `definition` "RetroQuestion".
+ */
+export interface RetroQuestion {
+  id: string;
+  text: string;
+}
+/**
+ * This interface was referenced by `Retro`'s JSON-Schema
+ * via the `definition` "RetroAnswer".
+ */
+export interface RetroAnswer {
+  id: string;
+  answer: string;
+}
+/**
+ * Model output for a retro: 2-3 short, open questions about how the period went, in the user's language.
+ */
+export interface RetroQuestions {
+  /**
+   * @minItems 2
+   * @maxItems 3
+   */
+  questions: string[];
 }
 /**
  * The runner's heartbeat row (`runner_state`). The status pill reads heartbeat_at.

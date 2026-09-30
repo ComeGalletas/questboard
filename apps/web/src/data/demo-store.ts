@@ -9,6 +9,7 @@ import type {
   PersonaLine,
   Quest,
   QuestProposal,
+  Retro,
   RunnerState,
 } from "@questboard/schema";
 import type { QuestPatch } from "../game/actions.ts";
@@ -25,6 +26,7 @@ type DemoState = {
   proposals: QuestProposal[];
   lines: PersonaLine[];
   reached?: MilestoneReached[]; // older saved demos don't have it
+  retros?: Retro[];
 };
 
 export const DEMO_CONFIG: Config = {
@@ -149,7 +151,27 @@ function seed(now: Date): DemoState {
       },
     },
   ];
-  return { quests, proposals, lines: [] };
+  // Last week's retro, as the weekly job would leave it (fixed questions: the demo has no model).
+  const monday = addDays(today, -((now.getDay() + 6) % 7));
+  const retros: Retro[] = [
+    {
+      id: "00000000-0000-4000-8000-000000000e71",
+      cadence: "weekly",
+      period_start: addDays(monday, -7),
+      period_end: addDays(monday, -1),
+      questions: [
+        { id: "q1", text: "What went well this week?" },
+        { id: "q2", text: "What got in the way?" },
+        { id: "q3", text: "What's one thing to change next week?" },
+      ],
+      answers: null,
+      status: "open",
+      source: "fallback",
+      answered_at: null,
+      created_at: now.toISOString(),
+    },
+  ];
+  return { quests, proposals, lines: [], retros };
 }
 
 export class DemoStore implements Store {
@@ -282,6 +304,18 @@ export class DemoStore implements Store {
   subscribe(onChange: () => void): () => void {
     this.listeners.add(onChange);
     return () => this.listeners.delete(onChange);
+  }
+
+  async listRetros(cadence: Retro["cadence"]): Promise<Retro[]> {
+    return (this.load().retros ?? [])
+      .filter((r) => r.cadence === cadence)
+      .sort((a, b) => b.period_start.localeCompare(a.period_start));
+  }
+
+  async saveRetro(id: string, patch: Pick<Retro, "status" | "answers" | "answered_at">) {
+    const state = this.load();
+    state.retros = (state.retros ?? []).map((r) => (r.id === id ? { ...r, ...patch } : r));
+    this.save(state);
   }
 
   async listReachedMilestones(): Promise<MilestoneReached[]> {

@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "retro.schema.json",
+  "title": "Retro",
+  "description": "A row of `retros`: questions about a week or month that ended, asked on the Week/Month board. The weekly/monthly job writes them (model-written, tailored to how the period went; fixed questions when no model answers). The user's answers are fed to later planning prompts as their own reflection.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "cadence",
+    "period_start",
+    "period_end",
+    "questions",
+    "status",
+    "source",
+    "created_at"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "cadence": {
+      "type": "string",
+      "enum": [
+        "weekly",
+        "monthly"
+      ]
+    },
+    "period_start": {
+      "type": "string",
+      "format": "date",
+      "description": "First day of the period reviewed."
+    },
+    "period_end": {
+      "type": "string",
+      "format": "date"
+    },
+    "questions": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/RetroQuestion"
+      }
+    },
+    "answers": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/RetroAnswer"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "answered",
+        "skipped"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "model",
+        "fallback"
+      ]
+    },
+    "answered_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "RetroQuestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "text"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^q[1-3]$"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        }
+      }
+    },
+    "RetroAnswer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "answer"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^q[1-3]$"
+        },
+        "answer": {
+          "type": "string",
+          "maxLength": 500
+        }
+      }
+    }
+  }
+}

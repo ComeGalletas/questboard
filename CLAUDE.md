@@ -56,7 +56,7 @@ docs/              PLAN.md, ADRs
 
 ## Data model (core tables)
 
-`config` (single row JSON: goals, capacity, quiet_hours, xp_weights, llm.providers[], persona order, integrations), `integrations`, `goals`, `personas`, `quests`, `quest_feedback`, `progress`, `persona_lines` (quest_id, persona, trigger, variant, condition, text, used_at), `llm_runs` (job, slot, date, trigger, provider_used, attempt, status, tokens), `runner_state` (heartbeat, last AM/PM success, lock, provider health), `pending_live_requests`, `senders` (domain → category), `extracted_records`, `sanitization_log` (rule hits and counts, never values), `notifications` (kind, target, persona, dedup key).
+`config` (single row JSON: goals, capacity, quiet_hours, xp_weights, llm.providers[], persona order, integrations), `integrations`, `goals`, `personas`, `quests`, `quest_feedback`, `progress`, `persona_lines` (quest_id, persona, trigger, variant, condition, text, used_at), `llm_runs` (job, slot, date, trigger, provider_used, attempt, status, tokens), `runner_state` (heartbeat, last AM/PM success, lock, provider health), `pending_live_requests`, `senders` (domain → category), `extracted_records`, `sanitization_log` (rule hits and counts, never values), `notifications` (kind, target, persona, dedup key), `milestones_reached` (celebrated once per key), `retros` (weekly/monthly questions + the user's answers, fed to plans as `reflection`).
 
 Local only (runner): `vault.db` (SQLCipher; key in OS keychain): `pseudonyms(token, kind, value_hash, value_encrypted, first_seen)`.
 

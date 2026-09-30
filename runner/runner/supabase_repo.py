@@ -227,6 +227,36 @@ class SupabaseRepo:
         }
         return self._request("GET", "quest_feedback", params)
 
+    def get_retro(self, cadence: str, period_start: date) -> dict[str, Any] | None:
+        params = {
+            "select": "id,status",
+            "cadence": f"eq.{cadence}",
+            "period_start": f"eq.{period_start.isoformat()}",
+        }
+        rows = self._request("GET", "retros", params)
+        return rows[0] if rows else None
+
+    def insert_retro(self, row: dict[str, Any]) -> None:
+        # A concurrent run may have asked already: the unique key makes that a no-op.
+        self._request(
+            "POST",
+            "retros",
+            {"on_conflict": "user_id,cadence,period_start"},
+            row,
+            "resolution=ignore-duplicates,return=minimal",
+        )
+
+    def latest_answered_retro(self, since: date) -> dict[str, Any] | None:
+        params = {
+            "select": "cadence,period_start,period_end,questions,answers,status",
+            "status": "eq.answered",
+            "period_end": f"gte.{since.isoformat()}",
+            "order": "period_end.desc",
+            "limit": "1",
+        }
+        rows = self._request("GET", "retros", params)
+        return rows[0] if rows else None
+
     def supersede_pending_proposals(self, job: JobName, run_ids: list[str] | None = None) -> int:
         if run_ids is not None and not run_ids:
             return 0

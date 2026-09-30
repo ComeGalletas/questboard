@@ -31,6 +31,7 @@ line = load("persona_line")["properties"]
 record = load("extracted_record")["properties"]
 goal = load("config")["$defs"]["Goal"]["properties"]
 proposal = load("quest_proposal")["properties"]
+retro = load("retro")["properties"]
 
 EXPECTED: dict[tuple[str, str], list[str]] = {
     ("quests", "cadence"): common["Cadence"]["enum"],
@@ -51,6 +52,9 @@ EXPECTED: dict[tuple[str, str], list[str]] = {
     ("quest_proposals", "op"): proposal["op"]["enum"],
     ("quest_proposals", "status"): proposal["status"]["enum"],
     ("notifications", "kind"): common["NotificationKind"]["enum"],
+    ("retros", "cadence"): retro["cadence"]["enum"],
+    ("retros", "status"): retro["status"]["enum"],
+    ("retros", "source"): retro["source"]["enum"],
 }
 
 CONSTRAINTS_SQL = """

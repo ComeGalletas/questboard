@@ -37,6 +37,12 @@ class Repo(Protocol):
 
     def update_quest(self, quest_id: str, fields: dict[str, Any]) -> None: ...
     def list_feedback(self, since: date) -> list[dict[str, Any]]: ...
+    def get_retro(self, cadence: str, period_start: date) -> dict[str, Any] | None: ...
+    def insert_retro(self, row: dict[str, Any]) -> None: ...
+    def latest_answered_retro(self, since: date) -> dict[str, Any] | None:
+        """The most recent answered retro whose period ended on or after `since`."""
+        ...
+
     def supersede_pending_proposals(self, job: JobName, run_ids: list[str] | None = None) -> int:
         """Mark pending proposals written by runs of `job` superseded; other jobs' stay.
         `run_ids` narrows it to those runs (a forced re-run replaces only its occurrence)."""
@@ -93,6 +99,7 @@ class MemoryRepo:
         self.runs: list[LLMRun] = []
         self.quests: list[Quest] = []
         self.feedback: list[dict[str, Any]] = []
+        self.retros: list[dict[str, Any]] = []
         self.proposals: list[dict[str, Any]] = []
         self.lines: list[dict[str, Any]] = []
         self.notifications: list[dict[str, Any]] = []
@@ -163,6 +170,27 @@ class MemoryRepo:
     def list_feedback(self, since: date) -> list[dict[str, Any]]:
         self._check()
         return [f for f in self.feedback if f["created_at"][:10] >= since.isoformat()]
+
+    def get_retro(self, cadence: str, period_start: date) -> dict[str, Any] | None:
+        self._check()
+        start = period_start.isoformat()
+        return next(
+            (r for r in self.retros if r["cadence"] == cadence and r["period_start"] == start),
+            None,
+        )
+
+    def insert_retro(self, row: dict[str, Any]) -> None:
+        self._check()
+        self.retros.append({"id": str(uuid.uuid4()), "answers": None, **row})
+
+    def latest_answered_retro(self, since: date) -> dict[str, Any] | None:
+        self._check()
+        done = [
+            r
+            for r in self.retros
+            if r["status"] == "answered" and r["period_end"] >= since.isoformat()
+        ]
+        return max(done, key=lambda r: r["period_end"], default=None)
 
     def supersede_pending_proposals(self, job: JobName, run_ids: list[str] | None = None) -> int:
         self._check()
