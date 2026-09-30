@@ -7,6 +7,7 @@ import type {
   PersonaLine,
   Quest,
   QuestProposal,
+  Retro,
   RunnerState,
 } from "@questboard/schema";
 import type { LiveKind, LiveKinds, LiveRequest } from "./store.ts";
@@ -175,6 +176,24 @@ export class SupabaseStore implements Store {
     diff_op: QuestProposal["payload"];
   }) {
     const { error } = await this.db.from("quest_feedback").insert(row);
+    if (error) throw new Error(error.message);
+  }
+
+  async listRetros(cadence: Retro["cadence"]): Promise<Retro[]> {
+    const { data, error } = await this.db
+      .from("retros")
+      .select(
+        "id,cadence,period_start,period_end,questions,answers,status,source,answered_at,created_at",
+      )
+      .eq("cadence", cadence)
+      .order("period_start", { ascending: false })
+      .limit(5);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as Retro[];
+  }
+
+  async saveRetro(id: string, patch: Pick<Retro, "status" | "answers" | "answered_at">) {
+    const { error } = await this.db.from("retros").update(patch).eq("id", id);
     if (error) throw new Error(error.message);
   }
 

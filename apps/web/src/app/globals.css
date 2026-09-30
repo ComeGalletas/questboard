@@ -761,3 +761,36 @@ html.companion-root body {
   border-color: var(--warn);
   color: var(--warn);
 }
+
+/* Weekly / monthly retro card */
+.retro {
+  border-left: calc(var(--px) * 2) solid var(--accent);
+  display: grid;
+  gap: calc(var(--px) * 3);
+}
+
+.retro-head {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--px) * 2);
+}
+
+.retro-head h3 {
+  margin: 0;
+  font-size: 12px;
+}
+
+.retro-q {
+  display: grid;
+  gap: var(--px);
+  margin-bottom: calc(var(--px) * 2);
+}
+
+.retro-q textarea {
+  font: inherit;
+  color: var(--text);
+  background: var(--ground);
+  border: 2px solid var(--border);
+  padding: 6px 8px;
+  resize: vertical;
+}

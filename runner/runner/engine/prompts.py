@@ -36,6 +36,8 @@ Return one JSON object with:
      say so in the summary. The parent stays open and tracks the whole; do not update it. Only
      daily adds may set parent_id, and only to an open weekly or monthly quest.
    - Use goals and recent outcomes; respect each persona's categories.
+   - reflection, when present, is the user's own answers to a past week's or month's retro
+     (what got in the way, what to change). Let it shape today's plan.
    - estimate_calibration gives, per category, how long quests really take vs their estimate
      (ratio 1.4 = 40 % longer). Scale estimates in adds and updates by it; propose updates for
      open quests whose estimates are clearly off.
@@ -113,6 +115,8 @@ Two separate budgets:
   capacity_min. Spread them out and skip {slot}s that are full. A used-up budget_min is never a
   reason to skip a breakdown.
 Scale estimates by estimate_calibration (per-category actual/estimate ratio) when present.
+reflection, when present, is the user's own retro of a past week or month (what got in the
+way, what to change): act on it in this plan.
 Coverage: each goal should have at least one open quest moving it forward this period. For
 every goal that no open quest covers, add a {cadence} quest sized to the goal, as long as the
 {cadence} total still fits budget_min. An empty ops list is right only when every goal is

@@ -25,6 +25,7 @@ from runner.engine.daily import HISTORY_DAYS, _outcomes, _quest_view, capacity_m
 from runner.engine.milestone_pool import milestone_pool
 from runner.engine.packs import Pack, load_packs
 from runner.engine.prompts import period_system_prompt, period_user_prompt
+from runner.engine.retro import REFLECTION_DAYS, ask_retro, reflection
 from runner.engine.rollup import rollup, sub_quests
 from runner.engine.validators import (
     CAPACITY_SLACK,
@@ -226,7 +227,10 @@ def period_job(cadence: str, ctx: JobContext, packs: list[Pack] | None = None) -
         if patch:
             repo.update_quest(str(q.id), patch)
 
-    # 2. Proposals (model): the period's quests, within budget.
+    # 2. Retro (model, fallback fixed): questions about the period that just ended.
+    ask_retro(ctx, cadence, period.start)
+
+    # 3. Proposals (model): the period's quests, within budget.
     quests = repo.list_quests(since=period.start - timedelta(days=WINDOW_DAYS))
     open_q = {str(q.id): q for q in quests if q.status.value in ACTIVE}
     in_period = [
@@ -250,6 +254,9 @@ def period_job(cadence: str, ctx: JobContext, packs: list[Pack] | None = None) -
         "recent_outcomes": _outcomes(quests, period.start),
         "estimate_calibration": calibration(quests, period.start),
     }
+    past = reflection(repo.latest_answered_retro(today - timedelta(days=REFLECTION_DAYS)))
+    if past:
+        prompt_ctx["reflection"] = past
     check_ctx = {
         "period": period,
         "open": open_q,

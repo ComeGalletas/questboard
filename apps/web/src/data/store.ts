@@ -14,6 +14,7 @@ import type {
   QuestProposal,
   ReplanRequest,
   ReplanResult,
+  Retro,
   RunnerState,
   SetupRequest,
   SetupTurn,
@@ -76,6 +77,10 @@ export interface Store {
     action: "accepted" | "rejected";
     diff_op: QuestProposal["payload"];
   }): Promise<void>;
+  /** Recent retros of one cadence, newest first. */
+  listRetros(cadence: Retro["cadence"]): Promise<Retro[]>;
+  /** The user's answers (or a skip). */
+  saveRetro(id: string, patch: Pick<Retro, "status" | "answers" | "answered_at">): Promise<void>;
   /** Milestones already celebrated (or recorded quietly). */
   listReachedMilestones(): Promise<MilestoneReached[]>;
   /** Record milestones; ones already recorded (same key) are left as they are. */
