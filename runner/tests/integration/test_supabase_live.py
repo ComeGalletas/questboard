@@ -219,8 +219,13 @@ def test_notifications_dedup_and_push_subscriptions(repo: SupabaseRepo) -> None:
     # The desktop shell: the row matches the shared schema, its query finds it until stamped.
     from questboard_schema.notification_schema import Notification
 
-    Notification.model_validate(after[0])
+    columns = ",".join(Notification.model_fields)  # the schema's columns; rows omit user_id
+    row = rest(
+        repo, "GET", "notifications", params={"target": f"eq.{target}", "select": columns}
+    ).json()[0]
+    Notification.model_validate(row)
     pc_query = {
+        "select": columns,
         "target": f"eq.{target}",
         "channels": "cs.{pc}",
         "sent_at": "not.is.null",
@@ -231,7 +236,7 @@ def test_notifications_dedup_and_push_subscriptions(repo: SupabaseRepo) -> None:
         repo,
         "PATCH",
         "notifications",
-        params={"id": f"eq.{after[0]['id']}"},
+        params={"id": f"eq.{row['id']}"},
         json={"pc_shown_at": datetime.now(BOGOTA).isoformat()},
     )
     assert stamped.status_code in (200, 204), stamped.text

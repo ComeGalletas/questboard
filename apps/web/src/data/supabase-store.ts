@@ -11,6 +11,7 @@ import type {
 import type { LiveKind, LiveKinds, LiveRequest } from "./store.ts";
 import type { QuestPatch } from "../game/actions.ts";
 import type { QuestChangesPatch } from "../game/proposals.ts";
+import { NOTIFICATION_COLUMNS } from "../lib/pc-notifications.ts";
 import { PLANNING_JOBS, type PlanRun } from "../lib/planner.ts";
 import type { NewQuest, Store } from "./store.ts";
 
@@ -165,7 +166,7 @@ export class SupabaseStore implements Store {
   async listPcNotifications(sinceIso: string): Promise<Notification[]> {
     const { data, error } = await this.db
       .from("notifications")
-      .select("*")
+      .select(NOTIFICATION_COLUMNS)
       .contains("channels", ["pc"])
       .not("sent_at", "is", null)
       .is("pc_shown_at", null)

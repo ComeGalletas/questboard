@@ -1,7 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { Notification } from "@questboard/schema";
-import { MAX_TOASTS, pcDue, spriteForKind, toastFor } from "./pc-notifications.ts";
+import { readFileSync } from "node:fs";
+import {
+  MAX_TOASTS,
+  NOTIFICATION_COLUMNS,
+  pcDue,
+  spriteForKind,
+  toastFor,
+} from "./pc-notifications.ts";
 
 const NOW = new Date("2026-09-30T14:00:00Z");
 const hoursAgo = (h: number) => new Date(NOW.getTime() - h * 3_600_000).toISOString();
@@ -66,6 +73,16 @@ test("toast text falls back per kind and respects the DB limits", () => {
     target: "questboard://today",
   });
   assert.equal(toastFor(note("y", { title: "t".repeat(100) })).title.length, 80);
+});
+
+test("the PC query selects exactly the Notification schema's columns", () => {
+  const schema = JSON.parse(
+    readFileSync(
+      new URL("../../../../packages/schema/schemas/notification.schema.json", import.meta.url),
+      "utf-8",
+    ),
+  );
+  assert.deepEqual(NOTIFICATION_COLUMNS.split(","), Object.keys(schema.properties));
 });
 
 test("sprite state per kind", () => {

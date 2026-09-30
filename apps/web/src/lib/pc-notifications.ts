@@ -5,6 +5,10 @@
 import type { Notification } from "@questboard/schema";
 import type { SpriteState } from "../data/reaction.tsx";
 
+/** Columns of the Notification schema (rows are selected without user_id). */
+export const NOTIFICATION_COLUMNS =
+  "id,kind,target,persona,dedup_date,channels,title,body,sent_at,pc_shown_at,created_at";
+
 /** Older released rows are skipped: don't replay yesterday's news after the PC was off. */
 export const MAX_AGE_MS = 12 * 60 * 60 * 1000;
 /** At most this many toasts at once (the newest); the rest are marked shown silently. */
