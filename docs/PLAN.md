@@ -87,7 +87,7 @@ Checkboxes verified against the code on 2026-09-29; unchecked items with a "Part
 - [ ] PC capture (hotkey + button) with whisper.cpp small; mobile hold-to-speak with Web Speech, clip fallback via runner (P1). (Partial: mobile hold-to-speak with Web Speech done; whisper.cpp and the clip fallback not yet.)
 - [x] Grammar parser (es/en) for create/complete/snooze/defer/what's-next; date parsing (chrono-node / dateparser). (Dates use the shared es/en grammar instead of chrono-node / dateparser; ADR 0001.)
 - [x] Confirmation card (title, when, persona, estimate) before any write; spoken "confirm".
-- [ ] LLM fallback for unparsed utterances as P1 diffs.
+- [x] LLM fallback for unparsed utterances as P1 diffs.
 
 **Done when:** "create task visit grandma next Saturday at ten" works offline on both devices.
 

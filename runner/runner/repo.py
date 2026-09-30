@@ -66,6 +66,9 @@ class Repo(Protocol):
         ...
 
     def update_request(self, request_id: str, fields: dict[str, Any]) -> None: ...
+    def delete_requests(self, kind: str, created_before: datetime) -> int:
+        """Delete `kind` rows created before the cutoff, whatever their status."""
+        ...
 
 
 class MemoryRepo:
@@ -244,3 +247,10 @@ class MemoryRepo:
                 r.update(fields)
                 return
         raise KeyError(request_id)
+
+    def delete_requests(self, kind: str, created_before: datetime) -> int:
+        self._check()
+        keep = [r for r in self.requests if r["kind"] != kind or r["created_at"] >= created_before]
+        gone = len(self.requests) - len(keep)
+        self.requests = keep
+        return gone

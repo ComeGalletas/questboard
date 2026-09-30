@@ -4,8 +4,12 @@ Requests wait while no provider is reachable (the app shows "pending"); after a 
 cancelled. `replan` ("suggest quests now") runs a forced manual planning job through the
 scheduler, so it is recorded in llm_runs and writes proposals only (invariant 3). `notify_test`
 is code only (no provider): it is answered first, even while LLM requests wait, by sending a
-test Web Push (runner.notify.selftest). Kinds without a handler yet (quest_review,
-voice_fallback) fail with a clear reason instead of waiting forever.
+test Web Push (runner.notify.selftest). `voice_fallback` turns an utterance the grammar didn't
+understand into a VoiceCommand for the app's confirmation card (runner.engine.voice_fallback).
+Its transcript is short-lived: the payload is blanked as soon as the request is answered,
+fails or expires, and rows older than VOICE_TTL are deleted outright (the app deletes its own
+once read). Kinds without a handler yet (quest_review) fail with a clear reason instead of
+waiting forever.
 """
 
 from __future__ import annotations
@@ -23,6 +27,7 @@ from questboard_schema.replan_result_schema import ReplanResult
 
 from runner.engine.packs import Pack, load_packs
 from runner.engine.setup import setup_turn
+from runner.engine.voice_fallback import voice_fallback
 from runner.notify.push import Sender
 from runner.notify.selftest import NotifyTestError, send_test
 from runner.providers.base import Provider, ProviderError
@@ -31,9 +36,11 @@ from runner.repo import Repo, RepoUnavailable
 MAX_AGE = timedelta(days=1)
 PER_POLL = 3
 CODE_ONLY = ("notify_test",)  # need no provider, so they never queue behind LLM requests
+EPHEMERAL = ("voice_fallback",)  # transcripts: payload blanked once answered, row deleted soon
+VOICE_TTL = timedelta(minutes=10)  # a spoken command older than this is stale, not pending
 
 Handler = Callable[[dict[str, Any], Config, list[Pack], list[Provider]], tuple[dict[str, Any], Any]]
-HANDLERS: dict[str, Handler] = {"setup_assistant": setup_turn}
+HANDLERS: dict[str, Handler] = {"setup_assistant": setup_turn, "voice_fallback": voice_fallback}
 # (job) -> the scheduler's Decision for a forced manual run; see Scheduler.replan.
 Replan = Callable[[JobName], Any]
 
@@ -50,6 +57,8 @@ def process_live(
     """Answer up to PER_POLL pending requests; returns how many were finished."""
     now = now or datetime.now(UTC)
     finished = 0
+    for kind in EPHEMERAL:
+        repo.delete_requests(kind, now - VOICE_TTL)
     for req in repo.list_pending_requests(limit=PER_POLL, kinds=CODE_ONLY):
         if not _expired(repo, req, now):
             finished += _notify_test(repo, req, config, push)
@@ -75,14 +84,18 @@ def process_live(
         if not available:
             break  # stays pending; P1 waits for a provider
         repo.update_request(req["id"], {"status": "running"})
+        blank = {"payload": {}} if req["kind"] in EPHEMERAL else {}
         try:
             result, _ = handler(req["payload"], config, packs or load_packs(), available)
         except ProviderError as exc:
-            repo.update_request(req["id"], {"status": "failed", "error": str(exc)[:500]})
+            error = "no provider could interpret it" if blank else str(exc)[:500]
+            repo.update_request(req["id"], {"status": "failed", "error": error, **blank})
         except Exception as exc:  # noqa: BLE001 - class name only: messages may carry data
-            repo.update_request(req["id"], {"status": "failed", "error": type(exc).__name__})
+            repo.update_request(
+                req["id"], {"status": "failed", "error": type(exc).__name__, **blank}
+            )
         else:
-            repo.update_request(req["id"], {"status": "done", "result": result})
+            repo.update_request(req["id"], {"status": "done", "result": result, **blank})
             finished += 1
     return finished
 
@@ -92,7 +105,8 @@ def _expired(repo: Repo, req: dict[str, Any], now: datetime) -> bool:
     if isinstance(created, str):
         created = datetime.fromisoformat(created)
     if now - created > MAX_AGE:
-        repo.update_request(req["id"], {"status": "cancelled", "error": "expired"})
+        blank = {"payload": {}} if req["kind"] in EPHEMERAL else {}
+        repo.update_request(req["id"], {"status": "cancelled", "error": "expired", **blank})
         return True
     return False
 

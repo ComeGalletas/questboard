@@ -231,6 +231,8 @@ export class DemoStore implements Store {
     return null;
   }
 
+  async deleteLiveRequest(): Promise<void> {}
+
   async saveConfig(): Promise<void> {
     throw new Error("Demo mode uses a fixed config.");
   }

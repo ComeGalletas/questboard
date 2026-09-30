@@ -241,3 +241,25 @@ def test_notifications_dedup_and_push_subscriptions(repo: SupabaseRepo) -> None:
     )
     assert stamped.status_code in (200, 204), stamped.text
     assert rest(repo, "GET", "notifications", params=pc_query).json() == []
+
+
+def test_voice_requests_are_blanked_and_deleted(repo: SupabaseRepo) -> None:
+    """The voice fallback's transcript lifecycle through RLS: blank the payload, then delete."""
+    created = rest(
+        repo,
+        "POST",
+        "pending_live_requests",
+        json={
+            "kind": "voice_fallback",
+            "payload": {"utterance": "integration test", "lang": "en", "today": "2026-09-30"},
+        },
+    )
+    assert created.status_code == 201, created.text
+    row_id = created.json()[0]["id"]
+    repo.update_request(row_id, {"status": "done", "result": {"intent": "unknown"}, "payload": {}})
+    blanked = rest(repo, "GET", "pending_live_requests", params={"id": f"eq.{row_id}"}).json()
+    assert blanked[0]["payload"] == {}
+
+    later = datetime.now(UTC) + timedelta(minutes=1)
+    assert repo.delete_requests("voice_fallback", later) >= 1
+    assert rest(repo, "GET", "pending_live_requests", params={"id": f"eq.{row_id}"}).json() == []

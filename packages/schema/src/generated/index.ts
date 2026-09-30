@@ -22,6 +22,7 @@ export interface QuestboardSchemas {
   setup_request?: SetupRequest;
   setup_turn?: SetupTurn;
   voice_command?: VoiceCommand;
+  voice_fallback_request?: VoiceFallbackRequest;
 }
 /**
  * Shared enums and value types referenced by the other schemas.
@@ -861,4 +862,15 @@ export interface VoiceCommand {
    * snooze: how long, when one was said.
    */
   minutes?: number;
+}
+/**
+ * Payload of a `voice_fallback` pending_live_requests row: an utterance the voice grammar didn't understand. Short-lived: the runner sanitizes it before any prompt, blanks the payload when it answers, and the app deletes the row once it has read the result (a VoiceCommand for the confirmation card). Transcripts are never kept.
+ */
+export interface VoiceFallbackRequest {
+  utterance: string;
+  lang: "en" | "es";
+  /**
+   * The user's local date, so relative days ("next Saturday") resolve like the grammar's.
+   */
+  today: string;
 }

@@ -16,6 +16,8 @@ import type {
   RunnerState,
   SetupRequest,
   SetupTurn,
+  VoiceCommand,
+  VoiceFallbackRequest,
 } from "@questboard/schema";
 import type { QuestPatch } from "../game/actions.ts";
 import type { QuestChangesPatch } from "../game/proposals.ts";
@@ -56,6 +58,8 @@ export interface Store {
   getLiveRequest<K extends LiveKind = "setup_assistant">(
     id: string,
   ): Promise<LiveRequest<LiveKinds[K]["result"]> | null>;
+  /** Removes a request row (voice transcripts are deleted as soon as they're answered). */
+  deleteLiveRequest(id: string): Promise<void>;
   saveConfig(config: Config): Promise<void>;
   savePushSubscription(sub: {
     endpoint: string;
@@ -82,6 +86,7 @@ export type LiveKinds = {
   setup_assistant: { payload: SetupRequest; result: SetupTurn };
   replan: { payload: ReplanRequest; result: ReplanResult };
   notify_test: { payload: NotifyTestRequest; result: NotifyTestResult };
+  voice_fallback: { payload: VoiceFallbackRequest; result: VoiceCommand };
 };
 export type LiveKind = keyof LiveKinds;
 

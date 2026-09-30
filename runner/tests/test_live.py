@@ -91,9 +91,9 @@ def test_queue_rules() -> None:
     repo = MemoryRepo(CONFIG)
     repo.requests = [
         request(id="old", created_at=NOW - timedelta(days=2)),
-        request(id="voice", kind="voice_fallback"),
+        request(id="review", kind="quest_review"),
         request(id="wait"),
     ]
     assert process_live(repo, CONFIG, [Down()], NOW, PACKS) == 0
     status = {r["id"]: r["status"] for r in repo.requests}
-    assert status == {"old": "cancelled", "voice": "failed", "wait": "pending"}
+    assert status == {"old": "cancelled", "review": "failed", "wait": "pending"}
