@@ -12,6 +12,15 @@ function tauri(): TauriGlobal | null {
   return (window as unknown as { __TAURI__?: TauriGlobal }).__TAURI__ ?? null;
 }
 
+/** Shows a Windows toast; clicking it opens `target` (a questboard:// link) in the app. */
+export async function showNotification(toast: {
+  title: string;
+  body: string;
+  target: string;
+}): Promise<void> {
+  await tauri()?.core.invoke("show_notification", toast);
+}
+
 /** True inside the desktop shell. */
 export function isDesktop(): boolean {
   return tauri() !== null;

@@ -5,6 +5,7 @@
 import type {
   Config,
   FallbackLine,
+  Notification,
   NotifyTestRequest,
   NotifyTestResult,
   PersonaLine,
@@ -69,6 +70,11 @@ export interface Store {
   }): Promise<void>;
   /** Calls back on any change to quests / persona_lines / runner_state / quest_proposals. */
   subscribe(onChange: () => void): () => void;
+  /** Released notifications for the PC channel not shown on the PC yet (desktop shell). */
+  listPcNotifications(sinceIso: string): Promise<Notification[]>;
+  markPcShown(ids: string[], at: string): Promise<void>;
+  /** Calls back when notifications change (the runner inserts or releases one). */
+  subscribeNotifications(onChange: () => void): () => void;
 }
 
 /** Live request kinds the app sends, with their payload and result shapes. */

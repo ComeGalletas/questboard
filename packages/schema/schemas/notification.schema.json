@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "notification.schema.json",
+  "title": "Notification",
+  "description": "A row of `notifications`. The runner plans and dedups them and stamps sent_at once quiet hours allow delivery; the phone gets Web Push, the PC desktop shell shows rows with the pc channel and stamps pc_shown_at.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "kind", "target", "dedup_date", "channels", "created_at"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "kind": { "$ref": "common.schema.json#/$defs/NotificationKind" },
+    "target": {
+      "type": "string",
+      "pattern": "^questboard://",
+      "description": "Deep link the notification opens."
+    },
+    "persona": { "type": ["string", "null"], "pattern": "^[a-z][a-z0-9_-]{1,31}$" },
+    "dedup_date": { "type": "string", "format": "date" },
+    "channels": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["pc", "push"] },
+      "uniqueItems": true
+    },
+    "title": { "type": ["string", "null"], "maxLength": 80 },
+    "body": { "type": ["string", "null"], "maxLength": 280 },
+    "sent_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Released for delivery (after quiet hours). Null while held."
+    },
+    "pc_shown_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "When the desktop shell showed it; each notification shows on the PC once."
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

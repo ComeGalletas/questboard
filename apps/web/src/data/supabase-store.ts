@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   Config,
   FallbackLine,
+  Notification,
   PersonaLine,
   Quest,
   QuestProposal,
@@ -10,6 +11,7 @@ import type {
 import type { LiveKind, LiveKinds, LiveRequest } from "./store.ts";
 import type { QuestPatch } from "../game/actions.ts";
 import type { QuestChangesPatch } from "../game/proposals.ts";
+import { NOTIFICATION_COLUMNS } from "../lib/pc-notifications.ts";
 import { PLANNING_JOBS, type PlanRun } from "../lib/planner.ts";
 import type { NewQuest, Store } from "./store.ts";
 
@@ -159,6 +161,35 @@ export class SupabaseStore implements Store {
   }) {
     const { error } = await this.db.from("quest_feedback").insert(row);
     if (error) throw new Error(error.message);
+  }
+
+  async listPcNotifications(sinceIso: string): Promise<Notification[]> {
+    const { data, error } = await this.db
+      .from("notifications")
+      .select(NOTIFICATION_COLUMNS)
+      .contains("channels", ["pc"])
+      .not("sent_at", "is", null)
+      .is("pc_shown_at", null)
+      .gte("sent_at", sinceIso)
+      .order("sent_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data ?? []) as Notification[];
+  }
+
+  async markPcShown(ids: string[], at: string) {
+    if (!ids.length) return;
+    const { error } = await this.db.from("notifications").update({ pc_shown_at: at }).in("id", ids);
+    if (error) throw new Error(error.message);
+  }
+
+  subscribeNotifications(onChange: () => void): () => void {
+    const channel = this.db
+      .channel("questboard-notifications")
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, onChange)
+      .subscribe();
+    return () => {
+      this.db.removeChannel(channel);
+    };
   }
 
   subscribe(onChange: () => void): () => void {

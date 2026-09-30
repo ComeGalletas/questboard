@@ -3,6 +3,8 @@
 //! - `dashboard` window: hides on close, so the app keeps living in the tray.
 //! - Tray: open the dashboard, runner status + pause / restart / log, start at login, quit.
 //! - Runner: hosted by `runner::Supervisor` (`uv run python -m runner run` from this repo).
+//! - PC notifications: the web app (which owns the Supabase session) listens for released rows
+//!   and calls `show_notification`; clicking the toast opens its questboard:// target.
 //! - Start at login: on by default (CLAUDE.md "Starts at login"), launched with `--minimized`
 //!   so it waits in the tray. The user can turn it off from the tray.
 //! - `questboard://` deep links: a single instance receives them (cold start or forwarded from a
@@ -36,6 +38,45 @@ struct PendingLink(Mutex<Option<String>>);
 #[tauri::command]
 fn take_deep_link(pending: State<'_, PendingLink>) -> Option<String> {
     pending.0.lock().ok()?.take()
+}
+
+/// A Windows toast for a released notification. Clicking it opens `target` like a deep link.
+#[tauri::command]
+fn show_notification(
+    app: AppHandle,
+    title: String,
+    body: String,
+    target: String,
+) -> Result<(), String> {
+    if !target.starts_with(SCHEME) {
+        return Err("target must be a questboard:// link".into());
+    }
+    let title: String = title.chars().take(80).collect();
+    let body: String = body.chars().take(280).collect();
+    #[cfg(windows)]
+    {
+        use tauri_winrt_notification::Toast;
+        // Installed builds show as Questboard (the installer registers the identifier as the
+        // Start-menu AppUserModelID); dev builds borrow PowerShell's, as unregistered apps must.
+        let app_id = if cfg!(debug_assertions) {
+            Toast::POWERSHELL_APP_ID.to_string()
+        } else {
+            app.config().identifier.clone()
+        };
+        let links = app.clone();
+        Toast::new(&app_id)
+            .title(&title)
+            .text1(&body)
+            .on_activated(move |_| {
+                open_links(&links, [target.clone()]);
+                Ok(())
+            })
+            .show()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(not(windows))]
+    let _ = (app, title, body, target);
+    Ok(())
 }
 
 fn show_dashboard(app: &AppHandle) {
@@ -211,7 +252,7 @@ fn main() {
             Some(vec![MINIMIZED]),
         ))
         .manage(PendingLink::default())
-        .invoke_handler(tauri::generate_handler![take_deep_link])
+        .invoke_handler(tauri::generate_handler![take_deep_link, show_notification])
         .setup(|app| {
             let handle = app.handle().clone();
 

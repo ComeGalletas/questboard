@@ -4,6 +4,7 @@
 import type {
   Config,
   FallbackLine,
+  Notification,
   PersonaLine,
   Quest,
   QuestProposal,
@@ -263,6 +264,17 @@ export class DemoStore implements Store {
   subscribe(onChange: () => void): () => void {
     this.listeners.add(onChange);
     return () => this.listeners.delete(onChange);
+  }
+
+  // The demo has no runner, so nothing is ever released for the PC.
+  async listPcNotifications(): Promise<Notification[]> {
+    return [];
+  }
+
+  async markPcShown(): Promise<void> {}
+
+  subscribeNotifications(): () => void {
+    return () => {};
   }
 
   static reset(): void {

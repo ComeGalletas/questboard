@@ -15,3 +15,7 @@ tauri = { version = "2", features = ["tray-icon"] }
 tauri-plugin-autostart = "2"
 tauri-plugin-deep-link = "2"
 tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
+
+[target.'cfg(windows)'.dependencies]
+# Native toasts with a click callback (the notification plugin has no desktop click actions).
+tauri-winrt-notification = "0.8"
