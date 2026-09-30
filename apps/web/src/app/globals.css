@@ -746,3 +746,18 @@ html.companion-root body {
   cursor: pointer;
   touch-action: none;
 }
+
+/* Quest edit / delete (row menu) */
+.quest-edit {
+  margin: 0 10px 10px;
+}
+
+.quest-actions > p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.quest-actions button.danger {
+  border-color: var(--warn);
+  color: var(--warn);
+}

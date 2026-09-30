@@ -20,6 +20,7 @@ import type {
   VoiceFallbackRequest,
 } from "@questboard/schema";
 import type { QuestPatch } from "../game/actions.ts";
+import type { EditPatch } from "../game/edit.ts";
 import type { QuestChangesPatch } from "../game/proposals.ts";
 import type { PlanRun } from "../lib/planner.ts";
 
@@ -42,7 +43,9 @@ export interface Store {
   readonly kind: "supabase" | "demo";
   listQuests(): Promise<Quest[]>;
   insertQuest(q: NewQuest): Promise<Quest>;
-  updateQuest(id: string, patch: QuestPatch | QuestChangesPatch): Promise<Quest>;
+  updateQuest(id: string, patch: QuestPatch | QuestChangesPatch | EditPatch): Promise<Quest>;
+  /** Hard delete (the user's own correction); dialogue, feedback and proposals cascade. */
+  deleteQuests(ids: string[]): Promise<void>;
   getConfig(): Promise<Config | null>;
   listLines(): Promise<PersonaLine[]>;
   markLineUsed(id: string, at: string): Promise<void>;

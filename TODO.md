@@ -50,7 +50,7 @@ Done when: log in on PC and phone and see an empty board with a "Runner offline"
 - [ ] Voice hold-to-speak on iOS (Web Speech where available, typed fallback otherwise) + confirmation card.
 
 ## Phase 1 — Manual quests and the board (week 2)
-- [x] Quest create + complete / partial / snooze / defer / skip with actual-time logging. (Edit/delete of a quest's fields: later, when needed.)
+- [x] Quest create + complete / partial / snooze / defer / skip with actual-time logging. Edit (title, category, persona, estimate, priority, day, deadline; XP follows while open) and delete (with its steps; says what XP goes) from each row's menu, finished quests included.
 - [x] Capacity bar (manual free hours x focus factor vs planned effort).
 - [x] Progress: XP, level, streaks, stats, all computed in code (P2). (`apps/web/src/game/`; UI lands with the board PR.)
 - [x] Persona panel with mood from completion rate; `lines.fallback.json`.

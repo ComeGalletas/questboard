@@ -1,13 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import type { Quest } from "@questboard/schema";
+import { useLog } from "@/data/log";
 import type { Row } from "@/game/summary";
 import type { QuestAction } from "@/game/actions";
 import { addDays, isoDate } from "@/game/dates";
-import { packFor } from "@/game/personas";
+import {
+  CATEGORIES,
+  deletionFor,
+  deletionMessage,
+  editFormFor,
+  editPatch,
+  type EditForm,
+} from "@/game/edit";
+import { PACKS, packFor } from "@/game/personas";
 import { Portrait } from "@/ui/Sprite";
 
-type Panel = null | "menu" | "complete" | "partial" | "defer";
+type Panel = null | "menu" | "complete" | "partial" | "defer" | "edit" | "delete";
 
 const STATUS_LABEL: Partial<Record<string, string>> = {
   done: "Done",
@@ -25,7 +35,10 @@ export function QuestRow({
   onAction: (a: QuestAction) => Promise<boolean>;
 }) {
   const q = row.quest;
+  const { store, quests, config, reload } = useLog();
   const pack = packFor(q.persona);
+  const [form, setForm] = useState<EditForm>(() => editFormFor(q));
+  const [error, setError] = useState<string | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
   const [minutes, setMinutes] = useState(String(q.estimate_min));
   const [deferTo, setDeferTo] = useState(() => addDays(isoDate(new Date()), 1));
@@ -37,6 +50,36 @@ export function QuestRow({
     setBusy(false);
     if (ok) setPanel(null);
   }
+
+  // Edits and deletes are the user's own corrections: straight to the store, no reaction.
+  async function change(work: () => Promise<unknown>) {
+    setBusy(true);
+    setError(null);
+    try {
+      await work();
+      await reload();
+      setPanel(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function saveEdit() {
+    const r = editPatch(q, form, config.xp_weights);
+    if (!r.ok) {
+      setError(r.reason);
+      return;
+    }
+    if (!Object.keys(r.patch).length) {
+      setPanel(null);
+      return;
+    }
+    void change(() => store.updateQuest(q.id, r.patch));
+  }
+
+  const deletion = panel === "delete" ? deletionFor(q, quests) : null;
 
   const progress = row.progress;
   const badge = row.snoozed
@@ -61,9 +104,11 @@ export function QuestRow({
       <button
         type="button"
         className="quest-main"
-        onClick={() => !row.closed && setPanel(panel ? null : "menu")}
+        onClick={() => {
+          setError(null);
+          setPanel(panel ? null : "menu");
+        }}
         aria-expanded={panel !== null}
-        disabled={row.closed}
       >
         <Portrait src={pack?.assets.portrait} label={pack?.name ?? q.persona} />
         <span className="quest-title">
@@ -106,32 +151,165 @@ export function QuestRow({
 
       {panel === "menu" && (
         <div className="quest-actions">
-          {q.status !== "in_progress" && (
-            <button type="button" disabled={busy} onClick={() => run({ kind: "start" })}>
-              Start
-            </button>
+          {!row.closed && (
+            <>
+              {q.status !== "in_progress" && (
+                <button type="button" disabled={busy} onClick={() => run({ kind: "start" })}>
+                  Start
+                </button>
+              )}
+              <button type="button" disabled={busy} onClick={() => openFinish("complete")}>
+                Done
+              </button>
+              <button type="button" disabled={busy} onClick={() => openFinish("partial")}>
+                Partial
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => run({ kind: "snooze", minutes: 30 })}
+              >
+                Snooze 30m
+              </button>
+              <button type="button" disabled={busy} onClick={() => setPanel("defer")}>
+                Defer
+              </button>
+              <button type="button" disabled={busy} onClick={() => run({ kind: "skip" })}>
+                Skip
+              </button>
+            </>
           )}
-          <button type="button" disabled={busy} onClick={() => openFinish("complete")}>
-            Done
-          </button>
-          <button type="button" disabled={busy} onClick={() => openFinish("partial")}>
-            Partial
-          </button>
           <button
             type="button"
             disabled={busy}
-            onClick={() => run({ kind: "snooze", minutes: 30 })}
+            onClick={() => {
+              setForm(editFormFor(q));
+              setPanel("edit");
+            }}
           >
-            Snooze 30m
+            Edit
           </button>
-          <button type="button" disabled={busy} onClick={() => setPanel("defer")}>
-            Defer
-          </button>
-          <button type="button" disabled={busy} onClick={() => run({ kind: "skip" })}>
-            Skip
+          <button type="button" disabled={busy} onClick={() => setPanel("delete")}>
+            Delete
           </button>
         </div>
       )}
+
+      {panel === "edit" && (
+        <form
+          className="quest-form quest-edit"
+          aria-label={`Edit ${q.title}`}
+          onSubmit={(e) => {
+            e.preventDefault();
+            saveEdit();
+          }}
+        >
+          <input
+            aria-label="Quest title"
+            value={form.title}
+            maxLength={120}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            required
+          />
+          <div className="quest-form-grid">
+            <label>
+              Category
+              <select
+                value={form.category}
+                onChange={(e) =>
+                  setForm({ ...form, category: e.target.value as Quest["category"] })
+                }
+              >
+                {CATEGORIES.map((c) => (
+                  <option key={c}>{c}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Persona
+              <select
+                value={form.persona}
+                onChange={(e) => setForm({ ...form, persona: e.target.value })}
+              >
+                {PACKS.map((p) => (
+                  <option key={p.slug} value={p.slug}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Estimate (min)
+              <input
+                type="number"
+                min={1}
+                max={1440}
+                inputMode="numeric"
+                value={form.estimate}
+                onChange={(e) => setForm({ ...form, estimate: e.target.value })}
+                required
+              />
+            </label>
+            <label>
+              Priority
+              <select
+                value={form.priority}
+                onChange={(e) => setForm({ ...form, priority: Number(e.target.value) })}
+              >
+                <option value={1}>P1 high</option>
+                <option value={2}>P2 normal</option>
+                <option value={3}>P3 low</option>
+              </select>
+            </label>
+            {q.scheduled_for && (
+              <label>
+                Day
+                <input
+                  type="date"
+                  value={form.day}
+                  onChange={(e) => setForm({ ...form, day: e.target.value })}
+                  required
+                />
+              </label>
+            )}
+            <label>
+              Deadline
+              <input
+                type="date"
+                value={form.deadline}
+                onChange={(e) => setForm({ ...form, deadline: e.target.value })}
+              />
+            </label>
+          </div>
+          <div className="quest-form-actions">
+            <button type="submit" disabled={busy || !form.title.trim()}>
+              Save
+            </button>
+            <button type="button" onClick={() => setPanel("menu")}>
+              Back
+            </button>
+          </div>
+        </form>
+      )}
+
+      {panel === "delete" && deletion && (
+        <div className="quest-actions" role="alertdialog" aria-label={`Delete ${q.title}`}>
+          <p>{deletionMessage(q, deletion)}</p>
+          <button
+            type="button"
+            className="danger"
+            disabled={busy}
+            onClick={() => void change(() => store.deleteQuests(deletion.ids))}
+          >
+            Delete
+          </button>
+          <button type="button" onClick={() => setPanel("menu")}>
+            Back
+          </button>
+        </div>
+      )}
+
+      {error && <p className="error">{error}</p>}
 
       {(panel === "complete" || panel === "partial") && (
         <form

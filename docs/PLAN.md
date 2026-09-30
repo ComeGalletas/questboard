@@ -44,7 +44,7 @@ Checkboxes verified against the code on 2026-09-29; unchecked items with a "Part
 **Done when:** you can log in on PC and phone and see an empty board with a "Runner offline" pill.
 
 ### Phase 1 — Manual quests and the board (week 2)
-- [ ] Quest CRUD (title, persona, estimate, deadline, priority, XP); complete / partial / snooze / defer / skip with actual-time logging. (Partial: create and all actions done; no priority field in the form, no edit/delete yet.)
+- [x] Quest CRUD (title, persona, estimate, deadline, priority, XP); complete / partial / snooze / defer / skip with actual-time logging.
 - [x] Capacity bar: free hours (manual for now) × focus factor vs planned effort.
 - [x] Progress: XP, level, streaks, stats (Discipline/Health/Career); all computed in code (P2).
 - [x] Persona panel with mood computed from completion rate; fallback lines from `lines.fallback.json`.
